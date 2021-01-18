@@ -16,9 +16,7 @@ const CreateUser = (props) => {
       username: username,
     };
     console.log(user);
-    console.log(process.env.REACT_APP_SERVER_URL);
-    axios.post(process.env.REACT_APP_SERVER_URL + "/users/add", user).then((result) => {
-      console.log(result.data);
+    axios.post("/api/users/add", user).then((result) => {
       if (result.status >= 400) {
         console.error("failed to add");
       }
