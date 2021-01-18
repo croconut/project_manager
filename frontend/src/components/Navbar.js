@@ -1,32 +1,31 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 const Navbar = (props) => {
+  const [collapse, setCollapse] = useState(true);
+  const collapser = () => {
+    setCollapse(!collapse);
+  };
   return (
     <nav className="navbar navbar-dark bg-dark navbar-expand-lg">
       <Link to="/" className="navbar-brand">
         ExerciseTracker
       </Link>
-      <button
-        type="button"
-        class="navbar-toggler"
-        data-toggle="collapse"
-        data-target="#navbarCollapse"
-        aria-controls="navbarCollapse"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
+      <button type="button" class="navbar-toggler" onClick={collapser}>
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div id="navbarCollapse" className="collapse navbar-collapse">
+      <div
+        id="navbarCollapse"
+        className={`${collapse ? "collapse" : ""} navbar-collapse`}
+      >
         <ul className="navbar-nav mr-auto">
           <li className="navbar-item">
-            <Link to="/user" className="nav-link">
+            <Link to="/user" className="nav-link" onClick={collapser}>
               Create a User
             </Link>
           </li>
           <li className="navbar-item">
-            <Link to="/create" className="nav-link">
+            <Link to="/create" className="nav-link" onClick={collapser}>
               Record an Exercise
             </Link>
           </li>
