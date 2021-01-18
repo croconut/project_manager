@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const Navbar = (props) => {
   const [collapse, setCollapse] = useState(true);
-  const collapser = () => {
+  const toggleCollapse = () => {
     setCollapse(!collapse);
   };
   return (
@@ -11,7 +11,7 @@ const Navbar = (props) => {
       <Link to="/" className="navbar-brand">
         ExerciseTracker
       </Link>
-      <button type="button" class="navbar-toggler" onClick={collapser}>
+      <button type="button" class="navbar-toggler" onClick={toggleCollapse}>
         <span class="navbar-toggler-icon"></span>
       </button>
       <div
@@ -20,12 +20,12 @@ const Navbar = (props) => {
       >
         <ul className="navbar-nav mr-auto">
           <li className="navbar-item">
-            <Link to="/user" className="nav-link" onClick={collapser}>
+            <Link to="/user" className="nav-link" onClick={toggleCollapse}>
               Create a User
             </Link>
           </li>
           <li className="navbar-item">
-            <Link to="/create" className="nav-link" onClick={collapser}>
+            <Link to="/create" className="nav-link" onClick={toggleCollapse}>
               Record an Exercise
             </Link>
           </li>
