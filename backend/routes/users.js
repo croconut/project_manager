@@ -12,7 +12,12 @@ router.route("/add").post((req, res) => {
   const newUser = new User({ username });
   newUser
     .save()
-    .then(() => res.json("User added!"))
+    // first cb is successful add, second is failure to add but well
+    // formed request (didn't pass model's validation methods)
+    .then(
+      () => res.json("User added!"),
+      () => res.status(403).json("User rejected!")
+    )
     .catch((err) => res.status(400).json("Error " + err));
 });
 

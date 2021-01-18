@@ -21,7 +21,10 @@ router.route("/add").post((req, res) => {
 
   newExercise
     .save()
-    .then(() => res.json("Exercise added!"))
+    .then(
+      () => res.json("Exercise added!"),
+      () => res.status(403).json("Exercise rejected!")
+    )
     .catch((err) => res.status(400).json("Error " + err));
 });
 
@@ -51,11 +54,14 @@ router.route("/update/:id").post((req, res) => {
     // so we don't want this
     // { upsert: true }
   )
-    .then((_result) => {
-      Exercise.findById(req.params.id)
-        .then((exercise) => res.json(exercise))
-        .catch((err) => res.status(400).json("Error " + err));
-    })
+    .then(
+      (_result) => {
+        Exercise.findById(req.params.id)
+          .then((exercise) => res.json(exercise))
+          .catch((err) => res.status(400).json("Error " + err));
+      },
+      () => res.status(403).json("Exercise update rejected!")
+    )
     .catch((err) => res.status(400).json("Error " + err));
 });
 
