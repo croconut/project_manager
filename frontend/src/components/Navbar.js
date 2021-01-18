@@ -11,8 +11,8 @@ const Navbar = (props) => {
       <Link to="/" className="navbar-brand">
         ExerciseTracker
       </Link>
-      <button type="button" class="navbar-toggler" onClick={toggleCollapse}>
-        <span class="navbar-toggler-icon"></span>
+      <button type="button" className="navbar-toggler" onClick={toggleCollapse}>
+        <span className="navbar-toggler-icon"></span>
       </button>
       <div
         id="navbarCollapse"
