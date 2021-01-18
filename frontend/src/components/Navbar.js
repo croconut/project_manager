@@ -7,21 +7,27 @@ const Navbar = (props) => {
       <Link to="/" className="navbar-brand">
         ExerciseTracker
       </Link>
-      <div className="collapse navbar-collapse">
+      <button
+        type="button"
+        class="navbar-toggler"
+        data-toggle="collapse"
+        data-target="#navbarCollapse"
+        aria-controls="navbarCollapse"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div id="navbarCollapse" className="collapse navbar-collapse">
         <ul className="navbar-nav mr-auto">
           <li className="navbar-item">
-            <Link to="/" className="nav-link">
-              Exercises
+            <Link to="/user" className="nav-link">
+              Create a User
             </Link>
           </li>
           <li className="navbar-item">
             <Link to="/create" className="nav-link">
               Record an Exercise
-            </Link>
-          </li>
-          <li className="navbar-item">
-            <Link to="/user" className="nav-link">
-              Create a User
             </Link>
           </li>
         </ul>

@@ -6,7 +6,6 @@ import EditExercise from "./components/EditExercise";
 import CreateExercise from "./components/CreateExercise";
 import CreateUser from "./components/CreateUser";
 // import './App.css';
-import "bootstrap/dist/css/bootstrap.min.css";
 
 function App() {
   return (
