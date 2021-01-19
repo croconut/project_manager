@@ -19,27 +19,25 @@ const CreateExercise = (props) => {
       .then((result) => {
         if (result.status >= 400) {
           console.error("failed to add");
-        } else {
-          console.log(result.data);
-          // not using map(element => element.username) because its unacceptably slow
-          const userArr = new Array(result.data.length);
-          for (let i = 0; i < userArr.length; i++) {
-            userArr[i] = result.data[i].username;
-          }
-          updateUsers(userArr);
+          return;
         }
+        // not using map(element => element.username) because its unacceptably slow
+        const userArr = new Array(result.data.length);
+        for (let i = 0; i < userArr.length; i++) {
+          userArr[i] = result.data[i].username;
+        }
+        updateUsers(userArr);
       })
       .catch((err) => {
-        console.log(err);
+        console.error(err);
       });
   }, [getUsers]);
 
   // console.log("create exercise rerender");
   const updateUsername = (e) => {
     // validation checks here
-    if (e === null || e === undefined)
-      return;
-    console.log('updating username');
+    if (e === null || e === undefined) return;
+    console.log("updating username");
     setUsername(e);
   };
 
@@ -69,7 +67,7 @@ const CreateExercise = (props) => {
       duration: duration,
       date: date,
     };
-    
+
     console.log(exercise);
 
     axios

@@ -11,11 +11,15 @@ const Navbar = ({ mainRoute, secondaryRoutes }) => {
     setCollapse(!collapse);
   };
 
+  // console.log("navbar rerender");
+
   const createNavLinks = () => {
     const arrItems = new Array(secondaryRoutes.length);
     for (let i = 0; i < arrItems.length; i++) {
       arrItems[i] = (
-        <li className="navbar-item">
+        // the link is extremely likely to be unique in any use case for this
+        // TODO implement actual unique key with uuid from the database
+        <li className="navbar-item" key={secondaryRoutes[i].link}>
           <Link
             to={secondaryRoutes[i].link}
             className="nav-link"
