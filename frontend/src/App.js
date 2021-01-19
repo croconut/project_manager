@@ -5,17 +5,11 @@ import ExercisesList from "./components/ExercisesList";
 import EditExercise from "./components/EditExercise";
 import CreateExercise from "./components/CreateExercise";
 import CreateUser from "./components/CreateUser";
+var RouteInformation = require("./staticData/Routes");
 // import './App.css';
 
 function App() {
-  const mainRoute = { name: "ExerciseTracker", link: "/" };
-  const navbarRoutes = [
-    { name: "Record an Exercise", link: "/exercise/create" },
-    { name: "Sign Up", link: "/join" },
-  ];
-  const nonNavbarRoutes = [
-    { name: "Edit Exercise", link: "/exercise/edit/:id" },
-  ];
+  const {mainRoute, navbarRoutes, nonNavbarRoutes} = RouteInformation;
 
   return (
     <Router>

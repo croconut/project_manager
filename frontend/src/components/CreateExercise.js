@@ -1,16 +1,45 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import DatePicker from "react-date-picker";
+import axios from "axios";
+import { apiRoutes } from "../staticData/Routes";
 
 const CreateExercise = (props) => {
   const userInput = useRef(null);
   const [username, setUsername] = useState("");
   const [description, setDescription] = useState("");
-  const [duration, setDuration] = useState(0);
+  const [duration, setDuration] = useState("");
   const [date, setDate] = useState(new Date());
-  const [users, setUsers] = useState(["test_user", "test_user_2"]);
+  const [users, setUsers] = useState([]);
 
+  const { getUsers, addExercise } = apiRoutes;
+
+  useEffect(() => {
+    axios
+      .get(getUsers)
+      .then((result) => {
+        if (result.status >= 400) {
+          console.error("failed to add");
+        } else {
+          console.log(result.data);
+          // not using map(element => element.username) because its unacceptably slow
+          const userArr = new Array(result.data.length);
+          for (let i = 0; i < userArr.length; i++) {
+            userArr[i] = result.data[i].username;
+          }
+          updateUsers(userArr);
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, [getUsers]);
+
+  // console.log("create exercise rerender");
   const updateUsername = (e) => {
     // validation checks here
+    if (e === null || e === undefined)
+      return;
+    console.log('updating username');
     setUsername(e);
   };
 
@@ -19,7 +48,8 @@ const CreateExercise = (props) => {
   };
 
   const updateDuration = (e) => {
-    setDuration(Number(e));
+    const num = Number(e);
+    if (!isNaN(num)) setDuration(num);
   };
 
   const updateDate = (e) => {
@@ -34,19 +64,30 @@ const CreateExercise = (props) => {
     submission.preventDefault();
 
     const exercise = {
-      username: username,
+      username: username === "" ? users[0] : username,
       description: description,
       duration: duration,
       date: date,
     };
-
+    
     console.log(exercise);
+
+    axios
+      .post(addExercise, exercise)
+      .then((result) => {
+        if (result.status >= 400) {
+          console.error("failed to add");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
 
     // return to homepage on submission
     // window.location = "/";
-    setUsername("");
+    updateUsername(users[0]);
     setDescription("");
-    setDuration(0);
+    setDuration("");
     setDate(new Date());
   };
 

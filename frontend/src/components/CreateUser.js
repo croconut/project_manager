@@ -20,6 +20,8 @@ const CreateUser = (props) => {
       if (result.status >= 400) {
         console.error("failed to add");
       }
+    }).catch(err => {
+      console.log(err);
     });
 
     setUsers([...users, username]);
