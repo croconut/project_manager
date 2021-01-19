@@ -1,15 +1,40 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-const Navbar = (props) => {
+// main route has .name and .link
+// secondary routes is array of objects with same parameters
+// .name and .link
+const Navbar = ({ mainRoute, secondaryRoutes }) => {
   const [collapse, setCollapse] = useState(true);
+
   const toggleCollapse = () => {
     setCollapse(!collapse);
   };
+
+  const createNavLinks = () => {
+    const arrItems = new Array(secondaryRoutes.length);
+    for (let i = 0; i < arrItems.length; i++) {
+      arrItems[i] = (
+        <li className="navbar-item">
+          <Link
+            to={secondaryRoutes[i].link}
+            className="nav-link"
+            onClick={toggleCollapse}
+          >
+            {secondaryRoutes[i].name}
+          </Link>
+        </li>
+      );
+    }
+    return arrItems;
+  };
+
+  const navItems = createNavLinks();
+
   return (
     <nav className="navbar navbar-dark bg-dark navbar-expand-lg">
-      <Link to="/" className="navbar-brand">
-        ExerciseTracker
+      <Link to={mainRoute.link} className="navbar-brand">
+        {mainRoute.name}
       </Link>
       <button type="button" className="navbar-toggler" onClick={toggleCollapse}>
         <span className="navbar-toggler-icon"></span>
@@ -18,18 +43,7 @@ const Navbar = (props) => {
         id="navbarCollapse"
         className={`${collapse ? "collapse" : ""} navbar-collapse`}
       >
-        <ul className="navbar-nav mr-auto">
-          <li className="navbar-item">
-            <Link to="/user" className="nav-link" onClick={toggleCollapse}>
-              Create a User
-            </Link>
-          </li>
-          <li className="navbar-item">
-            <Link to="/create" className="nav-link" onClick={toggleCollapse}>
-              Record an Exercise
-            </Link>
-          </li>
-        </ul>
+        <ul className="navbar-nav mr-auto">{navItems}</ul>
       </div>
     </nav>
   );

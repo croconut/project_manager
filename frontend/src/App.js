@@ -8,16 +8,28 @@ import CreateUser from "./components/CreateUser";
 // import './App.css';
 
 function App() {
+  const mainRoute = { name: "ExerciseTracker", link: "/" };
+  const navbarRoutes = [
+    { name: "Record an Exercise", link: "/exercise/create" },
+    { name: "Sign Up", link: "/join" },
+  ];
+  const nonNavbarRoutes = [
+    { name: "Edit Exercise", link: "/exercise/edit/:id" },
+  ];
+
   return (
     <Router>
-      <Navbar />
+      <Navbar
+        mainRoute={mainRoute}
+        secondaryRoutes={navbarRoutes}
+      />
       <br />
       <div className="container">
         <Switch>
-          <Route exact path="/" component={ExercisesList} />
-          <Route path="/edit/:id" component={EditExercise} />
-          <Route path="/create" component={CreateExercise} />
-          <Route path="/user" component={CreateUser} />
+          <Route exact path={mainRoute.link} component={ExercisesList} />
+          <Route path={nonNavbarRoutes[0].link}  component={EditExercise} />
+          <Route path={navbarRoutes[0].link}  component={CreateExercise} />
+          <Route path={navbarRoutes[1].link}  component={CreateUser} />
         </Switch>
       </div>
     </Router>

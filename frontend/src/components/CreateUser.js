@@ -28,11 +28,8 @@ const CreateUser = (props) => {
 
   return (
     <div>
-      <h1>Create New Exercise Log</h1>
-      <p />
-      {/* <p />
-      Current users:
-      {users.map(item => <p>{item}</p>)} */}
+      <h1>Sign Up</h1>
+      <p /> 
       <form onSubmit={onSubmit}>
         <div className="form-group">
           <label>Username: </label>
