@@ -1,8 +1,31 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
+import Routes from "./staticData/Routes";
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+const homepageLink = Routes.mainRoute.link;
+const appName = Routes.mainRoute.name;
+const secondaryRoutes = Routes.navbarRoutes;
+const unrenderedRoutes = Routes.nonNavbarRoutes;
+
+describe("<App />", () => {
+  it('renders a link to the homepage', () => {
+    render(<App />);
+    const linkElement = screen.getByText(appName).closest('a');
+    expect(linkElement).toHaveAttribute('href', homepageLink);
+  });
+  it('renders a link to the navbar routes', () => {
+    render(<App />);
+    for (let i = 0; i < secondaryRoutes.length; i++) {
+      const linkElement = screen.getByText(secondaryRoutes[i].name).closest('a');
+      expect(linkElement).toHaveAttribute('href', secondaryRoutes[i].link);
+    }
+  });
+  it('does not render a link to the non-navbar routes', () => {
+    render(<App />);
+    for (let i = 0; i < unrenderedRoutes.length; i++) {
+      const linkElement = screen.queryByText(unrenderedRoutes[i].name);
+      expect(linkElement).toBeNull();
+    }
+  });
 });
+
