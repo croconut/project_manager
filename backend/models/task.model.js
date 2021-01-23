@@ -18,16 +18,18 @@ const taskSchema = new mongoose.Schema(
     },
     assignedUsername: {
       type: String,
-      default: false,
-      trim: true,
+      required: false,
+      default: "",
     },
     // would be a font from the free font awesome icon set
     assignedUserIcon: {
       type: String,
-      defaut: false,
+      required: false,
+      defaut: "",
     },
     description: {
       type: String,
+      required: false,
       default: "",
       maxlength: 500,
     },
