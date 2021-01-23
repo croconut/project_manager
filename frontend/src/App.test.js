@@ -5,7 +5,7 @@ import Routes from "./staticData/Routes";
 const homepageLink = Routes.mainRoute.link;
 const appName = Routes.mainRoute.name;
 const secondaryRoutes = Routes.navbarRoutes;
-const unrenderedRoutes = Routes.nonNavbarRoutes;
+const unrenderedRoutes = Routes.otherRoutes;
 
 describe("<App />", () => {
   it('renders a link to the homepage', () => {
