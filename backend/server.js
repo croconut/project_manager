@@ -6,7 +6,7 @@ const path = require("path");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 
-const exercisesRouter = require("./routes/exercises");
+const exercisesRouter = require("./routes/tasklists");
 const usersRouter = require("./routes/users");
 const loginRouter = require("./routes/login");
 
@@ -58,7 +58,7 @@ store.on("error", (err) => console.error("store error: " + err));
 
 app.use(
   session({
-    key: cookieKey,
+    //using default name connect.sid rn
     secret: cookieSecret,
     resave: false,
     saveUninitialized: false,
@@ -67,6 +67,25 @@ app.use(
     store: store,
   })
 );
+
+app.use((req, res, next) => {
+  // no user but have cookie id for some reason?
+  // directly looking at session.id since thats set by
+  // session buuuuut deleting the cookie by name
+  if (req.cookies)
+    if (req.cookies.connect.sid && !req.session.user) res.clearCookie("connect.sid");
+  next();
+});
+
+// redirect to login when session not set
+// and not trying to access the home page "/"
+const nonHomeRedirect = (req, res, next) => {
+  if (req.session.user && req.cookies.sessionID) {
+    next();
+  } else {
+    res.redirect("/login");
+  }
+};
 
 mongoose.connect(uri, mongooseConnectionOptions);
 
@@ -82,11 +101,16 @@ app.use("/api/login", loginRouter);
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 
 app.get(
-  ["/", "/join", "/tasklist/create", "/tasklist/edit/:id"],
-  (req, res) => {
+  ["/join", "/tasklist/create", "/tasklist/edit/:id"], 
+  nonHomeRedirect,
+  (_req, res) => {
     res.sendFile(path.resolve(__dirname, "../frontend/build", "index.html"));
   }
 );
+
+app.get(["/", "/login"], (_req, res) => {
+  res.sendFile(path.resolve(__dirname, "../frontend/build", "index.html"));
+});
 
 app.listen(port, () => {
   console.log("server is running on port " + port);

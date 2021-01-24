@@ -1,13 +1,13 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const Schema = mongoose.Schema;
+const tasklist =  require("./tasklist.model");
 
 // by default: unique username and email required
 // as users will be searchable by username / email
 // and their profile url will be user/<username> ?
 // probably dont need that tbh
 
-const userSchema = new Schema(
+const userSchema = new mongoose.Schema(
   {
     username: {
       type: String,
@@ -37,7 +37,8 @@ const userSchema = new Schema(
     color: {
       type: String,
       default: "#fff",
-    }
+    },
+    tasklists: [tasklist.schema],
   },
   {
     timestamps: true,
