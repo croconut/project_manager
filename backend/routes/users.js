@@ -1,31 +1,65 @@
 const router = require("express").Router();
-let User = require("../models/user.model");
+const session = require("express-session");
+const ObjectID = require("mongodb").ObjectID;
+const User = require("../models/user.model");
 
-router.route("/").get((_req, res) => {
-  User.find()
-    .then((users) => res.json(users))
-    .catch((err) => res.status(400).json("Error: " + err));
+// dont really wanna send password information ever lol
+const userAll = "-password -_id";
+const userPublic = "-password -email -tasklists -_id";
+
+router.get("/myinfo", (req, res) => {
+  if (!req.session.user)
+    return res.status(403).json("Access forbidden to logged out users");
+  User.findById(
+    new ObjectID(req.session.user._id),
+    userAll,
+    { lean: true },
+    (err, doc) => {
+      if (err) return res.status(400).json("Error " + err);
+      console.log(doc);
+      res.json(doc);
+    }
+  );
 });
 
-router.route("/:username").get((req, res) => {
-  User.find({ username: req.params.username })
-  .then((user) => res.json(user))
-  .catch((err) => res.status(400).json("Error " + err));
+router.get("/:username", (req, res) => {
+  User.findOne(
+    { username: req.params.username },
+    userPublic,
+    { lean: true },
+    (err, doc) => {
+      if (err) return res.status(400).json("Error " + err);
+      res.json(doc);
+    }
+  );
 });
 
-router.route("/add").post((req, res) => {
-  const { username } = req.body;
-  const newUser = new User({ username });
-  newUser
-    .save()
-    // first cb is successful add, second is failure to add but well
-    // formed request (didn't pass model's validation methods, may be 
-    // missing something)
-    .then(
-      () => res.json("User added!"),
-      () => res.status(403).json("User rejected!")
-    )
-    .catch((err) => res.status(400).json("Error " + err));
+router.get("/:id", (req, res) => {
+  User.findOne(
+    { _id: req.params.id },
+    req.session.user._id === req.params.id ? userAll : userPublic,
+    { lean: true },
+    (err, doc) => {
+      if (err) return res.status(400).json("Error " + err);
+      res.json(doc);
+    }
+  );
+});
+
+router.get("/", (req, res) => {
+  User.find(
+    {},
+    userPublic,
+    {
+      limit: req.body.limit || 10,
+      skip: req.body.skip || 0,
+      lean: true,
+    },
+    (err, doc) => {
+      if (err) return res.status(400).json("Error " + err);
+      res.json(doc);
+    }
+  );
 });
 
 module.exports = router;

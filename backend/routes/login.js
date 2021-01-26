@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const router = require("express").Router();
 
-router.route("/", (req, res) => {
+router.post("/", (req, res) => {
   // on login, users use their username or email and password
   // for other routes they'll use their objectid and the
   // hashed password, saved in their cookie
@@ -17,6 +17,7 @@ router.route("/", (req, res) => {
   else {
     //attempt login by email
   }
+  res.status(500).send();
 });
 
 module.exports = router;

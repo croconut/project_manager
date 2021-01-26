@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const task = require("./task.model");
+const task = require("./task.schema");
 
 // when adding tasks to tasklist or updating task inside a tasklist ->
 // need to change its array based on its stage if changed
@@ -13,9 +13,6 @@ const tasklistSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
-      index: true,
-      trim: true,
       minlength: 1,
     },
     description: {
@@ -23,16 +20,11 @@ const tasklistSchema = new mongoose.Schema(
       required: false,
       default: "",
     },
-    todoTasks: [task.schema],
-    ongoingTasks: [task.schema],
-    completedTasks: [task.schema],
-    cancelledTasks: [task.schema],
+    tasks: [task.schema],
   },
   {
     timestamps: true,
   }
 );
 
-const Tasklist = mongoose.model("Tasklist", tasklistSchema);
-
-module.exports = { model: Tasklist, schema: tasklistSchema };
+module.exports = { schema: tasklistSchema };

@@ -6,9 +6,10 @@ const path = require("path");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 
-const exercisesRouter = require("./routes/tasklists");
+const tasklistRouter = require("./routes/tasklists");
 const usersRouter = require("./routes/users");
 const loginRouter = require("./routes/login");
+const registerRouter = require("./routes/register");
 
 require("dotenv").config();
 
@@ -25,7 +26,6 @@ if (process.env.NODE_ENV === "development") {
   console.log("testing mode");
   uri = process.env.ATLAS_URI_TEST;
 }
-const cookieKey = process.env.SESSION_KEY;
 const cookieSecret = process.env.SESSION_SECRET;
 
 const sessionStoreOptions = {
@@ -59,6 +59,7 @@ store.on("error", (err) => console.error("store error: " + err));
 app.use(
   session({
     //using default name connect.sid rn
+    key: "project-manager-c",
     secret: cookieSecret,
     resave: false,
     saveUninitialized: false,
@@ -70,21 +71,26 @@ app.use(
 
 app.use((req, res, next) => {
   // no user but have cookie id for some reason?
-  // directly looking at session.id since thats set by
-  // session buuuuut deleting the cookie by name
-  if (req.cookies)
-    if (req.cookies.connect.sid && !req.session.user) res.clearCookie("connect.sid");
+  if (req.session)
+    if (req.session.cookie && !req.session.user)
+      res.clearCookie("project-manager-c");
   next();
 });
 
 // redirect to login when session not set
 // and not trying to access the home page "/"
 const nonHomeRedirect = (req, res, next) => {
-  if (req.session.user && req.cookies.sessionID) {
+  if (req.session.user && req.session.cookie) {
+    console.log("allowed");
     next();
   } else {
     res.redirect("/login");
   }
+};
+
+const loginRedirect = (req, res, next) => {
+  if (req.session.user && req.cookies.sessionID) res.redirect("/");
+  else next();
 };
 
 mongoose.connect(uri, mongooseConnectionOptions);
@@ -94,21 +100,30 @@ connection.once("open", () => {
   console.log("mongo db database connection established successfully");
 });
 
-app.use("/api/tasklist", exercisesRouter);
-app.use("/api/users", usersRouter);
+app.use("/api/tasklist", nonHomeRedirect, tasklistRouter);
+app.use("/api/users", nonHomeRedirect, usersRouter);
+app.use("/api/register", registerRouter);
 app.use("/api/login", loginRouter);
 
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 
+// react routes only for logged in users
 app.get(
-  ["/join", "/tasklist/create", "/tasklist/edit/:id"], 
+  ["/tasklist/create", "/tasklist/edit/:id", "/logout"],
   nonHomeRedirect,
   (_req, res) => {
     res.sendFile(path.resolve(__dirname, "../frontend/build", "index.html"));
   }
 );
 
-app.get(["/", "/login"], (_req, res) => {
+// react routes always available
+// will eventually include static pages like about us and contact me
+app.get("/", (_req, res) => {
+  res.sendFile(path.resolve(__dirname, "../frontend/build", "index.html"));
+});
+
+// react routes only for people who aren't logged in
+app.get(["/login", "/join"], loginRedirect, (_req, res) => {
   res.sendFile(path.resolve(__dirname, "../frontend/build", "index.html"));
 });
 

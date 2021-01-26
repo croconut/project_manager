@@ -6,8 +6,6 @@ const taskSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true,
-    trim: true,
     minlength: 1,
   },
   assignedUsername: {
@@ -34,10 +32,9 @@ const taskSchema = new mongoose.Schema({
   stage: {
     type: String,
     enum: TaskStage,
+    required: false,
     default: TaskStage[0],
   },
 });
 
-const Task = mongoose.model("Task", taskSchema);
-
-module.exports = { model: Task, schema: taskSchema, stage: TaskStage };
+module.exports = { schema: taskSchema, stage: TaskStage };
