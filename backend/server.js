@@ -6,6 +6,8 @@ const path = require("path");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 
+const log = require("./utils/logcolors");
+
 const tasklistRouter = require("./routes/tasklists");
 const usersRouter = require("./routes/users");
 const loginRouter = require("./routes/login");
@@ -28,6 +30,9 @@ if (process.env.NODE_ENV === "development") {
   uri = process.env.ATLAS_URI_TEST;
 }
 const cookieSecret = process.env.SESSION_SECRET;
+if (!process.env.SESSION_KEY || process.env.SESSION_KEY === "") {
+  log.red("the session key was not set in the .env file");
+}
 
 const sessionStoreOptions = {
   useNewUrlParser: true,
@@ -51,16 +56,15 @@ let store = new MongoDBStore(
     connectionOptions: sessionStoreOptions,
   },
   (err) => {
-    if (err) console.error("store connection error: " + err);
+    if (err) log.red("store connection error: " + err);
   }
 );
 
-store.on("error", (err) => console.error("store error: " + err));
+store.on("error", (err) => log.red("store error: " + err));
 
 app.use(
   session({
-    //using default name connect.sid rn
-    key: "project-manager-c",
+    key: process.env.SESSION_KEY,
     secret: cookieSecret,
     resave: false,
     saveUninitialized: false,
@@ -74,7 +78,7 @@ app.use((req, res, next) => {
   // no user but have cookie id for some reason?
   if (req.session)
     if (req.session.cookie && (!req.session.user || !req.session.user._id))
-      res.clearCookie("project-manager-c");
+      res.clearCookie(process.env.SESSION_KEY);
   next();
 });
 
@@ -82,7 +86,6 @@ app.use((req, res, next) => {
 // and not trying to access the home page "/"
 const nonHomeRedirect = (req, res, next) => {
   if (req.session.user && req.session.user._id) {
-    console.log("allowed");
     next();
   } else {
     res.redirect("/login");
@@ -98,7 +101,7 @@ mongoose.connect(uri, mongooseConnectionOptions);
 
 const connection = mongoose.connection;
 connection.once("open", () => {
-  console.log("mongo db database connection established successfully");
+  log.cyan("mongo db database connection established successfully");
 });
 
 app.use("/api/tasklist", nonHomeRedirect, tasklistRouter);
@@ -131,5 +134,5 @@ app.get(["/login", "/join"], loginRedirect, (_req, res) => {
 });
 
 app.listen(port, () => {
-  console.log("server is running on port " + port);
+  log.cyan("server is running on port " + port);
 });
