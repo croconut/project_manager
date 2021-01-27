@@ -10,6 +10,7 @@ const tasklistRouter = require("./routes/tasklists");
 const usersRouter = require("./routes/users");
 const loginRouter = require("./routes/login");
 const registerRouter = require("./routes/register");
+const logoutRouter = require("./routes/logout");
 
 require("dotenv").config();
 
@@ -72,7 +73,7 @@ app.use(
 app.use((req, res, next) => {
   // no user but have cookie id for some reason?
   if (req.session)
-    if (req.session.cookie && !req.session.user)
+    if (req.session.cookie && (!req.session.user || !req.session.user._id))
       res.clearCookie("project-manager-c");
   next();
 });
@@ -80,7 +81,7 @@ app.use((req, res, next) => {
 // redirect to login when session not set
 // and not trying to access the home page "/"
 const nonHomeRedirect = (req, res, next) => {
-  if (req.session.user && req.session.cookie) {
+  if (req.session.user && req.session.user._id) {
     console.log("allowed");
     next();
   } else {
@@ -89,7 +90,7 @@ const nonHomeRedirect = (req, res, next) => {
 };
 
 const loginRedirect = (req, res, next) => {
-  if (req.session.user && req.cookies.sessionID) res.redirect("/");
+  if (!req.session.user || !req.session.user._id) res.redirect("/");
   else next();
 };
 
@@ -104,6 +105,8 @@ app.use("/api/tasklist", nonHomeRedirect, tasklistRouter);
 app.use("/api/users", nonHomeRedirect, usersRouter);
 app.use("/api/register", registerRouter);
 app.use("/api/login", loginRouter);
+// gotta be logged in to bother logging out
+app.use("/api/logout", loginRedirect, logoutRouter);
 
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 

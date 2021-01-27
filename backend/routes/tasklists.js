@@ -1,34 +1,37 @@
 const router = require("express").Router();
 // there isn't a tasklist model, it is a subdoc of the user
 const user = require("../models/user.model");
-const taskSchema = require("../models/tasklist.schema");
-
-// => query the session table and join it to a query for
-// the logged in user
-// will return full task list or error out
-
 
 // adding tasklist with no tasks defined yet
 router.post("/add", (req, res) => {
   // need user cookie information to add or whatever
   // so i need a router.use for all these that prechecks for correct
   // login credentials
-  const { name, description } = req.body;
+  const { name, description, tasks } = req.body;
+  console.log(req.body);
+  let taskOption = tasks;
+  if (!tasks) {
+    taskOption = [{ name: "First task!" }];
+  }
 
-  const tasklist = new taskSchema({
+  if (!name || name === "") {
+    return res.status(400).send("must include a name");
+  }
+
+  const tasklist = {
     name: name,
     description: description,
-  });
+    tasks: taskOption,
+  };
+
   // we should check that name and id will be unique
   user
     .updateOne(
       {
-        _id: req.sessionID.user.id,
-        "tasklists.name": { $ne: tasklist.name },
-        "tasklists.id": { $ne: tasklist.id },
+        _id: req.session.user._id,
+        "tasklists.$.name": { $ne: tasklist.name },
       },
-      { $push: { tasklists: tasklist } },
-      { upsert: true }
+      { $push: { tasklists: tasklist } }
     )
     .then(
       () => res.json("Tasklist added!"),
@@ -37,12 +40,15 @@ router.post("/add", (req, res) => {
     .catch((err) => res.status(400).json("Error " + err));
 });
 
-router.get("/:id", (req, res) => {
-  user.updateOne();
+router.get("/", (req, res) => {
+  console.log("help");
   user
-    .findById(req.params.id)
-    .then((exercise) => res.json(exercise))
-    .catch((err) => res.status(400).json("Error " + err));
+    .findOne({ _id: req.session.user._id }, "-_id tasklists")
+    .lean()
+    .exec((err, doc) => {
+      if (err) return res.status(400).json("Error " + error);
+      res.json(doc);
+    });
 });
 
 // this grabs the user doc and tasklist
@@ -56,7 +62,7 @@ router.post("/update/:id", (req, res) => {
   user
     .updateOne(
       {
-        _id: req.sessionID.user.id,
+        _id: req.session.user.id,
         "tasklists._id": req.params.id,
       },
       {
@@ -92,7 +98,7 @@ router.delete("/:id", (req, res) => {
   user
     .updateOne(
       {
-        _id: req.sessionID.user.id,
+        _id: req.session.user._id,
       },
       {
         $pull: { "tasklists._id": req.params.id },
@@ -100,16 +106,6 @@ router.delete("/:id", (req, res) => {
     )
     .then(() => res.json("Tasklist deleted!"))
     .catch((err) => res.status(400).json("Error " + err));
-});
-
-
-router.get("/", (_req, res) => {
-  // need to be able to find based on user information
-  // so need to be passed matching user information, then
-  // retrieves info based on matchability
-  // tasklist.find()
-  //   .then((tasklists) => res.json(tasklists))
-  //   .catch((err) => res.status(400).json("Error: " + err));
 });
 
 module.exports = router;
