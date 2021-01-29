@@ -1,138 +1,18 @@
-const express = require("express");
+const connect = require("./connect");
+const { createHttpTerminator } = require("http-terminator");
 const mongoose = require("mongoose");
-const helmet = require("helmet");
-const cors = require("cors");
-const path = require("path");
-const session = require("express-session");
-const MongoDBStore = require("connect-mongodb-session")(session);
+const app = require("./app");
 
-const log = require("./utils/logcolors");
-
-const tasklistRouter = require("./routes/tasklists");
-const usersRouter = require("./routes/users");
-const loginRouter = require("./routes/login");
-const registerRouter = require("./routes/register");
-const logoutRouter = require("./routes/logout");
-
-require("dotenv").config();
-
-const app = express();
-const port = process.env.PORT || 5000;
-let uri = "";
-if (process.env.NODE_ENV === "development") {
-  console.log("in development mode...");
-  uri = process.env.ATLAS_URI_DEV;
-} else if (process.env.NODE_ENV === "production") {
-  console.log("in production mode...");
-  uri = process.env.ATLAS_URI;
-} else {
-  console.log("testing mode");
-  uri = process.env.ATLAS_URI_TEST;
-}
-const cookieSecret = process.env.SESSION_SECRET;
-if (!process.env.SESSION_KEY || process.env.SESSION_KEY === "") {
-  log.red("the session key was not set in the .env file");
-}
-
-const sessionStoreOptions = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+const startServer = async () => {
+  const port = process.env.PORT || 5000;
+  const appStore = await connect(app);
+  const server = appStore.app.listen(port);
+  const shutdownManager = createHttpTerminator({server});
+  process.on('SIGTERM', async () => {
+    await mongoose.connection.close();
+    await appStore.store.client.close();
+    shutdownManager.terminate();
+  });
 };
 
-const mongooseConnectionOptions = {
-  useNewUrlParser: true,
-  useCreateIndex: true,
-  useUnifiedTopology: true,
-};
-
-app.use(cors());
-app.use(helmet());
-app.use(express.json());
-
-let store = new MongoDBStore(
-  {
-    uri: uri,
-    collection: "sessions",
-    connectionOptions: sessionStoreOptions,
-  },
-  (err) => {
-    if (err) log.red("store connection error: " + err);
-  }
-);
-
-store.on("error", (err) => log.red("store error: " + err));
-
-app.use(
-  session({
-    key: process.env.SESSION_KEY,
-    secret: cookieSecret,
-    resave: false,
-    saveUninitialized: false,
-    // one week in ms
-    cookie: { maxAge: 604800000 },
-    store: store,
-  })
-);
-
-app.use((req, res, next) => {
-  // no user but have cookie id for some reason?
-  if (req.session)
-    if (req.session.cookie && (!req.session.user || !req.session.user._id))
-      res.clearCookie(process.env.SESSION_KEY);
-  next();
-});
-
-// redirect to login when session not set
-// and not trying to access the home page "/"
-const nonHomeRedirect = (req, res, next) => {
-  if (req.session.user && req.session.user._id) {
-    next();
-  } else {
-    res.redirect("/login");
-  }
-};
-
-const loginRedirect = (req, res, next) => {
-  if (!req.session.user || !req.session.user._id) res.redirect("/");
-  else next();
-};
-
-mongoose.connect(uri, mongooseConnectionOptions);
-
-const connection = mongoose.connection;
-connection.once("open", () => {
-  log.cyan("mongo db database connection established successfully");
-});
-
-app.use("/api/tasklist", nonHomeRedirect, tasklistRouter);
-app.use("/api/users", nonHomeRedirect, usersRouter);
-app.use("/api/register", registerRouter);
-app.use("/api/login", loginRouter);
-// gotta be logged in to bother logging out
-app.use("/api/logout", loginRedirect, logoutRouter);
-
-app.use(express.static(path.join(__dirname, "../frontend/build")));
-
-// react routes only for logged in users
-app.get(
-  ["/tasklist/create", "/tasklist/edit/:id", "/logout"],
-  nonHomeRedirect,
-  (_req, res) => {
-    res.sendFile(path.resolve(__dirname, "../frontend/build", "index.html"));
-  }
-);
-
-// react routes always available
-// will eventually include static pages like about us and contact me
-app.get("/", (_req, res) => {
-  res.sendFile(path.resolve(__dirname, "../frontend/build", "index.html"));
-});
-
-// react routes only for people who aren't logged in
-app.get(["/login", "/join"], loginRedirect, (_req, res) => {
-  res.sendFile(path.resolve(__dirname, "../frontend/build", "index.html"));
-});
-
-app.listen(port, () => {
-  log.cyan("server is running on port " + port);
-});
+startServer();
