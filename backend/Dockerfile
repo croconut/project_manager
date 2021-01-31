@@ -50,20 +50,20 @@ WORKDIR /usr/src
 RUN chown node:node /usr/src && \
     apk add --no-cache dumb-init
 
+USER node
+
 # builder supplies package.json and node_modules/
 COPY --from=builder --chown=node:node /usr/src/node_modules/ node_modules/
 COPY --from=builder --chown=node:node /usr/src/package.json .
 
 # when packages dont change, only app and build information will get
 # updated
-COPY app/ app/
-COPY build/ build/
-COPY server.js .
+COPY --chown=node:node app/ app/
+COPY --chown=node:node build/ build/
+COPY --chown=node:node server.js .
 
 # PORT likely will be overwritten by supplied env file / secret
 ENV PORT 5000
 ENV NODE_ENV production
-
-USER node
 
 CMD ["dumb-init", "node", "server"]
