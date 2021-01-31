@@ -22,9 +22,9 @@ COPY package-lock.json .
 RUN (jq '{ dependencies, devDependencies }') < package.json > deps.json
 RUN (jq '.version = "1.0.0"' | jq '.packages."".version = "1.0.0"') < package-lock.json > deps-lock.json
 
-#################
+###########################
 # Node module cache image #
-#################
+###########################
 
 FROM node:${NODE_VERSION} AS builder
 
@@ -33,11 +33,7 @@ WORKDIR /usr/src
 COPY --from=deps deps.json ./package.json
 COPY --from=deps deps-lock.json ./package-lock.json
 
-RUN npm clean-install
-
-COPY package.json .
-
-ENV NODE_ENV production
+RUN --mount=type=secret,id=npmrc,target=/usr/src/.npmrc npm ci --only=production
 
 ####################
 # Production image #
@@ -52,12 +48,13 @@ RUN chown node:node /usr/src && \
 
 USER node
 
-# builder supplies package.json and node_modules/
+# builder supplies node_modules/
 COPY --from=builder --chown=node:node /usr/src/node_modules/ node_modules/
-COPY --from=builder --chown=node:node /usr/src/package.json .
+# grabbing package.json from actual directory instead of builder
+COPY --chown=node:node package.json .
 
-# when packages dont change, only app and build information will get
-# updated
+# when packages dont change, only app and build files will get
+# updated, and only these copying steps will change
 COPY --chown=node:node app/ app/
 COPY --chown=node:node build/ build/
 COPY --chown=node:node server.js .
