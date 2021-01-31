@@ -1,6 +1,7 @@
 # build with docker build . -t project-manager 
 # then run with docker run -p 5000:5000 --env-file=./.env project-manager
 # modifed from: https://gist.github.com/abstractvector/ed3f892ec0114e28b3d6dcdc4c39b1f2
+
 ARG ALPINE_VERSION=3.11
 ARG NODE_VERSION=14.15.4
 

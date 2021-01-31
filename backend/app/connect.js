@@ -91,28 +91,25 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
     res.sendFile(path.resolve(__dirname, "../build", "index.html"));
   });
   
-  try {
-    await mongoose.connect(uri, mongooseConnectionOptions);
-  }
-  catch(e) {
-    log.red(e);
-  }
+  await mongoose.connect(uri, mongooseConnectionOptions);
   
-  const monConn = mongoose.connection;
-  const opts = {
-    storeClient: monConn,
-    keyPrefix: "normal_requests",
-    points: 10, // Number of points
-    duration: 1, // Per second(s)
-    blockDuration: 2,
-  };
 
-  const fastLoginOpts = {
-    points: 5,
-    duration: 30,
-  }
+  // TODO ensure this gets awaited :x
+  // const monConn = mongoose.connection;
+  // const opts = {
+  //   storeClient: monConn,
+  //   keyPrefix: "normal_requests",
+  //   points: 10, // Number of points
+  //   duration: 1, // Per second(s)
+  //   blockDuration: 2,
+  // };
 
-  const rateLimiterMongo = new RateLimiterMongo(opts);
+  // const fastLoginOpts = {
+  //   points: 5,
+  //   duration: 30,
+  // }
+
+  // const rateLimiterMongo = await new RateLimiterMongo(opts);
   // rateLimiterMongo
   //   .consume(remoteAddress, 2) // consume 2 points
   //   .then((rateLimiterRes) => {

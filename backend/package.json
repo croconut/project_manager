@@ -28,6 +28,14 @@
   },
   "jest": {
     "testEnvironment": "node",
+    "globals": {
+      "server": "undefsafe",
+      "store": "undefsafe",
+      "manager": "undefsafe"
+    },
+    "setupFilesAfterEnv": [
+      "<rootDir>/testSetup.js"
+    ],
     "coveragePathIgnorePatterns": [
       "/node_modules/"
     ]
