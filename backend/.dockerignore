@@ -1,0 +1,12 @@
+.dockerignore
+node_modules
+npm-debug.log
+Dockerfile
+.git
+.gitignore
+.vscode
+.env
+.npmrc
+# need to ignore things that rely on dev dependencies
+# since this is for a production build
+__tests__

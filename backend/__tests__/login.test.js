@@ -1,8 +1,8 @@
 const request = require("supertest");
 const mongoose = require("mongoose");
-const app = require("../app");
+const app = require("../app/app");
 const { createHttpTerminator } = require("http-terminator");
-const connect = require("../connect");
+const connect = require("../app/connect");
 
 let server;
 let store;
@@ -17,7 +17,7 @@ beforeAll(async () => {
 
 afterAll(async done => {
   console.log("closing server...");
-  // gotta disconnect from the store, mongoose and 
+  // gotta disconnect from the store, mongoose then terminate the application
   await mongoose.disconnect();
   await store.client.close();
   await manager.terminate();

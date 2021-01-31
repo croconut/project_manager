@@ -4,6 +4,7 @@ module.exports = {
     { name: "Create a Tasklist", link: "/tasklist/create" },
     /* TODO: create a view tasklist page, user profile page, create project page */
     { name: "Sign Up", link: "/join" },
+    { name: "Login", link: "/login" }
   ],
   otherRoutes: [{ name: "Edit Exercise", link: "/tasklist/edit/:id" }],
   apiRoutes: {

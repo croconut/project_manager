@@ -13,25 +13,25 @@ const CreateExercise = (props) => {
 
   const { getUsers, addExercise } = apiRoutes;
 
-  useEffect(() => {
-    axios
-      .get(getUsers)
-      .then((result) => {
-        if (result.status >= 400) {
-          console.error("failed to add");
-          return;
-        }
-        // not using map(element => element.username) because its unacceptably slow
-        const userArr = new Array(result.data.length);
-        for (let i = 0; i < userArr.length; i++) {
-          userArr[i] = result.data[i].username;
-        }
-        updateUsers(userArr);
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }, [getUsers]);
+  // useEffect(() => {
+  //   axios
+  //     .get(getUsers)
+  //     .then((result) => {
+  //       if (result.status >= 400) {
+  //         console.error("failed to add");
+  //         return;
+  //       }
+  //       // not using map(element => element.username) because its unacceptably slow
+  //       const userArr = new Array(result.data.length);
+  //       for (let i = 0; i < userArr.length; i++) {
+  //         userArr[i] = result.data[i].username;
+  //       }
+  //       updateUsers(userArr);
+  //     })
+  //     .catch((err) => {
+  //       console.error(err);
+  //     });
+  // }, [getUsers]);
 
   // console.log("create exercise rerender");
   const updateUsername = (e) => {
@@ -70,16 +70,16 @@ const CreateExercise = (props) => {
 
     console.log(exercise);
 
-    axios
-      .post(addExercise, exercise)
-      .then((result) => {
-        if (result.status >= 400) {
-          console.error("failed to add");
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    // axios
+    //   .post(addExercise, exercise)
+    //   .then((result) => {
+    //     if (result.status >= 400) {
+    //       console.error("failed to add");
+    //     }
+    //   })
+    //   .catch((err) => {
+    //     console.log(err);
+    //   });
 
     // return to homepage on submission
     // window.location = "/";

@@ -3,9 +3,11 @@ const express = require("express");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const path = require("path");
+
+const { RateLimiterMongo } = require("rate-limiter-flexible");
+
 require("dotenv").config();
 
-// const app = require("./app");
 const tasklistRouter = require("./routes/tasklists");
 const usersRouter = require("./routes/users");
 const loginRouter = require("./routes/login");
@@ -67,29 +69,59 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
   // gotta be logged in to bother logging out
   app.use("/api/logout", loginRedirect, logoutRouter);
 
-  app.use(express.static(path.join(__dirname, "../frontend/build")));
+  app.use(express.static(path.join(__dirname, "../build")));
 
   // react routes only for logged in users
   app.get(
     ["/tasklist/create", "/tasklist/edit/:id", "/logout"],
     nonHomeRedirect,
     (_req, res) => {
-      res.sendFile(path.resolve(__dirname, "../frontend/build", "index.html"));
+      res.sendFile(path.resolve(__dirname, "../build", "index.html"));
     }
   );
 
   // react routes always available
   // will eventually include static pages like about us and contact me
   app.get("/", (_req, res) => {
-    res.sendFile(path.resolve(__dirname, "../frontend/build", "index.html"));
+    res.sendFile(path.resolve(__dirname, "../build", "index.html"));
   });
 
   // react routes only for people who aren't logged in
   app.get(["/login", "/join"], loginRedirect, (_req, res) => {
-    res.sendFile(path.resolve(__dirname, "../frontend/build", "index.html"));
+    res.sendFile(path.resolve(__dirname, "../build", "index.html"));
   });
+  
+  try {
+    await mongoose.connect(uri, mongooseConnectionOptions);
+  }
+  catch(e) {
+    log.red(e);
+  }
+  
+  const monConn = mongoose.connection;
+  const opts = {
+    storeClient: monConn,
+    keyPrefix: "normal_requests",
+    points: 10, // Number of points
+    duration: 1, // Per second(s)
+    blockDuration: 2,
+  };
 
-  await mongoose.connect(uri, mongooseConnectionOptions);
+  const fastLoginOpts = {
+    points: 5,
+    duration: 30,
+  }
+
+  const rateLimiterMongo = new RateLimiterMongo(opts);
+  // rateLimiterMongo
+  //   .consume(remoteAddress, 2) // consume 2 points
+  //   .then((rateLimiterRes) => {
+  //     // 2 points consumed
+  //   })
+  //   .catch((rateLimiterRes) => {
+  //     // Not enough points to consume
+
+  //   });
   return { app, store };
 };
 
@@ -106,15 +138,18 @@ const Connect = async (app) => {
     console.log("development mode...");
     uri = process.env.ATLAS_URI_DEV;
   }
+
   const sessionStoreOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   };
+
   const mongooseConnectionOptions = {
     useNewUrlParser: true,
     useCreateIndex: true,
     useUnifiedTopology: true,
   };
+
   let store = new MongoDBStore(
     {
       uri: uri,
