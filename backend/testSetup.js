@@ -13,7 +13,12 @@ beforeAll(async () => {
     gracefulTerminationTimeout: 1000,
     server,
   });
-
+  const collections = await mongoose.connection.db.collections();
+  let promiseArray = new Array(collections.length);
+  for (let i = 0; i < collections.length; i++) {
+    promiseArray[i] = collections[i].deleteMany();
+  }
+  await Promise.all(promiseArray);
 });
 
 afterAll(async (done) => {

@@ -90,7 +90,7 @@ function ContinueRegistration(req, res, newUser) {
             else {
               console.log(doc);
               req.session.user = doc;
-              return res.json("user added!");
+              return res.status(201).json("user added!");
             }
           }
         );

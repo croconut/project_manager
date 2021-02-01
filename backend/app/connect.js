@@ -4,7 +4,7 @@ const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const path = require("path");
 
-const { RateLimiterMongo } = require("rate-limiter-flexible");
+// const { RateLimiterMongo } = require("rate-limiter-flexible");
 
 require("dotenv").config();
 
@@ -90,9 +90,8 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
   app.get(["/login", "/join"], loginRedirect, (_req, res) => {
     res.sendFile(path.resolve(__dirname, "../build", "index.html"));
   });
-  
+
   await mongoose.connect(uri, mongooseConnectionOptions);
-  
 
   // TODO ensure this gets awaited :x
   // const monConn = mongoose.connection;

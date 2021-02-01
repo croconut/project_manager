@@ -20,11 +20,11 @@ router.post("/", (req, res) => {
   const { username, email, password } = req.body;
   let filter;
   if (
-    !req.body.hasOwnProperty("password") ||
-    (!req.body.hasOwnProperty("email") && !req.body.hasOwnProperty("username"))
+    !password ||
+    (!email && !username)
   )
     return missingParameters(res);
-  if (req.body.hasOwnProperty("email")) filter = { email: email };
+  if (email) filter = { email: email };
   else filter = { username: username };
   //attempt login by username
   //on success
@@ -36,6 +36,7 @@ router.post("/", (req, res) => {
     // dont send this doc
     // DONT SEND THIS DOC
     if (err) return passwordFailed(res);
+    if (!doc) return passwordFailed(res);
     doc.comparePassword(password, (err, match) => {
       if (err || !match) {
         return passwordFailed(res);
