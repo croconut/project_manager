@@ -5,8 +5,8 @@ const passwordFailed = (res) => {
   return res.status(403).json({ failed: "Login failed" });
 };
 
-const missingParameters = (res) => {
-  return res.status(403).json({
+const missingCredentials = (res) => {
+  return res.status(401).json({
     failed:
       "Login failed, missing required field " +
       "(password and either username or email).",
@@ -23,7 +23,7 @@ router.post("/", (req, res) => {
     !password ||
     (!email && !username)
   )
-    return missingParameters(res);
+    return missingCredentials(res);
   if (email) filter = { email: email };
   else filter = { username: username };
   //attempt login by username

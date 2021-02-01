@@ -2,7 +2,7 @@ const router = require("express").Router();
 const User = require("../models/user.model");
 
 const missingParameters = (res) => {
-  return res.status(403).json({
+  return res.status(400).json({
     failed:
       "Registration failed, missing required field " +
       "(password and either username or email).",
@@ -65,10 +65,10 @@ function ExistenceCheck(err, docs, req, res, username, email, newUser) {
         .status(200)
         .json({ accepted: "username and/or email not found" });
   if (docs.length > 1)
-    return res.status(403).json({ email: "match", username: "match" });
+    return res.status(409).json({ email: "match", username: "match" });
   if (docs[0].username === username) failureObj.username = "match";
   if (docs[0].email === email) failureObj.email = "match";
-  return res.status(403).json(failureObj);
+  return res.status(409).json(failureObj);
 }
 
 function ContinueRegistration(req, res, newUser) {
@@ -90,15 +90,19 @@ function ContinueRegistration(req, res, newUser) {
             else {
               console.log(doc);
               req.session.user = doc;
-              return res.status(201).json("user added!");
+              return res.status(201).json("User added!");
             }
           }
         );
       },
       (error) =>
         res
-          .status(403)
-          .json({ msg: "User rejected!", request: req.body, error: error })
+          .status(400)
+          .json({
+            msg: "User rejected, possible validation error!",
+            request: req.body,
+            error: error,
+          })
     )
     .catch((err) => res.status(400).json("Error " + err));
 }
