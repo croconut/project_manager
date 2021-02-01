@@ -121,10 +121,10 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
   return { app, store };
 };
 
-const Connect = async (app) => {
+const Connect = async (app, isTest = false) => {
   let uri = "";
   // default assumed to be development
-  if (process.env.NODE_ENV === "test") {
+  if (process.env.NODE_ENV === "test" || isTest) {
     console.log("testing mode...");
     uri = process.env.ATLAS_URI_TEST;
   } else if (process.env.NODE_ENV === "production") {

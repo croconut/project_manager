@@ -6,7 +6,9 @@ const connect = require("./app/connect");
 // creates globals ==> store, server, manager (store is specifically for sessions)
 
 beforeAll(async () => {
-  let app2 = await connect(app);
+  // second argument is to guarantee run the app in test mode
+  // even if the env isn't set right
+  let app2 = await connect(app, true);
   global.store = app2.store;
   global.server = await app2.app.listen(process.env.PORT_TEST);
   global.manager = createHttpTerminator({
