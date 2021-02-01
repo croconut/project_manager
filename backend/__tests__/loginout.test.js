@@ -90,10 +90,15 @@ describe("login and out", () => {
     expect(cookie).toBeDefined();
     // has cookie array with the unset previous cookie, then the set current cookie :>
     expect(cookie.length).toEqual(2);
+    const response2 = await request(server).get("/api/users/myinfo").set('Cookie', cookie[1]);
+    // can view our information but not the password
+    expect(response2.body.username).toEqual(user1.username);
+    expect(response2.body.email).toEqual(user1.email);
+    expect(response2.body.password).toBeUndefined();
     done();
   });
 
-  it("cannot register a well formed request with username or email db match", async (done) => {
+  it("cannot register a well formed request with username and/or email db match", async (done) => {
     let res = await request(server).post("/api/register").send(user1);
     expect(res.statusCode).toEqual(403);
     res = await request(server).post("/api/register").send(user1AltEmail);
