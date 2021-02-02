@@ -1,14 +1,15 @@
 const request = require("supertest");
+const api = require("../app/staticData/APIRoutes");
 
 // consumes global server variable
 
 describe("login and out", () => {
-  const loginRoute = "/api/login";
+  const loginRoute = api.loginRouter.route;
   // this route always causes a redirect
-  const logoutRoute = "/api/logout";
-  const registerRoute = "/api/register";
+  const logoutRoute = api.logoutRouter.route;
+  const registerRoute = api.registerRouter.route;
   // this route gets redirected when not logged in
-  const loginCheckRoute = "/api/users/myinfo";
+  const loginCheckRoute = api.usersPrivateInfo.route;
   const user1 = {
     email: "blah@mail",
     username: "some-username",

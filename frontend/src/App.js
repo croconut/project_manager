@@ -22,6 +22,7 @@ function App() {
           <Route path={navbarRoutes[0].link} component={CreateExercise} />
           <Route path={navbarRoutes[1].link} component={CreateUser} />
           <Route path={navbarRoutes[2].link} component={Login} />
+          {/* just redirect to home when the thing fails */}
         </Switch>
       </div>
     </Router>

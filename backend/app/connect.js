@@ -13,6 +13,7 @@ const usersRouter = require("./routes/users");
 const loginRouter = require("./routes/login");
 const registerRouter = require("./routes/register");
 const logoutRouter = require("./routes/logout");
+const apiRoutes = require("./staticData/APIRoutes");
 const log = require("./utils/logcolors");
 
 const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
@@ -35,6 +36,7 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
     if (req.session.user && req.session.user._id) {
       next();
     } else {
+      // this gets caught by react btw
       res.redirect("/login");
     }
   };
@@ -62,32 +64,34 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
     next();
   });
 
-  app.use("/api/tasklist", nonHomeRedirect, tasklistRouter);
-  app.use("/api/users", nonHomeRedirect, usersRouter);
-  app.use("/api/register", registerRouter);
-  app.use("/api/login", alreadyLoggedIn, loginRouter);
+  app.use(apiRoutes.tasklistRouter.route, nonHomeRedirect, tasklistRouter);
+  app.use(apiRoutes.usersRouter.route, nonHomeRedirect, usersRouter);
+  app.use(apiRoutes.registerRouter.route, registerRouter);
+  app.use(apiRoutes.loginRouter.route, alreadyLoggedIn, loginRouter);
   // gotta be logged in to bother logging out
-  app.use("/api/logout", loginRedirect, logoutRouter);
+  app.use(apiRoutes.logoutRouter.route, loginRedirect, logoutRouter);
 
   app.use(express.static(path.join(__dirname, "../build")));
 
+  // would like to use these BUT refreshes dont work as well
+
   // react routes only for logged in users
-  app.get(
-    ["/tasklist/create", "/tasklist/edit/:id", "/logout"],
-    nonHomeRedirect,
-    (_req, res) => {
-      res.sendFile(path.resolve(__dirname, "../build", "index.html"));
-    }
-  );
+  // app.get(
+  //   ["/tasklist/create", "/tasklist/edit/:id", "/logout"],
+  //   nonHomeRedirect,
+  //   (_req, res) => {
+  //     res.sendFile(path.resolve(__dirname, "../build", "index.html"));
+  //   }
+  // );
+
+  // react routes only for people who aren't logged in
+  // app.get(["/login", "/join"], loginRedirect, (_req, res) => {
+  //   res.sendFile(path.resolve(__dirname, "../build", "index.html"));
+  // });
 
   // react routes always available
   // will eventually include static pages like about us and contact me
-  app.get("/", (_req, res) => {
-    res.sendFile(path.resolve(__dirname, "../build", "index.html"));
-  });
-
-  // react routes only for people who aren't logged in
-  app.get(["/login", "/join"], loginRedirect, (_req, res) => {
+  app.get("/*", (_req, res) => {
     res.sendFile(path.resolve(__dirname, "../build", "index.html"));
   });
 
@@ -123,7 +127,7 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
 
 const Connect = async (app, isTest = false) => {
   let uri = "";
-  // default assumed to be development
+  // not covering production / development in tests
   if (process.env.NODE_ENV === "test" || isTest) {
     console.log("testing mode...");
     uri = process.env.ATLAS_URI_TEST;
@@ -146,6 +150,7 @@ const Connect = async (app, isTest = false) => {
     useUnifiedTopology: true,
   };
 
+  // this store connection is supposedly synchronous
   let store = new MongoDBStore(
     {
       uri: uri,

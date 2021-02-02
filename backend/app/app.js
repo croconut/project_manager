@@ -10,7 +10,7 @@ require("dotenv").config();
 const app = express();
 
 if (!process.env.SESSION_KEY || process.env.SESSION_KEY === "") {
-  log.red("the session key was not set in the .env file");
+  log.red("the session key was not set");
 }
 
 app.use(cors());

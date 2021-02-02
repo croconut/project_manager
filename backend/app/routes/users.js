@@ -21,31 +21,8 @@ router.get("/myinfo", (req, res) => {
   );
 });
 
-router.get("/:username", (req, res) => {
-  User.findOne(
-    { username: req.params.username },
-    userPublic,
-    { lean: true },
-    (err, doc) => {
-      if (err) return res.status(400).json("Error " + err);
-      res.json(doc);
-    }
-  );
-});
-
-router.get("/:id", (req, res) => {
-  User.findOne(
-    { _id: req.params.id },
-    req.session.user._id === req.params.id ? userAll : userPublic,
-    { lean: true },
-    (err, doc) => {
-      if (err) return res.status(400).json("Error " + err);
-      res.json(doc);
-    }
-  );
-});
-
-router.get("/", (req, res) => {
+router.get("/search", (req, res) => {
+  // TODO allow search by username / index using query / params (like the existence check)
   User.find(
     {},
     userPublic,
