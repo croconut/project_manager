@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const tasklist =  require("./tasklist.schema");
+const tasklist = require("./tasklist.schema");
 
 // by default: unique username and email required
 // as users will be searchable by username / email
@@ -29,6 +29,16 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+    },
+    passwordReset: {
+      type: String,
+      required: false,
+      default: "",
+    },
+    passwordResetTime: {
+      type: Date,
+      required: false,
+      default: new Date(1970, 1, 1),
     },
     icon: {
       type: String,
@@ -59,8 +69,13 @@ userSchema.methods.comparePassword = function (plaintext, callback) {
   return callback(null, bcrypt.compareSync(plaintext, this.password));
 };
 
+userSchema.statics.privateFields = () =>
+  "-password -_id -passwordReset -passwordResetTime";
+userSchema.statics.publicFields = () =>
+  userSchema.statics.privateFields() + " -email -tasklists";
+
 // TODO check whether this index should be $.name or just .name :o
-userSchema.index({_id: 1, "tasklists.$.name": 1 });
+userSchema.index({ _id: 1, "tasklists.$.name": 1 });
 
 const User = mongoose.model("User", userSchema);
 

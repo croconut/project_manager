@@ -1,4 +1,6 @@
 const request = require("supertest");
+const mongoose = require("mongoose");
+const User = require("../app/models/user.model");
 const api = require("../app/staticData/APIRoutes");
 
 describe("user model can perform CRUD ops", () => {
@@ -7,6 +9,27 @@ describe("user model can perform CRUD ops", () => {
   // this route gets redirected when not logged in
   const loginCheckRoute = api.usersPrivateInfo.route;
   const updateRoute = api.usersUpdate.route;
+  const searchRoute = api.usersSearch.route;
+  const passwordResetRoute = api.usersPasswordReset.route;
+
+  const neverShownInfo = (user) => {
+    expect(user).not.toHaveProperty("password");
+    expect(user).not.toHaveProperty("passwordReset");
+    expect(user).not.toHaveProperty("passwordResetTime");
+  };
+
+  const passwordResetTokenCreateMock = async (
+    passwordReset,
+    createTime,
+    callback
+  ) => {
+    await User.findOneAndUpdate(
+      { username: user1.username },
+      { passwordReset: passwordReset, passwordResetTime: createTime },
+      { lean: true },
+      callback
+    );
+  };
   // user that changes over course of CRUD ops
   let user1 = {
     email: "blah@mail",
@@ -66,6 +89,33 @@ describe("user model can perform CRUD ops", () => {
     const password = currentUser["password"];
     expect(password).toBeUndefined();
 
+    done();
+  });
+
+  it("cannot view password related info for logged-in user", async (done) => {
+    const response = await request(server)
+      .get(loginCheckRoute)
+      .set("Cookie", cookie)
+      .expect(200);
+    let user = response.body;
+    delete user.updatedAt;
+    neverShownInfo(user);
+    done();
+  });
+
+  it("cannot view email, tasklists or password info of other users", async (done) => {
+    const response = await request(server)
+      .get(searchRoute + "/" + user2.username)
+      .set("Cookie", cookie)
+      .expect(200);
+    let user = response.body;
+    delete user.updatedAt;
+    // can't see anything the actual user wouldn't be able to
+    neverShownInfo(user);
+    // ensuring we actually pulled the user and username out
+    expect(user.username).toEqual(user2.username);
+    expect(user).not.toHaveProperty("email");
+    expect(user).not.toHaveProperty("tasklists");
     done();
   });
 
@@ -178,12 +228,37 @@ describe("user model can perform CRUD ops", () => {
       .send({ user: { password: newPassword } })
       .expect(403);
     // there shouuuuld have been no changes and should return 200, login okay
-    await request(server)
-      .post(loginRoute)
-      .send(user1)
-      .expect(200);
+    await request(server).post(loginRoute).send(user1).expect(200);
     done();
   });
 
-  // it("logs out other sessions when password has been changed");
+  it("logs out other sessions when password has been changed", async (done) => {
+    const newPassword = "apgoisPSGIanepi2in233709a8adagPOGIN";
+    const passwordReset = "justatokenthatimmocking";
+    const createTime = Date.now();
+    // essentially a mock of the password reset system
+    passwordResetTokenCreateMock(
+      passwordReset,
+      createTime,
+      async (err, doc) => {
+        expect(!err).toEqual(true);
+        expect(doc).toBeDefined();
+        await request(server)
+          .post(passwordResetRoute + "/" + user1.username + "/" + passwordReset)
+          .send({ password: newPassword })
+          .expect(204);
+        // should be incapable of logging in with old password
+        const promises = new Array(2);
+        promises[0] = request(server).post(loginRoute).send(user1).expect(403);
+        // should be incapable of viewing information with an old session
+        // and redirects to login
+        promises[1] = request(server)
+          .get(loginCheckRoute)
+          .set("Cookie", cookie)
+          .expect(302);
+        await Promise.all(promises);
+        done();
+      }
+    );
+  });
 });

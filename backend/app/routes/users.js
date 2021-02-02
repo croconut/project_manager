@@ -2,33 +2,42 @@ const router = require("express").Router();
 const User = require("../models/user.model");
 
 // dont really wanna send password information ever lol
-const userAll = "-password -_id";
-const userPublic = "-password -email -tasklists -_id";
+const userPrivate = User.privateFields();
+// public info just has more restrictions
+const userPublic = User.publicFields();
 
 router.get("/myinfo", (req, res) => {
   // using middle ware that ensures logged in
   // if (!req.session.user)
   //   return res.status(403).json("Access forbidden to logged out users");
-  User.findById(req.session.user._id, userAll, { lean: true }, (err, doc) => {
-    if (err || !doc) return res.status(400).json("Error " + err);
-    console.log(doc);
-    res.json(doc);
-  });
+  User.findById(
+    req.session.user._id,
+    userPrivate,
+    { lean: true },
+    (err, doc) => {
+      if (err)
+        return res.status(400).json("Error " + err + " or user not found");
+      if (!doc) return res.status(404).json("Your data was not found");
+      console.log(doc);
+      res.json(doc);
+    }
+  );
 });
 
-router.get("/search", (req, res) => {
+router.get("/search/:username", (req, res) => {
   // TODO allow search by username / index using query / params (like the existence check)
-  User.find(
-    {},
+  const username = req.params.username;
+  User.findOne(
+    { username: username },
     userPublic,
-    {
-      limit: req.body.limit || 10,
-      skip: req.body.skip || 0,
-      lean: true,
-    },
+    { lean: true },
     (err, doc) => {
-      if (err) return res.status(400).json("Error " + err);
-      res.json(doc);
+      if (err)
+        return res
+          .status(404)
+          .json({ failed: "error or username not found", error: err });
+      if (!doc) return res.status(404).json("user " + username + " not found");
+      res.status(200).json(doc);
     }
   );
 });
@@ -37,12 +46,14 @@ router.post("/update", (req, res) => {
   // updates the logged in user
   const userUpdates = req.body.user;
   // removing password, cannot change that
-  if (userUpdates["password"])
-    return res
-      .status(403)
-      .json({
-        forbidden: "changing the password without a token is forbidden",
-      });
+  if (
+    userUpdates["password"] ||
+    userUpdates["passwordReset"] ||
+    userUpdates["passwordResetTime"]
+  )
+    return res.status(403).json({
+      forbidden: "changing the password or is forbidden",
+    });
   if (!userUpdates || typeof userUpdates !== "object")
     return res.status(400).json({ missing: "missing user object in body" });
   User.findByIdAndUpdate(

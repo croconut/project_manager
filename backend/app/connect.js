@@ -13,6 +13,7 @@ const usersRouter = require("./routes/users");
 const loginRouter = require("./routes/login");
 const registerRouter = require("./routes/register");
 const logoutRouter = require("./routes/logout");
+const passwordResetRouter = require("./routes/userPasswordReset");
 const apiRoutes = require("./staticData/APIRoutes");
 const log = require("./utils/logcolors");
 
@@ -68,6 +69,7 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
   app.use(apiRoutes.usersRouter.route, nonHomeRedirect, usersRouter);
   app.use(apiRoutes.registerRouter.route, registerRouter);
   app.use(apiRoutes.loginRouter.route, alreadyLoggedIn, loginRouter);
+  app.use(apiRoutes.usersPasswordReset.route, passwordResetRouter);
   // gotta be logged in to bother logging out
   app.use(apiRoutes.logoutRouter.route, loginRedirect, logoutRouter);
 

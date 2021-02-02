@@ -6,7 +6,11 @@ module.exports = {
   // no methods for the base yet
   usersRouter: { route: "/api/users", methods: [] },
   usersUpdate: { route: "/api/users/update", methods: ["POST"] },
+  // can only delete yourself while logged in
+  usersDelete: { route: "/api/users/delete", methods: ["DELETE"] },
   usersSearch: { route: "/api/users/search", methods: ["GET"] },
+  // want email to send user to frontend, then frontend to use this api
+  usersPasswordReset: { route: "/api/userPasswordReset", methods: ["POST"] },
   // can a user register, given this email and/or username
   registerCapable: { route: "/api/register/existence", methods: ["GET"] },
   usersPrivateInfo: { route: "/api/users/myinfo", methods: ["GET"] },
