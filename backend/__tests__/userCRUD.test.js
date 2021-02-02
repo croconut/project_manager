@@ -244,8 +244,8 @@ describe("user model can perform CRUD ops", () => {
         expect(!err).toEqual(true);
         expect(doc).toBeDefined();
         await request(server)
-          .post(passwordResetRoute + "/" + user1.username + "/" + passwordReset)
-          .send({ password: newPassword })
+          .post(passwordResetRoute)
+          .send({ username: user1.username, token: passwordReset, password: newPassword })
           .expect(204);
         // should be incapable of logging in with old password
         const promises = new Array(2);

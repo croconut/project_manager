@@ -1,14 +1,13 @@
 const router = require("express").Router();
 const User = require("../models/user.model");
 
-router.post("/:username/:token", async (req, res) => {
+router.post("/", async (req, res) => {
   // id and token params
   // body should only have a password field
-  const { username, token } = req.params;
-  const newPassword = req.body.password;
-  if (!username || !token || !newPassword) {
+  const { username, token, password } = req.body;
+  if (!username || !token || !password) {
     return res.status(400).json({
-      missing: "need params: username and token and password in body",
+      missing: "need username, token and password in body",
     });
   }
   User.findOne(
@@ -39,7 +38,7 @@ router.post("/:username/:token", async (req, res) => {
       User.updateOne(
         { username: username },
         {
-          password: newPassword,
+          password: password,
           passwordReset: "",
           passwordResetTime: new Date(1970, 1, 1),
         },
