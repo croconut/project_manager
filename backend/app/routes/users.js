@@ -36,6 +36,13 @@ router.get("/search", (req, res) => {
 router.post("/update", (req, res) => {
   // updates the logged in user
   const userUpdates = req.body.user;
+  // removing password, cannot change that
+  if (userUpdates["password"])
+    return res
+      .status(403)
+      .json({
+        forbidden: "changing the password without a token is forbidden",
+      });
   if (!userUpdates || typeof userUpdates !== "object")
     return res.status(400).json({ missing: "missing user object in body" });
   User.findByIdAndUpdate(
@@ -44,7 +51,9 @@ router.post("/update", (req, res) => {
     { new: true, lean: true, fields: "username" },
     (err, doc) => {
       if (err) return res.status(400).json({ error: "error " + err });
-      return res.status(204).json({ success: "User " + doc.username + " updated" });
+      return res
+        .status(204)
+        .json({ success: "User " + doc.username + " updated" });
     }
   );
 });

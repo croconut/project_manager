@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
       index: true,
       minlength: 3,
     },
-    // obviously the hashed password, so creation constraints
+    // front end hashes it too, so creation constraints
     // will not be here
     password: {
       type: String,
@@ -46,6 +46,8 @@ const userSchema = new mongoose.Schema(
 );
 
 // if password gets updated :x
+// IMPORTANT password updates are allowed on model level
+// ROUTES must control when updates to password are allowed
 // credit: https://codingshiksha.com/javascript/node-js-express-session-based-authentication-system-using-express-session-cookie-parser-in-mongodb/
 userSchema.pre("save", function (nextfn) {
   if (!this.isDirectModified("password")) return nextfn();
@@ -57,7 +59,8 @@ userSchema.methods.comparePassword = function (plaintext, callback) {
   return callback(null, bcrypt.compareSync(plaintext, this.password));
 };
 
-userSchema.index({_id: 1, "tasklists.name": 1 });
+// TODO check whether this index should be $.name or just .name :o
+userSchema.index({_id: 1, "tasklists.$.name": 1 });
 
 const User = mongoose.model("User", userSchema);
 

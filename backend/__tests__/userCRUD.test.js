@@ -3,6 +3,7 @@ const api = require("../app/staticData/APIRoutes");
 
 describe("user model can perform CRUD ops", () => {
   const registerRoute = api.registerRouter.route;
+  const loginRoute = api.loginRouter.route;
   // this route gets redirected when not logged in
   const loginCheckRoute = api.usersPrivateInfo.route;
   const updateRoute = api.usersUpdate.route;
@@ -26,10 +27,7 @@ describe("user model can perform CRUD ops", () => {
 
   // can create user is essentially checked here
   beforeAll(async (done) => {
-    await request(server)
-      .post(registerRoute)
-      .send(user2)
-      .expect(201);
+    await request(server).post(registerRoute).send(user2).expect(201);
     const response = await request(server)
       .post(registerRoute)
       .send(user1)
@@ -110,7 +108,6 @@ describe("user model can perform CRUD ops", () => {
       .set("Cookie", cookie)
       .send({ user: { blargh: "help", username: newName } })
       .expect(204);
-
     const response = await request(server)
       .get(loginCheckRoute)
       .set("Cookie", cookie)
@@ -125,6 +122,68 @@ describe("user model can perform CRUD ops", () => {
     done();
   });
 
-  // it("cannot update with a taken username and / or email");
-  // it("can update with mix of valid / invalid properties");
+  it("cannot update with a taken username and / or email", async (done) => {
+    const promises = new Array(6);
+    // returns forbidden cuz its trying to set password too
+    promises[0] = request(server)
+      .post(updateRoute)
+      .set("Cookie", cookie)
+      .send({ user: user2 })
+      .expect(403);
+    promises[1] = request(server)
+      .post(updateRoute)
+      .set("Cookie", cookie)
+      .send({ user: { username: user2.username, email: user2.email } })
+      .expect(400);
+    promises[2] = request(server)
+      .post(updateRoute)
+      .set("Cookie", cookie)
+      .send({ user: { username: user2.username } })
+      .expect(400);
+    promises[3] = request(server)
+      .post(updateRoute)
+      .set("Cookie", cookie)
+      .send({ user: { email: user2.email } })
+      .expect(400);
+    // mix of valid and invalid posts do nothing when there's a db match
+    // on the unique props email or username
+    promises[4] = request(server)
+      .post(updateRoute)
+      .set("Cookie", cookie)
+      .send({ user: { email: user2.email, icon: "fas fa-air-freshener" } })
+      .expect(400);
+    promises[5] = request(server)
+      .post(updateRoute)
+      .set("Cookie", cookie)
+      .send({
+        user: { username: user2.username, icon: "fas fa-air-freshener" },
+      })
+      .expect(400);
+    await Promise.all(promises);
+    const response = await request(server)
+      .get(loginCheckRoute)
+      .set("Cookie", cookie)
+      .expect(200);
+    let userCheck = response.body;
+    delete userCheck.updatedAt;
+    expect(userCheck).toEqual(currentUser);
+    done();
+  });
+
+  it("cannot update the password without an email-generated token", async (done) => {
+    const newPassword = "apgoisPSGIanepi2in233709a8adagPOGIN";
+    await request(server)
+      .post(updateRoute)
+      .set("Cookie", cookie)
+      .send({ user: { password: newPassword } })
+      .expect(403);
+    // there shouuuuld have been no changes and should return 200, login okay
+    await request(server)
+      .post(loginRoute)
+      .send(user1)
+      .expect(200);
+    done();
+  });
+
+  // it("logs out other sessions when password has been changed");
 });
