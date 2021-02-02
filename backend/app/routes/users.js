@@ -9,16 +9,11 @@ router.get("/myinfo", (req, res) => {
   // using middle ware that ensures logged in
   // if (!req.session.user)
   //   return res.status(403).json("Access forbidden to logged out users");
-  User.findById(
-    req.session.user._id,
-    userAll,
-    { lean: true },
-    (err, doc) => {
-      if (err || !doc) return res.status(400).json("Error " + err);
-      console.log(doc);
-      res.json(doc);
-    }
-  );
+  User.findById(req.session.user._id, userAll, { lean: true }, (err, doc) => {
+    if (err || !doc) return res.status(400).json("Error " + err);
+    console.log(doc);
+    res.json(doc);
+  });
 });
 
 router.get("/search", (req, res) => {
@@ -34,6 +29,22 @@ router.get("/search", (req, res) => {
     (err, doc) => {
       if (err) return res.status(400).json("Error " + err);
       res.json(doc);
+    }
+  );
+});
+
+router.post("/update", (req, res) => {
+  // updates the logged in user
+  const userUpdates = req.body.user;
+  if (!userUpdates || typeof userUpdates !== "object")
+    return res.status(400).json({ missing: "missing user object in body" });
+  User.findByIdAndUpdate(
+    req.session.user._id,
+    userUpdates,
+    { new: true, lean: true, fields: "username" },
+    (err, doc) => {
+      if (err) return res.status(400).json({ error: "error " + err });
+      return res.status(204).json({ success: "User " + doc.username + " updated" });
     }
   );
 });

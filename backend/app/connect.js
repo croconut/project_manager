@@ -148,6 +148,7 @@ const Connect = async (app, isTest = false) => {
     useNewUrlParser: true,
     useCreateIndex: true,
     useUnifiedTopology: true,
+    useFindAndModify: false,
   };
 
   // this store connection is supposedly synchronous

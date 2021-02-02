@@ -3,7 +3,8 @@ const api = require("../app/staticData/APIRoutes");
 
 // consumes global server variable
 
-describe("login and out", () => {
+// does not test user model validation
+describe("registration, login, logout", () => {
   const loginRoute = api.loginRouter.route;
   // this route always causes a redirect
   const logoutRoute = api.logoutRouter.route;
@@ -31,7 +32,6 @@ describe("login and out", () => {
     await request(server)
       .post(loginRoute)
       .send(user1)
-      .set("Accept", "application/json")
       .expect(403);
     done();
   });

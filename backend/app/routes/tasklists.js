@@ -1,6 +1,6 @@
 const router = require("express").Router();
 // there isn't a tasklist model, it is a subdoc of the user
-const user = require("../models/user.model");
+const User = require("../models/user.model");
 
 // adding tasklist with no tasks defined yet
 router.post("/add", (req, res) => {
@@ -25,13 +25,13 @@ router.post("/add", (req, res) => {
   };
 
   // we should check that name and id will be unique
-  user
+  User
     .updateOne(
       {
         _id: req.session.user._id,
         "tasklists.$.name": { $ne: tasklist.name },
       },
-      { $push: { tasklists: tasklist } }
+      { $set: { tasklists: tasklist } }
     )
     .then(
       () => res.json("Tasklist added!"),
@@ -42,13 +42,22 @@ router.post("/add", (req, res) => {
 
 router.get("/", (req, res) => {
   console.log("help");
-  user
+  User
     .findOne({ _id: req.session.user._id }, "-_id tasklists")
     .lean()
     .exec((err, doc) => {
-      if (err) return res.status(400).json("Error " + error);
+      if (err) return res.status(400).json("Error " + err);
       res.json(doc);
     });
+});
+
+router.get("/read/:id", (req, res) => {
+  User.findOne({ _id: req.session.user._id }, "-_id tasklists")
+  .exec((err, doc) => {
+    if (err) return res.status(400).json("Error " + err);
+    console.log(doc);
+    res.status(200).send("found");
+  });
 });
 
 // this grabs the user doc and tasklist
@@ -58,8 +67,13 @@ router.get("/", (req, res) => {
 // tasks have been modified
 // or when tasklist name / description whatever changes
 // can be used to add a new tasklist
+// ex url is site.com/tasklists/update/asdgaps9in293
 router.post("/update/:id", (req, res) => {
-  user
+  const { name, description, tasks } = req.body;
+  if (!name && !description && !tasks) {
+    return res.status(400).json({missing: "Missing parameters for update"});
+  }
+  User
     .updateOne(
       {
         _id: req.session.user.id,
@@ -67,35 +81,27 @@ router.post("/update/:id", (req, res) => {
       },
       {
         $set: {
-          ...(req.body.name !== undefined && {
-            "tasklists.$.name": req.body.name,
+          ...(name && {
+            "tasklists.$.name": name,
           }),
-          ...(req.body.description !== undefined && {
-            "tasklists.$.description": req.body.description,
+          ...(description && {
+            "tasklists.$.description": description,
           }),
-          ...(req.body.tasks !== undefined && {
-            "tasklists.$.tasks": req.body.tasks,
+          ...(tasks && {
+            "tasklists.$.tasks": tasks,
           }),
         },
-      },
-      {
-        upsert: true,
       }
     )
     .then(
-      (_result) => {
-        tasklist
-          .findById(req.params.id)
-          .then((exercise) => res.json(exercise))
-          .catch((err) => res.status(400).json("Error " + err));
-      },
-      () => res.status(403).json("Tasklist update rejected!")
+      // eslint-disable-next-line no-unused-vars
+      () => res.status(200).json({ success: "Tasklist updated" })
     )
     .catch((err) => res.status(400).json("Error " + err));
 });
 
-router.delete("/:id", (req, res) => {
-  user
+router.delete("/delete/:id", (req, res) => {
+  User
     .updateOne(
       {
         _id: req.session.user._id,

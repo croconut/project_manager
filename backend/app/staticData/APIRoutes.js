@@ -5,6 +5,7 @@ module.exports = {
   tasklistRouter: { route: "/api/tasklist", methods: ["POST"] },
   // no methods for the base yet
   usersRouter: { route: "/api/users", methods: [] },
+  usersUpdate: { route: "/api/users/update", methods: ["POST"] },
   usersSearch: { route: "/api/users/search", methods: ["GET"] },
   // can a user register, given this email and/or username
   registerCapable: { route: "/api/register/existence", methods: ["GET"] },
