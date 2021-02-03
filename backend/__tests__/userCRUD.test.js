@@ -1,5 +1,4 @@
 const request = require("supertest");
-const mongoose = require("mongoose");
 const User = require("../app/models/user.model");
 const api = require("../app/staticData/APIRoutes");
 
