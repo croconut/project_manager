@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const emailVal = require("email-validator");
 const tasklist = require("./tasklist.schema");
 
 // by default: unique username and email required
@@ -62,9 +63,39 @@ const PASSWORD_REGEX = new RegExp(
   `^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*()_-]{14,128}$`
 );
 
+userSchema.statics.privateFields = () =>
+  "-password -_id -passwordReset -passwordResetTime";
+userSchema.statics.publicFields = () =>
+  userSchema.statics.privateFields() + " -email -tasklists";
+
+userSchema.statics.passwordAcceptable = (plaintext) =>
+  plaintext.length >= 32 || PASSWORD_REGEX.test(plaintext);
+
+userSchema.statics.validateUser = function(username) {
+  return USER_REGEX.test(username);
+};
+
+userSchema.statics.validateEmail = function(email) {
+  return emailVal.validate(email);
+};
+
+userSchema.methods.comparePassword = function (plaintext, callback) {
+  return callback(null, bcrypt.compareSync(plaintext, this.password));
+};
+
 // this code is resilient to refactoring, don't bother
 userSchema.path("username").validate(function (value) {
-  return USER_REGEX.test(value);
+  return userSchema.statics.validateUser(value);
+});
+
+// this is a somewhat strict email validator, there will be valid
+// emails that this won't like but oh well
+userSchema.path("email").validate(function (value) {
+  return userSchema.statics.validateEmail(value);
+});
+
+userSchema.path("password").validate(function (value) {
+  return userSchema.statics.passwordAcceptable(value);
 });
 
 // if password gets updated :x
@@ -73,23 +104,15 @@ userSchema.path("username").validate(function (value) {
 // credit: https://codingshiksha.com/javascript/node-js-express-session-based-authentication-system-using-express-session-cookie-parser-in-mongodb/
 // i know you want to... dont turn this into an arrow function
 // it's reliant on the usage of this
-userSchema.pre("save", function (nextfn) {
+function HashPassword(nextfn) {
   if (!this.isDirectModified("password")) return nextfn();
   this.password = bcrypt.hashSync(this.password, 10);
   nextfn();
-});
+}
 
-userSchema.methods.comparePassword = function (plaintext, callback) {
-  return callback(null, bcrypt.compareSync(plaintext, this.password));
-};
-
-userSchema.statics.privateFields = () =>
-  "-password -_id -passwordReset -passwordResetTime";
-userSchema.statics.publicFields = () =>
-  userSchema.statics.privateFields() + " -email -tasklists";
-
-userSchema.statics.passwordAcceptable = (plaintext) =>
-  plaintext.length >= 32 || PASSWORD_REGEX.test(plaintext);
+// its tempting to try, but cannot use 'this' on updateOne
+// basically do all password changes through save
+userSchema.pre("save", HashPassword);
 
 // TODO check whether this index should be $.name or just .name :o
 userSchema.index({ _id: 1, "tasklists.$.name": 1 });

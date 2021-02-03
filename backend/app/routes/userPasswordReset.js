@@ -49,6 +49,7 @@ router.post("/", async (req, res) => {
       // need to gather doc id
       // and set the new pasword / reset the password reset fields
       userid = doc._id;
+      // explicitly setting these fields only
       doc.password = password;
       doc.passwordReset = "";
       doc.passwordResetTime = new Date(1970, 1, 1);

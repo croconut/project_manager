@@ -44,6 +44,8 @@ router.get("/search/:username", (req, res) => {
 router.post("/update", (req, res) => {
   // updates the logged in user
   const userUpdates = req.body.user;
+  if (!userUpdates || typeof userUpdates !== "object")
+    return res.status(400).json({ missing: "missing user object in body" });
   // removing password, cannot change that
   if (
     userUpdates["password"] ||
@@ -51,21 +53,26 @@ router.post("/update", (req, res) => {
     userUpdates["passwordResetTime"]
   )
     return res.status(403).json({
-      forbidden: "changing the password or is forbidden",
+      forbidden: "changing the password or related info is forbidden",
     });
-  if (!userUpdates || typeof userUpdates !== "object")
-    return res.status(400).json({ missing: "missing user object in body" });
-  User.findByIdAndUpdate(
-    req.session.user._id,
-    userUpdates,
-    { new: true, lean: true, fields: "username" },
-    (err, doc) => {
-      if (err) return res.status(400).json({ error: "error " + err });
-      return res
-        .status(204)
-        .json({ success: "User " + doc.username + " updated" });
-    }
-  );
+
+  // if they accidentally wanna change user _id, gets stripped
+  if (userUpdates["_id"]) delete userUpdates._id;
+
+  User.findById(req.session.user._id, {}, {}, (err, doc) => {
+    if (err) return res.status(500).json({ error: "error " + err });
+    if (!doc)
+      return res.status(404).json({ missing: "error cannot find user" });
+    doc.set(userUpdates);
+    doc
+      .save()
+      .then(() => res.status(204).json({ success: "User updated" }))
+      .catch((err) =>
+        res
+          .status(400)
+          .json({ failed: "doc likely failed validation", error: err })
+      );
+  });
 });
 
 module.exports = router;

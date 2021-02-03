@@ -22,7 +22,8 @@ describe("user model can perform CRUD ops", () => {
     createTime,
     callback
   ) => {
-    await User.findOneAndUpdate(
+    // this doesn't go through validation methods i think
+    await User.updateOne(
       { username: user1.username },
       { passwordReset: passwordReset, passwordResetTime: createTime },
       { lean: true },
@@ -31,13 +32,13 @@ describe("user model can perform CRUD ops", () => {
   };
   // user that changes over course of CRUD ops
   let user1 = {
-    email: "blah@mail",
+    email: "blah@mail.co",
     username: "some-username",
     password: "noonecaresabout432PASSword",
   };
   // some other user we wont be modifying
   const user2 = {
-    email: "blargh@mailer",
+    email: "blargh@emailer.co.uk",
     username: "another-name",
     password: "noonecaresabout33432PASSword",
   };
@@ -216,6 +217,32 @@ describe("user model can perform CRUD ops", () => {
     let userCheck = response.body;
     delete userCheck.updatedAt;
     expect(userCheck).toEqual(currentUser);
+    done();
+  });
+
+  it("cannot update username or email to invalid values", async (done) => {
+    const promises = new Array();
+    promises.push(
+      request(server)
+        .post(updateRoute)
+        .set("Cookie", cookie)
+        .send({ user: { username: "bad$symbol" } })
+        .expect(400)
+    );
+    promises.push(
+      request(server)
+        .post(updateRoute)
+        .set("Cookie", cookie)
+        .send({ user: { email: "badmail" } })
+        .expect(400)
+    );
+    await Promise.all(promises);
+    const response = await request(server)
+      .get(loginCheckRoute)
+      .set("Cookie", cookie)
+      .expect(200);
+    expect(response.body.username).toEqual(currentUser.username);
+    expect(response.body.email).toEqual(currentUser.email);
     done();
   });
 

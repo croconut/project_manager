@@ -12,20 +12,32 @@ describe("registration, login, logout", () => {
   // this route gets redirected when not logged in
   const loginCheckRoute = api.usersPrivateInfo.route;
   const user1 = {
-    email: "blah@mail",
+    email: "blah@mail.com",
     username: "some-username",
     password: "noonecaresabout432PASSword",
   };
   const badPassword = user1.password + "fake";
   const user1AltEmail = {
-    email: "blahg@mail",
+    email: "blahg@mail.com",
     username: "some-username",
     password: "noonecaresabout432PASSword",
   };
   const user1AltUsername = {
-    email: "blah@mail",
+    email: "blah@mail.com",
     username: "some-user",
     password: "noonecaresabout432PASSword",
+  };
+
+  const user2 = {
+    email: "find@fakemail.com",
+    username: "THIS-_",
+    password: "alsodecenteventhoughitsalllowercaseletterscuzitslongaf",
+    emailBad: "@bad",
+    usernameBad: "illegal+character",
+    passwordBad: "BlecH$232",
+    emailBad2: "bad@something",
+    usernameBad2: "$specialchars__bad",
+    passwordBad2: "LEECHie",
   };
 
   it("can't login to account that doesn't exist", async (done) => {
@@ -271,5 +283,84 @@ describe("registration, login, logout", () => {
     done();
   });
 
-  // it("cannot register with invalid username, email or password")
+  it("cannot register with invalid username, email or password", async (done) => {
+    // its faster but possibly too error prone to use indexes instead of 
+    // pushing for this use case
+    const promises = new Array();
+    promises.push(
+      request(server)
+        .post(registerRoute)
+        .send({
+          username: user2.username,
+          email: user2.emailBad,
+          password: user2.password,
+        })
+        .expect(400)
+    );
+    promises.push(
+      request(server)
+        .post(registerRoute)
+        .send({
+          username: user2.usernameBad,
+          email: user2.email,
+          password: user2.password,
+        })
+        .expect(400)
+    );
+    promises.push(
+      request(server)
+        .post(registerRoute)
+        .send({
+          username: user2.username,
+          email: user2.email,
+          password: user2.passwordBad,
+        })
+        .expect(400)
+    );
+    promises.push(
+      request(server)
+        .post(registerRoute)
+        .send({
+          username: user2.username,
+          email: user2.emailBad2,
+          password: user2.password,
+        })
+        .expect(400)
+    );
+    promises.push(
+      request(server)
+        .post(registerRoute)
+        .send({
+          username: user2.usernamebad2,
+          email: user2.email,
+          password: user2.password,
+        })
+        .expect(400)
+    );
+    promises.push(
+      request(server)
+        .post(registerRoute)
+        .send({
+          username: user2.username,
+          email: user2.email,
+          password: user2.passwordBad2,
+        })
+        .expect(400)
+    );
+    await Promise.all(promises);
+    done();
+  });
+
+  it("can register user2", async done => {
+    const promises = new Array();
+    promises.push(
+      request(server)
+        .post(registerRoute)
+        .send(user2)
+        .expect(201)
+    );
+    await Promise.all(promises);
+    done();
+  });
+
 });
