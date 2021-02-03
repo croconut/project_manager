@@ -241,6 +241,8 @@ describe("user model can perform CRUD ops", () => {
       .get(loginCheckRoute)
       .set("Cookie", cookie)
       .expect(200);
+    // ensuring nothing changed, semi unnecessary with current implementation
+    // but ya never know...
     expect(response.body.username).toEqual(currentUser.username);
     expect(response.body.email).toEqual(currentUser.email);
     done();

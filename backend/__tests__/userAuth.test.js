@@ -36,7 +36,7 @@ describe("registration, login, logout", () => {
     usernameBad: "illegal+character",
     passwordBad: "BlecH$232",
     emailBad2: "bad@something",
-    usernameBad2: "$specialchars__bad",
+    usernameBad2: "s.pecialchars__bad",
     passwordBad2: "LEECHie",
   };
 

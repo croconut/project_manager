@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const emailVal = require("email-validator");
 const tasklist = require("./tasklist.schema");
 
 // by default: unique username and email required
@@ -57,11 +56,13 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-const USER_REGEX = new RegExp("^[A-Za-z][a-zA-Z0-9-_]*$");
+const USER_REGEX = new RegExp("^[A-Za-z][a-zA-Z0-9_-]*$");
 
 const PASSWORD_REGEX = new RegExp(
   `^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*()_-]{14,128}$`
 );
+
+const EMAIL_REGEX = new RegExp(`^.+[@]+(?=.*[.]).+$`);
 
 userSchema.statics.privateFields = () =>
   "-password -_id -passwordReset -passwordResetTime";
@@ -76,7 +77,7 @@ userSchema.statics.validateUser = function(username) {
 };
 
 userSchema.statics.validateEmail = function(email) {
-  return emailVal.validate(email);
+  return EMAIL_REGEX.test(email);
 };
 
 userSchema.methods.comparePassword = function (plaintext, callback) {
