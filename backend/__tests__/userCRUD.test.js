@@ -244,7 +244,11 @@ describe("user model can perform CRUD ops", () => {
         expect(doc).toBeDefined();
         await request(server)
           .post(passwordResetRoute)
-          .send({ username: user1.username, token: passwordReset, password: newPassword })
+          .send({
+            username: user1.username,
+            token: passwordReset,
+            password: newPassword,
+          })
           .expect(204);
         // should be incapable of logging in with old password
         const promises = new Array(2);
@@ -255,6 +259,128 @@ describe("user model can perform CRUD ops", () => {
           .get(loginCheckRoute)
           .set("Cookie", cookie)
           .expect(302);
+        await Promise.all(promises);
+        user1.password = newPassword;
+        const response = await request(server)
+          .post(loginRoute)
+          .send(user1)
+          .expect(200);
+        cookie = response.headers["set-cookie"][1];
+        const response2 = await request(server)
+          .get(loginCheckRoute)
+          .set("Cookie", cookie)
+          .expect(200);
+        // only updated password, this response shouldn't change
+        let user = response2.body;
+        delete user.updatedAt;
+        expect(user).toEqual(currentUser);
+        done();
+      }
+    );
+  });
+
+  it("cant reset password with bad or missing parameters", async (done) => {
+    const newPassword = "apgoisPSGIanepi2in233709a8adagPOGIN";
+    const passwordReset = "someKINDATOKENorsomethingitDONTMATTER";
+    const createTime = Date.now();
+    // essentially a mock of the password reset system
+    passwordResetTokenCreateMock(
+      passwordReset,
+      createTime,
+      async (err, doc) => {
+        expect(!err).toEqual(true);
+        expect(doc).toBeDefined();
+        const promises = new Array(13);
+        promises[0] = request(server)
+          .post(passwordResetRoute)
+          .send({
+            username: user1.username,
+            token: "totallyFAKE",
+            password: newPassword,
+          })
+          .expect(403);
+        promises[1] = request(server)
+          .post(passwordResetRoute)
+          .send({
+            username: "totallyFAKE",
+            token: "totallyFAKE",
+            password: newPassword,
+          })
+          .expect(400);
+        promises[2] = request(server)
+          .post(passwordResetRoute)
+          .send({
+            username: user1.username,
+            password: newPassword,
+          })
+          .expect(400);
+        promises[3] = request(server)
+          .post(passwordResetRoute)
+          .send({
+            token: passwordReset,
+            password: newPassword,
+          })
+          .expect(400);
+        promises[4] = request(server)
+          .post(passwordResetRoute)
+          .send({
+            username: user1.username,
+            token: passwordReset,
+          })
+          .expect(400);
+        promises[5] = request(server)
+          .post(passwordResetRoute)
+          .send({
+            username: user1.username,
+            token: passwordReset,
+          })
+          .expect(400);
+        promises[6] = request(server)
+          .post(passwordResetRoute)
+          .send({
+            username: user1.username,
+            token: passwordReset,
+            password: "notGOODenoughtopassvalidation",
+          })
+          .expect(400);
+        promises[7] = request(server)
+          .post(passwordResetRoute)
+          .send({
+            username: user1.username,
+            token: passwordReset,
+            password: "notGOODen6632",
+          })
+          .expect(400);
+        promises[8] = request(server)
+          .post(passwordResetRoute)
+          .send({
+            username: "totallyFAKE",
+            token: passwordReset,
+            password: newPassword,
+          })
+          .expect(400);
+        promises[9] = request(server)
+          .post(passwordResetRoute)
+          .send({
+            password: newPassword,
+          })
+          .expect(400);
+        promises[10] = request(server)
+          .post(passwordResetRoute)
+          .send({
+            token: passwordReset,
+          })
+          .expect(400);
+        promises[11] = request(server)
+          .post(passwordResetRoute)
+          .send({
+            username: user1.username,
+          })
+          .expect(400);
+        promises[12] = request(server)
+          .post(passwordResetRoute)
+          .send({})
+          .expect(400);
         await Promise.all(promises);
         done();
       }

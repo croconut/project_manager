@@ -270,4 +270,6 @@ describe("registration, login, logout", () => {
       .expect(302);
     done();
   });
+
+  // it("cannot register with invalid username, email or password")
 });
