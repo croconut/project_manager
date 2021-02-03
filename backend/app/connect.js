@@ -157,7 +157,7 @@ const Connect = async (app, isTest = false) => {
   let store = new MongoDBStore(
     {
       uri: uri,
-      collection: "sessions",
+      collection: process.env.SESSION_COLLECTION,
       expires: 604800000,
       connectionOptions: sessionStoreOptions,
     },

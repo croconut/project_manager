@@ -29,6 +29,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+      minlength: 14,
     },
     passwordReset: {
       type: String,
@@ -55,10 +56,23 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+const USER_REGEX = new RegExp("^[A-Za-z][a-zA-Z0-9-_]*$");
+
+const PASSWORD_REGEX = new RegExp(
+  `^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*()_-]{14,128}$`
+);
+
+// this code is resilient to refactoring, don't bother
+userSchema.path("username").validate(function (value) {
+  return USER_REGEX.test(value);
+});
+
 // if password gets updated :x
 // IMPORTANT password updates are allowed on model level
 // ROUTES must control when updates to password are allowed
 // credit: https://codingshiksha.com/javascript/node-js-express-session-based-authentication-system-using-express-session-cookie-parser-in-mongodb/
+// i know you want to... dont turn this into an arrow function
+// it's reliant on the usage of this
 userSchema.pre("save", function (nextfn) {
   if (!this.isDirectModified("password")) return nextfn();
   this.password = bcrypt.hashSync(this.password, 10);
@@ -74,9 +88,13 @@ userSchema.statics.privateFields = () =>
 userSchema.statics.publicFields = () =>
   userSchema.statics.privateFields() + " -email -tasklists";
 
+userSchema.statics.passwordAcceptable = (plaintext) =>
+  plaintext.length >= 32 || PASSWORD_REGEX.test(plaintext);
+
 // TODO check whether this index should be $.name or just .name :o
 userSchema.index({ _id: 1, "tasklists.$.name": 1 });
 
+// all userschema changes must be before this line
 const User = mongoose.model("User", userSchema);
 
 module.exports = User;

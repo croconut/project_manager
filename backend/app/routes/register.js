@@ -38,6 +38,14 @@ router.post("/", (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) return missingParameters(res);
 
+  if (!User.passwordAcceptable(password))
+    return res
+      .status(400)
+      .json({
+        weakPassword:
+          "password must be 32 characters or 14 with capitals, lowercase and numbers",
+      });
+
   const tasklist = { name: "To-Do", tasks: [{ name: "My first task!" }] };
   const newUser = new User({
     username,
@@ -88,7 +96,6 @@ function ContinueRegistration(req, res, newUser) {
           (err, doc) => {
             if (err) return res.status(400).json("Error " + err);
             else {
-              console.log(doc);
               req.session.user = doc;
               return res.status(201).json("User added!");
             }
@@ -96,13 +103,11 @@ function ContinueRegistration(req, res, newUser) {
         );
       },
       (error) =>
-        res
-          .status(400)
-          .json({
-            msg: "User rejected, possible validation error!",
-            request: req.body,
-            error: error,
-          })
+        res.status(400).json({
+          msg: "User rejected, possible validation error!",
+          request: req.body,
+          error: error,
+        })
     )
     .catch((err) => res.status(400).json("Error " + err));
 }

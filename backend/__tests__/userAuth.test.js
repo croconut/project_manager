@@ -29,10 +29,7 @@ describe("registration, login, logout", () => {
   };
 
   it("can't login to account that doesn't exist", async (done) => {
-    await request(server)
-      .post(loginRoute)
-      .send(user1)
-      .expect(403);
+    await request(server).post(loginRoute).send(user1).expect(403);
     done();
   });
 
@@ -93,6 +90,45 @@ describe("registration, login, logout", () => {
         // username: user1.username,
         // email: user1.email,
         // password: user1.password,
+      })
+      .expect(400);
+    await Promise.all(promises);
+    done();
+  });
+
+  it("denies username that fail validation", async (done) => {
+    const unusedEmail = "aogina@something";
+    const promises = new Array(5);
+    promises[0] = request(server)
+      .post(registerRoute)
+      .send({ username: "agoo.33", email: unusedEmail, password: unusedEmail })
+      .expect(400);
+    promises[1] = request(server)
+      .post(registerRoute)
+      .send({ username: "$agoo33", email: unusedEmail, password: unusedEmail })
+      .expect(400);
+    promises[2] = request(server)
+      .post(registerRoute)
+      .send({
+        username: "DROP TABLES",
+        email: unusedEmail,
+        password: unusedEmail,
+      })
+      .expect(400);
+    promises[3] = request(server)
+      .post(registerRoute)
+      .send({
+        username: "soemthign;",
+        email: unusedEmail,
+        password: unusedEmail,
+      })
+      .expect(400);
+    promises[4] = request(server)
+      .post(registerRoute)
+      .send({
+        username: "heywhatup;DROP tables",
+        email: unusedEmail,
+        password: unusedEmail,
       })
       .expect(400);
     await Promise.all(promises);
@@ -223,7 +259,10 @@ describe("registration, login, logout", () => {
       .send(user1)
       .expect(200);
     const cookie = response.headers["set-cookie"];
-    await request(server).post(logoutRoute).set("Cookie", cookie[1]).expect(302);
+    await request(server)
+      .post(logoutRoute)
+      .set("Cookie", cookie[1])
+      .expect(302);
     // using the previously valid login cookie should cause the redirect
     await request(server)
       .get(loginCheckRoute)

@@ -18,7 +18,6 @@ router.get("/myinfo", (req, res) => {
       if (err)
         return res.status(400).json("Error " + err + " or user not found");
       if (!doc) return res.status(404).json("Your data was not found");
-      console.log(doc);
       res.json(doc);
     }
   );

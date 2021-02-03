@@ -6,11 +6,13 @@ import { apiRoutes } from "../staticData/Routes";
 const MIN_CHAR = 14;
 const MAX_CHAR = 128;
 
-// just says i need at least one capital or upper case letter
+// just says i need at least one uppercase, lowercase
 // and one number and optionally special characters
-const PASSWORD_REQ = new RegExp("(^[A-Za-z]+[0-9]+[!@#$%^*()-_]*$)");
+const PASSWORD_REQ = new RegExp(
+  `^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*()_-]{${MIN_CHAR},${MAX_CHAR}}$`
+);
 
-const USERNAME_REQ = new RegExp("^[a-zA-Z]+[a-zA-Z0-9-_]*$");
+const USERNAME_REQ = new RegExp("^[A-Za-z][a-zA-Z0-9-_]*$");
 
 const { addUser, getUsers } = apiRoutes;
 
@@ -34,7 +36,7 @@ const CreateUser = (props) => {
     updatePassword("");
     setPasswordMatches("");
     setEmail("");
-  }
+  };
 
   const checkMatches = (p, p2) => {
     setPasswordMatches(p === p2);
@@ -229,9 +231,9 @@ const CreateUser = (props) => {
 
           {!passwordHasAlphaNumerics && (
             <small id="passwordHelp" className="text-danger">
-              Passwords must have letters and numbers
+              Passwords must have lower and uppercase letters and numbers
               <br />
-              Passwords may also use these characters: !@#$%^*()-_
+              Passwords may also use special characters: !@#$%^*()_-
               <br />
             </small>
           )}
