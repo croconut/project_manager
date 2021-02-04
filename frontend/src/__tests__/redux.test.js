@@ -5,6 +5,10 @@ import * as actions from "../redux/actions";
 import * as selectors from "../redux/selectors";
 
 // essentially the unit tests for the redux library
+// will not be using store.getState() or dispatches directly in
+// any component code BUT this is the easiest way to ensure they work
+// as intended
+// TODO set up component based end-to-end tests
 describe("store actions and selection tests", () => {
   const store = configureStore();
   const tasklistArray = new Array(1000);
@@ -121,5 +125,7 @@ describe("store actions and selection tests", () => {
     }
   });
 
-  // it("cant modify or remove tasklist if id is changed")
+  it.todo("cant modify or remove tasklist if id is changed")
+  it.todo("selectors return correct tasklists")
+  it.todo("task CRUD with tasklist id and task only")
 });

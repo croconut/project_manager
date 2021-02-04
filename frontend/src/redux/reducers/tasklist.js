@@ -52,13 +52,13 @@ export const tasklistHolder = (state = exampleTasklist, action) => {
       };
     case types.ADD_TASK:
       return state.map((item) =>
-        action.payload.tasklist._id === item._id
+        action.payload.tasklistID === item._id
           ? { ...item, tasks: [...item.tasks, action.payload.task] }
           : item
       );
     case types.MODIFY_TASK:
       return state.map((item) =>
-        action.payload.tasklist._id === item._id
+        action.payload.tasklistID === item._id
           ? {
               ...item,
               tasks: item.tasks.map((task) =>
@@ -71,7 +71,7 @@ export const tasklistHolder = (state = exampleTasklist, action) => {
       );
     case types.REMOVE_TASK:
       return state.map((item) =>
-        action.payload.tasklist._id === item._id
+        action.payload.tasklistID === item._id
           ? {
               ...item,
               tasks: item.tasks.filter(

@@ -15,16 +15,16 @@ import {
   loggedInRoutes,
   usersPrivateInfo,
 } from "../staticData/Routes";
-// import './App.css';
 
 const App = ({ tasklists, replaceTasklists }) => {
-  // const updateFromServer = dispatch.updateTasklistsFromServer;
   useEffect(() => {
     const initUser = async () => {
       const response = await axios.get(usersPrivateInfo.route, {
         withCredentials: true,
       });
-      // here imma update the tasklists
+      // here imma update the tasklists assuming it came
+      // TODO check for error code and wait for login signal complete if
+      // error out in some way
       replaceTasklists(response.data.tasklists);
     };
     initUser();
@@ -49,11 +49,15 @@ const App = ({ tasklists, replaceTasklists }) => {
   );
 };
 
+// not sure i'll need to look at the tasklists at any point from this component
+// TODO remove when component complete and deemed unnecessary
 const mapStateToProps = (state) => {
   const tasklists = state.tasklistHolder.tasklists;
   return { tasklists };
 };
 
+// pass an object entirely composed of actions
+// to bind them to dispatch
 const mapActionsToProps = {
   // renaming so i can use it without saying props.
   replaceTasklists: updateTasklistsFromServer,

@@ -28,26 +28,26 @@ export const removeTasklist = (tasklist) => ({
   },
 });
 
-export const addTask = (tasklist, task) => ({
+export const addTask = (tasklistID, task) => ({
   type: types.ADD_TASK,
   payload: {
-    tasklist: tasklist,
+    tasklistID: tasklistID,
     task: task,
   },
 });
 
-export const modifyTask = (tasklist, task) => ({
+export const modifyTask = (tasklistID, task) => ({
   type: types.MODIFY_TASK,
   payload: {
-    tasklist: tasklist,
+    tasklistID: tasklistID,
     task: task,
   },
 });
 
-export const removeTask = (tasklist, task) => ({
+export const removeTask = (tasklistID, task) => ({
   type: types.REMOVE_TASK,
   payload: {
-    tasklist: tasklist,
+    tasklistID: tasklistID,
     task: task,
   },
 });
