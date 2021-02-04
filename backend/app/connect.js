@@ -14,7 +14,7 @@ const loginRouter = require("./routes/login");
 const registerRouter = require("./routes/register");
 const logoutRouter = require("./routes/logout");
 const passwordResetRouter = require("./routes/userPasswordReset");
-const apiRoutes = require("./staticData/APIRoutes");
+const Routes = require("./staticData/Routes");
 const log = require("./utils/logcolors");
 
 const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
@@ -65,13 +65,13 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
     next();
   });
 
-  app.use(apiRoutes.tasklistRouter.route, nonHomeRedirect, tasklistRouter);
-  app.use(apiRoutes.usersRouter.route, nonHomeRedirect, usersRouter);
-  app.use(apiRoutes.registerRouter.route, registerRouter);
-  app.use(apiRoutes.loginRouter.route, alreadyLoggedIn, loginRouter);
-  app.use(apiRoutes.usersPasswordReset.route, passwordResetRouter);
+  app.use(Routes.tasklistRouter.route, nonHomeRedirect, tasklistRouter);
+  app.use(Routes.usersRouter.route, nonHomeRedirect, usersRouter);
+  app.use(Routes.registerRouter.route, registerRouter);
+  app.use(Routes.loginRouter.route, alreadyLoggedIn, loginRouter);
+  app.use(Routes.usersPasswordReset.route, passwordResetRouter);
   // gotta be logged in to bother logging out
-  app.use(apiRoutes.logoutRouter.route, loginRedirect, logoutRouter);
+  app.use(Routes.logoutRouter.route, loginRedirect, logoutRouter);
 
   app.use(express.static(path.join(__dirname, "../build")));
 

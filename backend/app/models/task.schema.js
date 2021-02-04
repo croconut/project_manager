@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
-
-const TaskStage = ["To-Do", "Ongoing", "Complete", "Cancelled"];
+const { TaskStage } = require("../staticData/ModelConstants");
 
 const taskSchema = new mongoose.Schema({
   name: {
