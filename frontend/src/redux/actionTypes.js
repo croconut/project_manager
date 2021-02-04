@@ -4,11 +4,14 @@ export const MODIFY_TASK = "MODIFY_TASK";
 export const ADD_TASKLIST = "ADD_TASKLIST";
 export const REMOVE_TASKLIST = "REMOVE_TASKLIST";
 export const MODIFY_TASKLIST = "MODIFY_TASKLIST";
-// take current user and update some info
-// init full user must have been run
-// everything will consume this
+export const REPLACE_ALL_TASKLISTS = "REPLACE_ALL_TASKLISTS";
 export const UPDATE_USER = "UPDATE_USER";
-// init from server, MUST BE DONE FIRST ALWAYS
-// from main route page NOT from the homepage
-// everything will consume this
-export const INIT_FULL_USER = "INIT_FULL_USER";
+
+export const addTask = () => ({ type: ADD_TASK });
+export const removeTask = () => ({ type: REMOVE_TASK });
+export const modifyTask = () => ({ type: MODIFY_TASK });
+export const addTasklist = () => ({ type: ADD_TASKLIST });
+export const removeTasklist = () => ({ type: REMOVE_TASKLIST });
+export const modifyTasklist = () => ({ type: MODIFY_TASKLIST });
+export const replaceAllTasklists = () => ({ type: REPLACE_ALL_TASKLISTS });
+export const updateUser = () => ({ type: UPDATE_USER });

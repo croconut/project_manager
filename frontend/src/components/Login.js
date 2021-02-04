@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { apiRoutes } from "../staticData/Routes";
 
 const Login = (props) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [users, setUsers] = useState(["test_user", "test_user_2"]);
-
-  const { addUser, getUsers } = apiRoutes;
 
   const updateUsers = (e) => {
     setUsers(e);

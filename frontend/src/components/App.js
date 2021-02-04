@@ -1,27 +1,31 @@
 import React, { useEffect } from "react";
 import axios from "axios";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import Homepage from "./components/Homepage";
-import EditExercise from "./components/EditExercise";
-import CreateExercise from "./components/CreateExercise";
-import CreateUser from "./components/CreateUser";
-import Login from "./components/Login";
+import { connect } from "react-redux";
+import { updateTasklistsFromServer } from "../redux/actions";
+import Navbar from "./Navbar";
+import Homepage from "./Homepage";
+import EditExercise from "./EditExercise";
+import CreateExercise from "./CreateExercise";
+import CreateUser from "./CreateUser";
+import Login from "./Login";
 import {
   mainRoute,
   navbarRoutes,
   loggedInRoutes,
   usersPrivateInfo,
-} from "./staticData/Routes";
+} from "../staticData/Routes";
 // import './App.css';
 
-function App() {
+const App = (props) => {
+  console.log(props);
   useEffect(() => {
     const initUser = async () => {
       const response = await axios.get(usersPrivateInfo.route, {
         withCredentials: true,
       });
-      console.log(response.data);
+      // here imma update the tasklists 
+      props.updateTasklistsFromServer(response.data.tasklists);
     };
     initUser();
   }, []);
@@ -33,9 +37,9 @@ function App() {
         <Switch>
           <Route exact path={mainRoute.route} component={Homepage} />
           <Route path={loggedInRoutes[0].route} component={EditExercise} />
-          <Route path={navbarRoutes[0].route} component={CreateExercise} />
-          <Route path={navbarRoutes[1].route} component={CreateUser} />
-          <Route path={navbarRoutes[2].route} component={Login} />
+          <Route path={loggedInRoutes[1].route} component={CreateExercise} />
+          <Route path={navbarRoutes[0].route} component={CreateUser} />
+          <Route path={navbarRoutes[1].route} component={Login} />
 
           <Route path={"/*"} component={Homepage} />
           {/* just redirect to home when the thing fails */}
@@ -45,4 +49,9 @@ function App() {
   );
 }
 
-export default App;
+const mapStateToProps = state => {
+  const tasklist = state.tasklistReducer;
+  return { tasklist };
+};
+
+export default connect(mapStateToProps, { updateTasklistsFromServer } )(App);
