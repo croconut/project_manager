@@ -17,18 +17,18 @@ import {
 } from "../staticData/Routes";
 // import './App.css';
 
-const App = (props) => {
-  console.log(props);
+const App = ({ tasklists, replaceTasklists }) => {
+  // const updateFromServer = dispatch.updateTasklistsFromServer;
   useEffect(() => {
     const initUser = async () => {
       const response = await axios.get(usersPrivateInfo.route, {
         withCredentials: true,
       });
-      // here imma update the tasklists 
-      props.updateTasklistsFromServer(response.data.tasklists);
+      // here imma update the tasklists
+      replaceTasklists(response.data.tasklists);
     };
     initUser();
-  }, []);
+  }, [replaceTasklists]);
   return (
     <Router>
       <Navbar mainRoute={mainRoute} secondaryRoutes={navbarRoutes} />
@@ -47,11 +47,16 @@ const App = (props) => {
       </div>
     </Router>
   );
-}
+};
 
-const mapStateToProps = state => {
+const mapStateToProps = (state) => {
   const tasklists = state.tasklistHolder.tasklists;
   return { tasklists };
 };
 
-export default connect(mapStateToProps, { updateTasklistsFromServer } )(App);
+const mapActionsToProps = {
+  // renaming so i can use it without saying props.
+  replaceTasklists: updateTasklistsFromServer,
+};
+
+export default connect(mapStateToProps, mapActionsToProps)(App);
