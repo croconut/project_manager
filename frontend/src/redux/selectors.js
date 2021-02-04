@@ -1,4 +1,6 @@
-export const getTasklists = (store) => store.tasklists;
+export const getTasklists = (store) => store.tasklistHolder.tasklists;
+
+export const getTasklistIDs = (store) => store.tasklistHolder.ids;
 
 export const getTasklistByName = (store, name) => {
   var tasklists = getTasklists(store);
@@ -14,6 +16,10 @@ export const getTasklistByIndex = (store, index) => {
   if (!tasklists) return null;
   if (tasklists.length <= index) return null;
   return tasklists[index];
+};
+
+export const getTasklistById = (store, id) => {
+
 };
 
 export const getUserInfo = (store) => {

@@ -50,8 +50,8 @@ const App = (props) => {
 }
 
 const mapStateToProps = state => {
-  const tasklist = state.tasklistReducer;
-  return { tasklist };
+  const tasklists = state.tasklistHolder.tasklists;
+  return { tasklists };
 };
 
 export default connect(mapStateToProps, { updateTasklistsFromServer } )(App);
