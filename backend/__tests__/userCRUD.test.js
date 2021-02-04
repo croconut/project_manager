@@ -1,6 +1,6 @@
 const request = require("supertest");
 const User = require("../app/models/user.model");
-const api = require("../app/staticData/APIRoutes");
+const api = require("../app/staticData/Routes");
 
 describe("user model can perform CRUD ops", () => {
   const registerRoute = api.registerRouter.route;

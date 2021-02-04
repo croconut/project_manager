@@ -1,4 +1,14 @@
 module.exports = {
+  mainRoute: { name: "ProjectManager", route: "/" },
+  navbarRoutes: [
+    /* TODO: create a view tasklist page, user profile page, create project page */
+    { name: "Sign Up", route: "/join" },
+    { name: "Login", route: "/login" },
+  ],
+  loggedInRoutes: [
+    { name: "Logout", route: "/logout" },
+    { name: "Create a Tasklist", route: "/tasklist/create" },
+  ],
   loginRouter: { route: "/api/login", methods: ["POST"] },
   logoutRouter: { route: "/api/logout", methods: ["POST"] },
   registerRouter: { route: "/api/register", methods: ["POST"] },

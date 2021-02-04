@@ -1,5 +1,5 @@
 const request = require("supertest");
-const api = require("../app/staticData/APIRoutes");
+const api = require("../app/staticData/Routes");
 
 // consumes global server variable
 
