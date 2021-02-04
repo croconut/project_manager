@@ -1,16 +1,27 @@
 module.exports = {
-  mainRoute: { name: "ProjectManager", link: "/" },
+  mainRoute: { name: "ProjectManager", route: "/" },
   navbarRoutes: [
-    { name: "Create a Tasklist", link: "/tasklist/create" },
     /* TODO: create a view tasklist page, user profile page, create project page */
-    { name: "Sign Up", link: "/join" },
-    { name: "Login", link: "/login" }
+    { name: "Sign Up", route: "/join" },
+    { name: "Login", route: "/login" },
   ],
-  otherRoutes: [{ name: "Edit Exercise", link: "/tasklist/edit/:id" }],
-  apiRoutes: {
-    getUsers: "/api/users/:username",
-    addUser: "/api/users/add",
-    getExercises: "/api/tasklist",
-    addExercise: "/api/tasklist/add",
-  },
+  loggedInRoutes: [
+    { name: "Logout", route: "/logout" },
+    { name: "Create a Tasklist", route: "/tasklist/create" },
+  ],
+  loginRouter: { route: "/api/login", methods: ["POST"] },
+  logoutRouter: { route: "/api/logout", methods: ["POST"] },
+  registerRouter: { route: "/api/register", methods: ["POST"] },
+  tasklistRouter: { route: "/api/tasklist", methods: ["POST"] },
+  // no methods for the base yet
+  usersRouter: { route: "/api/users", methods: [] },
+  usersUpdate: { route: "/api/users/update", methods: ["POST"] },
+  // can only delete yourself while logged in
+  usersDelete: { route: "/api/users/delete", methods: ["DELETE"] },
+  usersSearch: { route: "/api/users/search", methods: ["GET"] },
+  // want email to send user to frontend, then frontend to use this api
+  usersPasswordReset: { route: "/api/userPasswordReset", methods: ["POST"] },
+  // can a user register, given this email and/or username
+  registerCapable: { route: "/api/register/existence", methods: ["GET"] },
+  usersPrivateInfo: { route: "/api/users/myinfo", methods: ["GET"] },
 };

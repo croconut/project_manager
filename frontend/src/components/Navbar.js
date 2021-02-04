@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-// main route has .name and .link
+// main route has .name and .route
 // secondary routes is array of objects with same parameters
-// .name and .link
+// .name and .route
 const Navbar = ({ mainRoute, secondaryRoutes }) => {
   const [collapse, setCollapse] = useState(true);
 
@@ -19,9 +19,9 @@ const Navbar = ({ mainRoute, secondaryRoutes }) => {
       arrItems[i] = (
         // the link is extremely likely to be unique in any use case for this
         // TODO implement actual unique key with uuid from the database
-        <li className="navbar-item" key={secondaryRoutes[i].link}>
+        <li className="navbar-item" key={secondaryRoutes[i].route}>
           <Link
-            to={secondaryRoutes[i].link}
+            to={secondaryRoutes[i].route}
             className="nav-link"
             onClick={toggleCollapse}
           >
@@ -37,7 +37,7 @@ const Navbar = ({ mainRoute, secondaryRoutes }) => {
 
   return (
     <nav className="navbar navbar-dark bg-dark navbar-expand-lg">
-      <Link to={mainRoute.link} className="navbar-brand">
+      <Link to={mainRoute.route} className="navbar-brand">
         {mainRoute.name}
       </Link>
       <button type="button" className="navbar-toggler" onClick={toggleCollapse}>

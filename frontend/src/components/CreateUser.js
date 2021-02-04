@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useHistory } from "react-router-dom";
 import axios from "axios";
 import crypto from "crypto";
-import { apiRoutes } from "../staticData/Routes";
+import { registerRouter } from "../staticData/Routes";
 
 const MIN_CHAR = 14;
 const MAX_CHAR = 128;
+const MIN_NO_RESTRICTIONS = 32;
 
 // just says i need at least one uppercase, lowercase
 // and one number and optionally special characters
@@ -12,9 +14,9 @@ const PASSWORD_REQ = new RegExp(
   `^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*()_-]{${MIN_CHAR},${MAX_CHAR}}$`
 );
 
-const USERNAME_REQ = new RegExp("^[A-Za-z][a-zA-Z0-9-_]*$");
+const USER_REGEX = new RegExp("^[A-Za-z][a-zA-Z0-9_-]*$");
 
-const { addUser, getUsers } = apiRoutes;
+const EMAIL_REGEX = new RegExp(`^.+[@]+(?=.*[.]).+$`);
 
 // general summary of logic: just add user when they
 
@@ -29,8 +31,7 @@ const CreateUser = (props) => {
   );
   const [passwordOkay, setPasswordOkay] = useState("");
   const [email, setEmail] = useState("");
-  const [users, setUsers] = useState(["test_user", "test_user_2"]);
-
+  const history = useHistory();
   const resetState = () => {
     setUsername("");
     updatePassword("");
@@ -47,16 +48,14 @@ const CreateUser = (props) => {
     setPasswordMinChar(
       MAX_CHAR >= password.length && password.length >= MIN_CHAR
     );
-    setPasswordHasAlphaNumerics(PASSWORD_REQ.test(password));
+    setPasswordHasAlphaNumerics(
+      password.length >= MIN_NO_RESTRICTIONS || PASSWORD_REQ.test(password)
+    );
   };
 
   const updatePasswordDuplicate = (e) => {
     setPasswordDuplicate(e);
     checkMatches(password, e);
-  };
-
-  const updateUsers = (e) => {
-    setUsers(e);
   };
 
   const updatePassword = (e) => {
@@ -69,29 +68,6 @@ const CreateUser = (props) => {
   };
 
   useEffect(() => {
-    axios
-      .get(getUsers)
-      .then((result) => {
-        if (result.status >= 400) {
-          console.error("failed to get users");
-          return;
-        }
-        // not using map(element => element.username) because its unacceptably slow
-        const userArr = new Array(result.data.length);
-        for (let i = 0; i < userArr.length; i++) {
-          userArr[i] = result.data[i].username;
-        }
-        if (userArr.length > 1 && userArr[0]) {
-          updateUsers(userArr);
-          console.log(userArr);
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }, []);
-
-  useEffect(() => {
     if (passwordMatches && passwordMinChar && passwordHasAlphaNumerics) {
       setPasswordOkay("text-success");
     } else {
@@ -100,7 +76,7 @@ const CreateUser = (props) => {
   }, [passwordMatches, passwordMinChar, passwordHasAlphaNumerics]);
 
   const updateUsername = (e) => {
-    if (e === "" || USERNAME_REQ.test(e)) setUsername(e);
+    if (e === "" || USER_REGEX.test(e)) setUsername(e);
   };
 
   const onSubmit = (submission) => {
@@ -117,17 +93,21 @@ const CreateUser = (props) => {
     };
     console.log(user);
     //TODO check that not hitting database with duplicate to our knowledge
-    // axios
-    //   .post(addUser, user)
-    //   .then((result) => {
-    //     if (result.status >= 400) {
-    //       //TODO display we hit database with duplicate
-    //       console.error("failed to add");
-    //     }
-    //   })
-    //   .catch((err) => {
-    //     console.error(err);
-    //   });
+    axios
+      .post(registerRouter.route, user)
+      .then((result) => {
+        console.log(result.status);
+        if (result.status !== 201) {
+          //TODO display we hit database with duplicate
+          console.error("failed to add");
+        }
+        else {
+          history.push("/");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      });
 
     //only reset information when form successfully submitted
     //display specific error else
@@ -231,7 +211,8 @@ const CreateUser = (props) => {
 
           {!passwordHasAlphaNumerics && (
             <small id="passwordHelp" className="text-danger">
-              Passwords must have lower and uppercase letters and numbers
+              Passwords must have lower and uppercase letters and numbers OR be{" "}
+              {MIN_NO_RESTRICTIONS}+ characters long
               <br />
               Passwords may also use special characters: !@#$%^*()_-
               <br />

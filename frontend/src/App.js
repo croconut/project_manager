@@ -1,27 +1,43 @@
-import React from "react";
+import React, { useEffect } from "react";
+import axios from "axios";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import ExercisesList from "./components/ExercisesList";
+import Homepage from "./components/Homepage";
 import EditExercise from "./components/EditExercise";
 import CreateExercise from "./components/CreateExercise";
 import CreateUser from "./components/CreateUser";
 import Login from "./components/Login";
-import { mainRoute, navbarRoutes, otherRoutes } from "./staticData/Routes";
+import {
+  mainRoute,
+  navbarRoutes,
+  loggedInRoutes,
+  usersPrivateInfo,
+} from "./staticData/Routes";
 // import './App.css';
 
 function App() {
-  console.log("re-render triggered");
+  useEffect(() => {
+    const initUser = async () => {
+      const response = await axios.get(usersPrivateInfo.route, {
+        withCredentials: true,
+      });
+      console.log(response.data);
+    };
+    initUser();
+  }, []);
   return (
     <Router>
       <Navbar mainRoute={mainRoute} secondaryRoutes={navbarRoutes} />
       <br />
       <div className="container">
         <Switch>
-          <Route exact path={mainRoute.link} component={ExercisesList} />
-          <Route path={otherRoutes[0].link} component={EditExercise} />
-          <Route path={navbarRoutes[0].link} component={CreateExercise} />
-          <Route path={navbarRoutes[1].link} component={CreateUser} />
-          <Route path={navbarRoutes[2].link} component={Login} />
+          <Route exact path={mainRoute.route} component={Homepage} />
+          <Route path={loggedInRoutes[0].route} component={EditExercise} />
+          <Route path={navbarRoutes[0].route} component={CreateExercise} />
+          <Route path={navbarRoutes[1].route} component={CreateUser} />
+          <Route path={navbarRoutes[2].route} component={Login} />
+
+          <Route path={"/*"} component={Homepage} />
           {/* just redirect to home when the thing fails */}
         </Switch>
       </div>
