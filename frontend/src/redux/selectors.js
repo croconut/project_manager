@@ -29,11 +29,11 @@ export const getTasklists = (state) => {
 
 export const getTasklistIDs = (state) => ({ ...state.tasklistHolder.ids });
 
-export const getTasklistByName = (state, name) => {
+export const getTasklistByName = (state, props) => {
   var tasklists = _getTasklists(state);
   if (!tasklists) return null;
   for (let i = 0; i < tasklists.length; i++) {
-    if (tasklists[i].name === name) {
+    if (tasklists[i].name === props.name) {
       let tasks = tasklists[i].tasks;
       let taskCopy = new Array(tasks.length);
       for (let j = 0; j < tasks.length; j++) {
@@ -46,30 +46,31 @@ export const getTasklistByName = (state, name) => {
   return null;
 };
 
-export const getTasklistByIndex = (state, index) => {
+export const getTasklistByIndex = (state, props) => {
   var tasklists = _getTasklists(state);
   if (!tasklists) return null;
-  if (tasklists.length <= index) return null;
-  let tasks = tasklists[index].tasks;
+  if (tasklists.length <= props.index) return null;
+  let tasks = tasklists[props.index].tasks;
   let taskCopy = new Array(tasks.length);
   for (let j = 0; j < tasks.length; j++) {
     // tasks are flat objects, shallow is best
     taskCopy[j] = { ...tasks[j] };
   }
   // other than tasks, tasklist is shallow object
-  return { ...tasklists[index], ...{ tasks: taskCopy } };
+  return { ...tasklists[props.index], ...{ tasks: taskCopy } };
 };
 
-export const getTasklistById = (state, id) => {
+// note: it's .id not ._id here
+export const getTasklistById = (state, props) => {
   var tasklists = _getTasklists(state);
   var ids = _getTasklistIDS(state);
-  let tasks = tasklists[ids[id]].tasks;
+  let tasks = tasklists[ids[props.id]].tasks;
   let taskCopy = new Array(tasks.length);
   for (let j = 0; j < tasks.length; j++) {
     // tasks are flat objects, shallow is best
     taskCopy[j] = { ...tasks[j] };
   }
-  return { ...tasklists[ids[id]], ...{ tasks: taskCopy } };
+  return { ...tasklists[ids[props.id]], ...{ tasks: taskCopy } };
 };
 
 export const getUserInfo = (state) => ({ ...state.userInfo });
