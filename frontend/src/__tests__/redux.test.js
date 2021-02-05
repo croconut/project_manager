@@ -1,9 +1,9 @@
 import configureStore from "../redux/configureStore";
 import faker from "faker";
+import immutable from "immutable";
 import { v4 as idgen } from "uuid";
 import * as actions from "../redux/actions";
 import * as selectors from "../redux/selectors";
-import { addTasklist } from "../redux/actionTypes";
 
 // essentially the unit tests for the redux library
 // will not be using store.getState() or dispatches directly in
@@ -102,22 +102,23 @@ describe("store actions and selection tests", () => {
 
   it("tasklists can be initialized", () => {
     var list = initTLists(store, serverInit);
-    expect(list).toEqual(serverInit);
+    expect(list).toEqual(immutable.fromJS(serverInit));
   });
 
   it("tasklists can be reinitialized", () => {
     var list = initTLists(store, serverInit2);
-    expect(list).toEqual(serverInit2);
+    expect(list).toEqual(immutable.fromJS(serverInit2));
     list = initTLists(store, tasklistArray);
-    expect(list).toEqual(tasklistArray);
+    expect(list).toEqual(immutable.fromJS(tasklistArray));
   });
 
   it("tasklists can be added to", () => {
     var list = addTList(store, serverInit[0]);
     // this store should be identical
     const newStore = [...currentTasklists, serverInit[0]];
-    expect(list).toEqual(newStore);
-    expect(getTLids(store)[serverInit[0]._id]).toEqual(list.length - 1);
+    expect(list).toEqual(immutable.fromJS(newStore));
+    const ids = getTLids(store);
+    expect(ids.get(serverInit[0]._id)).toEqual(list.size - 1);
   });
 
   it("tasklists can be modified", () => {
@@ -131,7 +132,7 @@ describe("store actions and selection tests", () => {
     ];
     let list = modTList(store, tasklistToModify);
     let ids = getTLids(store);
-    expect(list[ids[tasklistToModify._id]]).toEqual(tasklistToModify);
+    expect(list.get(ids.get(tasklistToModify._id))).toEqual(immutable.fromJS(tasklistToModify));
   });
 
   it("tasklists can be removed", () => {

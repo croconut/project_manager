@@ -27,6 +27,7 @@ const App = ({ tasklists, replaceTasklists }) => {
       // TODO check for error code and wait for login signal complete if
       // error out in some way
       replaceTasklists(response.data.tasklists);
+      console.log(tasklists);
     };
     initUser();
   }, [replaceTasklists]);

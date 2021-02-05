@@ -1,14 +1,29 @@
 import * as types from "../actionTypes";
+import immutable from "immutable";
 
 // ids gives the array index for the associated tasklist
-const exampleTasklist = { tasklists: [{}], ids: {} };
+// this should have all the copy information required
+const exampleTasklist = immutable.fromJS({
+  tasklists: [{ tasks: [{}] }],
+  ids: {},
+});
+console.log(exampleTasklist);
 
 // action payload has at least 2 required keys: .tasklist and .tasklist._id
 // if doing single task actions it also requires .task and .task._id
 // OR just one ==> tasklists
 // tasklists and tasks are required to have unique id @ ._id
 
+// expects the payload to be a normal js object
+// object becomes immutable
 export const tasklistHolder = (state = exampleTasklist, action) => {
+  if (action.payload) {
+    if (action.payload.tasklist) {
+      action.payload.tasklist = immutable.fromJS(action.payload.tasklist);
+    } else if (action.payload.task) {
+      action.payload.task = immutable.fromJS(action.payload.task);
+    }
+  }
   switch (action.type) {
     case types.REPLACE_ALL_TASKLISTS:
       let ids = {};
@@ -16,25 +31,33 @@ export const tasklistHolder = (state = exampleTasklist, action) => {
       for (let i = 0; i < list.length; i++) {
         ids[list[i]._id] = i;
       }
-      return { tasklists: action.payload.tasklists, ids: ids };
+      return immutable.fromJS({
+        tasklists: action.payload.tasklists,
+        ids: ids,
+      });
     case types.ADD_TASKLIST:
-      let prevL = state.tasklists.length;
-      return {
-        tasklists: [...state.tasklists, action.payload.tasklist],
-        ids: { ...state.ids, [action.payload.tasklist._id]: prevL },
-      };
+      return state.withMutations(function (state) {
+        state
+          .setIn(
+            ["ids", action.payload.tasklist.get("_id")],
+            state.get("tasklists").size
+          )
+          .update("tasklists", (arr) => arr.push(action.payload.tasklist));
+      });
     case types.MODIFY_TASKLIST:
-      // map is just crazy slow buuuut i want a copy of the array anyways
-      // for 'immutability' purposes :d
-      // important to not that this cannot change the _id of the tasklist
-      return {
-        tasklists: state.tasklists.map((item) =>
-          item._id === action.payload.tasklist._id
-            ? action.payload.tasklist
-            : item
-        ),
-        ids: state.ids,
-      };
+      return state.withMutations(function (state) {
+        state.mergeIn(
+          [
+            "tasklists",
+            state
+              .get("tasklists")
+              .findIndex(
+                (item) => item.get("_id") === action.payload.tasklist.get("_id")
+              ),
+          ],
+          action.payload.tasklist
+        );
+      });
     case types.REMOVE_TASKLIST:
       // let { [action.payload.tasklist._id]: omit, ...ids2} = state.ids;
       // cannot simply destructure as filter does in place removal:

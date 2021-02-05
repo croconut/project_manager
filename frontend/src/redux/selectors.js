@@ -4,30 +4,13 @@
 // and each is spread)
 
 // internal functions, do not export selectors that aren't giving deep copies
-const _getTasklists = (state) => state.tasklistHolder.tasklists;
-const _getTasklistIDS = (state) => state.tasklistHolder.ids;
+const _getTasklists = (state) => state.tasklistHolder.get("tasklists");
+const _getTasklistIDS = (state) => state.tasklistHolder.get("ids");
 
 // everything is getting manual deep copying or spreading for shallow copying
-export const getTasklists = (state) => {
-  // IMPORTANT: must guarantee that this function won't modify original state
-  // dont wanna copy here since there will be no data modification
-  
-  let lists = _getTasklists(state);
-  let copy = new Array(lists.length);
-  for (let i = 0; i < lists.length; i++) {
-    // this would normally be an extracted function
-    let tasks = lists[i].tasks;
-    let taskCopy = new Array(tasks.length);
-    for (let j = 0; j < tasks.length; j++) {
-      // tasks are flat objects, shallow is best
-      taskCopy[j] = { ...tasks[j] };
-    }
-    copy[i] = { ...lists[i], ...{ tasks: taskCopy } };
-  }
-  return copy;
-};
+export const getTasklists = (state) => state.tasklistHolder.get("tasklists");
 
-export const getTasklistIDs = (state) => ({ ...state.tasklistHolder.ids });
+export const getTasklistIDs = (state) => state.tasklistHolder.get("ids");
 
 export const getTasklistByName = (state, props) => {
   var tasklists = _getTasklists(state);
