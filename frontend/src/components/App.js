@@ -3,6 +3,7 @@ import axios from "axios";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import { connect } from "react-redux";
 import { updateTasklistsFromServer } from "../redux/actions";
+import { getTasklists } from "../redux/selectors";
 import Navbar from "./Navbar";
 import Homepage from "./Homepage";
 import EditExercise from "./EditExercise";
@@ -52,7 +53,10 @@ const App = ({ tasklists, replaceTasklists }) => {
 // not sure i'll need to look at the tasklists at any point from this component
 // TODO remove when component complete and deemed unnecessary
 const mapStateToProps = (state) => {
-  const tasklists = state.tasklistHolder.tasklists;
+  // BAD
+  // const tasklists = state.tasklistHolder.tasklists;
+  // GOOD cuz using a selector
+  const tasklists = getTasklists(state);
   return { tasklists };
 };
 
