@@ -1,9 +1,10 @@
-import { StateFromReducersMapObject } from "redux";
 import { TasklistsHolder } from "../staticData/types";
 import { RootState } from "./reducers";
 
 const FreezeState = (state: RootState) => {
   FreezeTasklists(state.tasklistHolder);
+
+  Object.freeze(state);
 };
 
 export const FreezeTasklists = (holder: TasklistsHolder) => {
