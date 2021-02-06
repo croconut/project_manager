@@ -17,7 +17,6 @@
     "axios": "^0.21.1",
     "bootstrap": "^4.5.3",
     "cross-env": "^7.0.3",
-    "immutable": "^4.0.0-rc.12",
     "jquery": "^3.5.1",
     "lodash": "^4.17.20",
     "popper.js": "1.16.1",
@@ -57,6 +56,7 @@
   },
   "proxy": "http://localhost:5000",
   "devDependencies": {
+    "@types/lodash": "^4.14.168",
     "faker": "^5.3.1"
   }
 }

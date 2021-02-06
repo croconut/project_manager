@@ -6,4 +6,7 @@ import { tasklistHolder } from "./tasklist";
 // import color from "./color";
 // import email from "./email";
 
-export default combineReducers({ tasklistHolder });
+const rootReducer = combineReducers({ tasklistHolder });
+
+export default rootReducer;
+export type RootState = ReturnType<typeof rootReducer>

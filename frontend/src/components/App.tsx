@@ -61,7 +61,7 @@ const App: FC<Props> = ({ tasklists, replaceTasklists }): JSX.Element => {
 
 // not sure i'll need to look at the tasklists at any point from this component
 // TODO remove when component complete and deemed unnecessary
-const mapStateToProps = (state: DefaultRootState) => {
+const mapStateToProps = (state: RootState) => {
   // BAD
   // const tasklists = state.tasklistHolder.tasklists;
   // GOOD cuz using a selector

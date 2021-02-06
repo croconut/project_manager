@@ -1,29 +1,70 @@
-import * as types from "../actionTypes";
-import immutable from "immutable";
+import * as types from "../../staticData/types";
+import { AnyAction } from "redux";
 
 // ids gives the array index for the associated tasklist
 // this should have all the copy information required
-const exampleTasklist = immutable.fromJS({
+const exampleTasklist: types.TasklistsHolder = fromJS({
   tasklists: [{ tasks: [{}] }],
   ids: {},
 });
 console.log(exampleTasklist);
+
+const tasklistsHelper: Function = (
+  state: types.TasklistsHolder,
+  action: types.TasklistsAction
+): types.TasklistsHolder => {
+  switch (action.type) {
+    case types.REPLACE_ALL_TASKLISTS:
+      const lists: types.Tasklists = action.payload.tasklists;
+      const ids: types.IDs = Map<string, number>().withMutations(function (
+        ids
+      ) {
+        for (let i = 0; i < lists.size; i++) {
+          ids.set(lists.getIn([i, "_ids"]), i);
+        }
+      });
+      return Map({
+        tasklists: lists,
+        ids: ids,
+      });
+  }
+  return state;
+};
+
+const tasklistHelper: Function = (
+  state: types.TasklistsHolder,
+  action: types.TasklistAction
+): types.TasklistsHolder => {
+  switch (action.type) {
+    case types.ADD_TASKLIST:
+      const size = state.get("tasklists")?.size;
+      return state.withMutations(function (state) {
+        state
+          .setIn(
+            ["ids", action.payload.tasklist.get("_id")],
+            size
+          )
+          // .update("tasklists", (arr) => arr.push(action.payload.tasklist));
+      });
+  }
+  return state;
+};
 
 // action payload has at least 2 required keys: .tasklist and .tasklist._id
 // if doing single task actions it also requires .task and .task._id
 // OR just one ==> tasklists
 // tasklists and tasks are required to have unique id @ ._id
 
-// expects the payload to be a normal js object
-// object becomes immutable
-export const tasklistHolder = (state = exampleTasklist, action) => {
-  if (action.payload) {
-    if (action.payload.tasklist) {
-      action.payload.tasklist = immutable.fromJS(action.payload.tasklist);
-    } else if (action.payload.task) {
-      action.payload.task = immutable.fromJS(action.payload.task);
-    }
-  }
+// changing this from anyaction to specifically the actions it's set up to work with
+// based on types
+export const tasklistHolder = (
+  state = exampleTasklist,
+  action: AnyAction
+): types.TasklistsHolder => {
+  if (types.isTasklistsAction(action)) return tasklistsHelper(state, action);
+  else if (types.isTasklistAction(action)) return tasklistHelper(state, action);
+  else if (types.isTaskAction(action)) return taskHelper(state, action);
+  return state;
   switch (action.type) {
     case types.REPLACE_ALL_TASKLISTS:
       let ids = {};
