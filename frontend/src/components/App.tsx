@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import React, { FC, useEffect } from "react";
 import axios from "axios";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
-import { connect } from "react-redux";
+import { connect, DefaultRootState } from "react-redux";
 import { updateTasklistsFromServer } from "../redux/actions";
 import { getTasklists } from "../redux/selectors";
 import Navbar from "./Navbar";
@@ -10,6 +10,8 @@ import EditExercise from "./EditExercise";
 import CreateExercise from "./CreateExercise";
 import CreateUser from "./CreateUser";
 import Login from "./Login";
+import { List, Map } from "immutable";
+
 import {
   mainRoute,
   navbarRoutes,
@@ -17,7 +19,14 @@ import {
   usersPrivateInfo,
 } from "../staticData/Routes";
 
-const App = ({ tasklists, replaceTasklists }) => {
+
+type Props = {
+  replaceTasklists: Function;
+  tasklists: List<Map<string, string>>;
+};
+
+const App: FC<Props> = ({ tasklists, replaceTasklists }): JSX.Element => {
+  console.log(tasklists.getIn([0, "_id"]));
   useEffect(() => {
     const initUser = async () => {
       const response = await axios.get(usersPrivateInfo.route, {
@@ -27,7 +36,6 @@ const App = ({ tasklists, replaceTasklists }) => {
       // TODO check for error code and wait for login signal complete if
       // error out in some way
       replaceTasklists(response.data.tasklists);
-      console.log(tasklists);
     };
     initUser();
   }, [replaceTasklists]);
@@ -53,7 +61,7 @@ const App = ({ tasklists, replaceTasklists }) => {
 
 // not sure i'll need to look at the tasklists at any point from this component
 // TODO remove when component complete and deemed unnecessary
-const mapStateToProps = (state) => {
+const mapStateToProps = (state: DefaultRootState) => {
   // BAD
   // const tasklists = state.tasklistHolder.tasklists;
   // GOOD cuz using a selector
