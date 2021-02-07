@@ -1,9 +1,10 @@
-import configureStore from "../redux/configureStore";
+import configureStore, { RootStore } from "../redux/configureStore";
 import faker from "faker";
-import immutable from "immutable";
 import { v4 as idgen } from "uuid";
 import * as actions from "../redux/actions";
 import * as selectors from "../redux/selectors";
+import { ITask, ITasklist, TTasklists, TTasks } from "src/staticData/types";
+import { TaskStage } from "src/staticData/ModelConstants";
 
 // essentially the unit tests for the redux library
 // will not be using store.getState() or dispatches directly in
@@ -11,90 +12,78 @@ import * as selectors from "../redux/selectors";
 // as intended
 // TODO set up component based end-to-end tests
 describe("store actions and selection tests", () => {
-  const store = configureStore();
-  const tasklistArray = new Array(1000);
-  for (let i = 0; i < tasklistArray.length; i++) {
-    const tasks = new Array(Math.ceil(Math.random() * 35));
+  const store: RootStore = configureStore();
+  const tasklistArray: TTasklists = new Array(1000);
+
+  const createTasklist = (): ITasklist => {
+    const tasks: TTasks = new Array(Math.ceil(Math.random() * 5));
     for (let j = 0; j < tasks.length; j++) {
       tasks[j] = {
         _id: idgen(),
         name: faker.name.jobTitle(),
         description: faker.name.jobDescriptor(),
+        assignedUserIcon: "fa folder",
+        assignedUsername: faker.name.title(),
+        stage: TaskStage[Math.floor(Math.random() * 12) % TaskStage.length],
       };
     }
-    tasklistArray[i] = {
+    return {
       _id: idgen(),
       name: faker.internet.userName(),
       description: faker.address.city(),
+      createdAt: new Date(Date.now()),
+      updatedAt: new Date(Date.now()),
       tasks: tasks,
     };
-  }
-  const serverInit = [
-    {
-      _id: idgen(),
-      name: faker.internet.userName(),
-      description: faker.address.city(),
-      tasks: [
-        {
-          _id: idgen(),
-          name: faker.name.jobTitle(),
-          description: faker.name.jobDescriptor(),
-        },
-      ],
-    },
-  ];
+  };
 
-  const serverInit2 = [
-    {
-      _id: idgen(),
-      name: faker.internet.userName(),
-      description: faker.address.city(),
-      tasks: [
-        {
-          _id: idgen(),
-          name: faker.name.jobTitle(),
-          description: faker.name.jobDescriptor(),
-        },
-      ],
-    },
-  ];
+  for (let i = 0; i < tasklistArray.length; i++) {
+    tasklistArray[i] = createTasklist();
+  }
+  const serverInit: TTasklists = [createTasklist()];
+
+  const serverInit2: TTasklists = [createTasklist()];
 
   // helper functions (just make it easier to write the tests tbh)
 
-  const getRandomList = (store) => {
+  const getRandomList = (store: RootStore):ITasklist | undefined => {
     let index = Math.floor(Math.random() * 1000) % getTLs(store).length;
-    return selectors.getTasklistByIndex(store.getState(), index);
+    return selectors.getTasklistByIndex(store.getState(), { index });
   };
 
-  const modTList = (store, tasklist) => {
+  const modTList = (store: RootStore, tasklist: ITasklist) => {
     store.dispatch(actions.modifyTasklist(tasklist));
     return selectors.getTasklists(store.getState());
   };
 
-  const addTList = (store, tasklist) => {
+  const addTList = (store: RootStore, tasklist: ITasklist) => {
     store.dispatch(actions.addTasklist(tasklist));
     return selectors.getTasklists(store.getState());
   };
 
-  const removeTList = (store, tasklist) => {
+  const removeTList = (store: RootStore, tasklist: ITasklist) => {
     store.dispatch(actions.removeTasklist(tasklist));
     return selectors.getTasklists(store.getState());
   };
 
-  const initTLists = (store, tasklists) => {
+  const initTLists = (store: RootStore, tasklists: TTasklists) => {
     store.dispatch(actions.updateTasklistsFromServer(tasklists));
     return selectors.getTasklists(store.getState());
   };
 
-  const getTLids = (store) => {
-    return selectors.getTasklistIDs(store.getState());
+  const getTLids = (store: RootStore) => {
+    return selectors.getTasklistIDS(store.getState());
   };
 
-  const getTLs = (store) => {
+  const getTLs = (store: RootStore) => {
     return selectors.getTasklists(store.getState());
   };
 
-  let currentTasklists;
+  const getTLByID = (store: RootStore, id: string) => {
+    return selectors.getTasklistById(store.getState(), { id });
+  }
+
+  let currentTasklists: TTasklists;
 
   afterEach(() => {
     currentTasklists = getTLs(store);
@@ -102,23 +91,23 @@ describe("store actions and selection tests", () => {
 
   it("tasklists can be initialized", () => {
     var list = initTLists(store, serverInit);
-    expect(list).toEqual(immutable.fromJS(serverInit));
+    expect(list).toEqual(serverInit);
   });
 
   it("tasklists can be reinitialized", () => {
     var list = initTLists(store, serverInit2);
-    expect(list).toEqual(immutable.fromJS(serverInit2));
+    expect(list).toEqual(serverInit2);
     list = initTLists(store, tasklistArray);
-    expect(list).toEqual(immutable.fromJS(tasklistArray));
+    expect(list).toEqual(tasklistArray);
   });
 
   it("tasklists can be added to", () => {
     var list = addTList(store, serverInit[0]);
     // this store should be identical
     const newStore = [...currentTasklists, serverInit[0]];
-    expect(list).toEqual(immutable.fromJS(newStore));
+    expect(list).toEqual(newStore);
     const ids = getTLids(store);
-    expect(ids.get(serverInit[0]._id)).toEqual(list.size - 1);
+    expect(ids[serverInit[0]?._id]).toEqual(list.length - 1);
   });
 
   it("tasklists can be modified", () => {
@@ -126,13 +115,17 @@ describe("store actions and selection tests", () => {
     const tasklistToModify =
       tasklistArray[Math.floor(Math.random() * 1000) % tasklistArray.length];
     tasklistToModify.name = "hey what up";
-    tasklistToModify.tasks = [
-      ...tasklistToModify.tasks,
-      { name: "task2", description: "bruuuuh" },
-    ];
-    let list = modTList(store, tasklistToModify);
-    let ids = getTLids(store);
-    expect(list.get(ids.get(tasklistToModify._id))).toEqual(immutable.fromJS(tasklistToModify));
+    var newTask: ITask = {
+      name: "task2",
+      description: "bruuuuh",
+      _id: "balgho",
+      assignedUserIcon: "",
+      assignedUsername: "",
+      stage: TaskStage[3],
+    };
+    tasklistToModify.tasks = [...tasklistToModify.tasks, newTask];
+    modTList(store, tasklistToModify);
+    expect(getTLByID(store, tasklistToModify._id)).toEqual(tasklistToModify);
   });
 
   it("tasklists can be removed", () => {
@@ -157,7 +150,9 @@ describe("store actions and selection tests", () => {
 
   // also tests immutability of an item retrieved with selector
   it("cant modify or remove tasklist if id is changed", () => {
-    let tasklist = getRandomList(store);
+    let tasklist: ITasklist | undefined = getRandomList(store);
+    // if somehow we didn't get something, should never happen in this test @.@
+    if (!tasklist) return;
     const oldId = tasklist._id;
     // an id that cannot exist
     const id = "129385070";
@@ -170,17 +165,18 @@ describe("store actions and selection tests", () => {
     expect(ids[id]).toBeUndefined();
     // ensure modification to tasklist
     // does not effect tasklists array
-    
+
     expect(listBeforeRemove[ids[oldId]]._id).toEqual(oldId);
-    
+
     removeTList(store, tasklist);
     var listAfterRemove = getTLs(store);
     var idsAfterRemove = getTLids(store);
-    // same for removing SINCE that tasklist._id doesn't exist 
+    // same for removing SINCE that tasklist._id doesn't exist
     // in the store's copy of that tasklist
     expect(idsAfterRemove[oldId]).toBeDefined();
     expect(listBeforeRemove.length).toEqual(listAfterRemove.length);
   });
+  it.todo("state returned from a selector cannot be modified");
   it.todo("selectors return correct tasklists");
   it.todo("task CRUD with tasklist id and task only");
 });

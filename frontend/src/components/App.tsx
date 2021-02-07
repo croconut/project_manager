@@ -1,7 +1,7 @@
 import React, { FC, useEffect } from "react";
 import axios from "axios";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
-import { connect, DefaultRootState } from "react-redux";
+import { connect } from "react-redux";
 import { updateTasklistsFromServer } from "../redux/actions";
 import { getTasklists } from "../redux/selectors";
 import Navbar from "./Navbar";
@@ -10,7 +10,6 @@ import EditExercise from "./EditExercise";
 import CreateExercise from "./CreateExercise";
 import CreateUser from "./CreateUser";
 import Login from "./Login";
-import { List, Map } from "immutable";
 
 import {
   mainRoute,
@@ -18,15 +17,17 @@ import {
   loggedInRoutes,
   usersPrivateInfo,
 } from "../staticData/Routes";
+import { RootState } from "src/redux/reducers";
+import { TTasklists } from "src/staticData/types";
 
 
 type Props = {
   replaceTasklists: Function;
-  tasklists: List<Map<string, string>>;
+  tasklists: TTasklists;
 };
 
 const App: FC<Props> = ({ tasklists, replaceTasklists }): JSX.Element => {
-  console.log(tasklists.getIn([0, "_id"]));
+  console.log(tasklists[0]?._id);
   useEffect(() => {
     const initUser = async () => {
       const response = await axios.get(usersPrivateInfo.route, {

@@ -1,53 +1,30 @@
 import * as types from "../../staticData/types";
-import { AnyAction } from "redux";
+import { TaskStage } from "src/staticData/ModelConstants";
+import { v4 as genid } from "uuid";
 
 // ids gives the array index for the associated tasklist
 // this should have all the copy information required
-const exampleTasklist: types.TasklistsHolder = fromJS({
-  tasklists: [{ tasks: [{}] }],
-  ids: {},
-});
-console.log(exampleTasklist);
-
-const tasklistsHelper: Function = (
-  state: types.TasklistsHolder,
-  action: types.TasklistsAction
-): types.TasklistsHolder => {
-  switch (action.type) {
-    case types.REPLACE_ALL_TASKLISTS:
-      const lists: types.Tasklists = action.payload.tasklists;
-      const ids: types.IDs = Map<string, number>().withMutations(function (
-        ids
-      ) {
-        for (let i = 0; i < lists.size; i++) {
-          ids.set(lists.getIn([i, "_ids"]), i);
-        }
-      });
-      return Map({
-        tasklists: lists,
-        ids: ids,
-      });
-  }
-  return state;
-};
-
-const tasklistHelper: Function = (
-  state: types.TasklistsHolder,
-  action: types.TasklistAction
-): types.TasklistsHolder => {
-  switch (action.type) {
-    case types.ADD_TASKLIST:
-      const size = state.get("tasklists")?.size;
-      return state.withMutations(function (state) {
-        state
-          .setIn(
-            ["ids", action.payload.tasklist.get("_id")],
-            size
-          )
-          // .update("tasklists", (arr) => arr.push(action.payload.tasklist));
-      });
-  }
-  return state;
+var defaultTasklists: types.ITasklistsHolder = {
+  tasklists: [
+    {
+      description: "",
+      _id: "RANDOM_garbageLOL1235",
+      name: "",
+      createdAt: new Date(Date.now()),
+      updatedAt: new Date(Date.now()),
+      tasks: [
+        {
+          name: "",
+          description: "",
+          _id: "",
+          assignedUsername: "",
+          stage: TaskStage[0],
+          assignedUserIcon: "",
+        },
+      ],
+    },
+  ],
+  ids: { RANDOM_garbageLOL1235: 0 },
 };
 
 // action payload has at least 2 required keys: .tasklist and .tasklist._id
@@ -58,92 +35,54 @@ const tasklistHelper: Function = (
 // changing this from anyaction to specifically the actions it's set up to work with
 // based on types
 export const tasklistHolder = (
-  state = exampleTasklist,
-  action: AnyAction
-): types.TasklistsHolder => {
-  if (types.isTasklistsAction(action)) return tasklistsHelper(state, action);
-  else if (types.isTasklistAction(action)) return tasklistHelper(state, action);
-  else if (types.isTaskAction(action)) return taskHelper(state, action);
-  return state;
+  state: types.ITasklistsHolder = defaultTasklists,
+  action: types.AllTasklistActions
+): types.ITasklistsHolder => {
   switch (action.type) {
     case types.REPLACE_ALL_TASKLISTS:
-      let ids = {};
-      let list = action.payload.tasklists;
-      for (let i = 0; i < list.length; i++) {
-        ids[list[i]._id] = i;
-      }
-      return immutable.fromJS({
-        tasklists: action.payload.tasklists,
-        ids: ids,
-      });
-    case types.ADD_TASKLIST:
-      return state.withMutations(function (state) {
-        state
-          .setIn(
-            ["ids", action.payload.tasklist.get("_id")],
-            state.get("tasklists").size
-          )
-          .update("tasklists", (arr) => arr.push(action.payload.tasklist));
-      });
-    case types.MODIFY_TASKLIST:
-      return state.withMutations(function (state) {
-        state.mergeIn(
-          [
-            "tasklists",
-            state
-              .get("tasklists")
-              .findIndex(
-                (item) => item.get("_id") === action.payload.tasklist.get("_id")
-              ),
-          ],
-          action.payload.tasklist
-        );
-      });
-    case types.REMOVE_TASKLIST:
-      // let { [action.payload.tasklist._id]: omit, ...ids2} = state.ids;
-      // cannot simply destructure as filter does in place removal:
-      // all other indexes will increment
-      let list2 = state.tasklists.filter(
-        (item) => item._id !== action.payload.tasklist._id
-      );
-      let ids2 = {};
-      for (let i = 0; i < list2.length; i++) {
-        ids2[list2[i]._id] = i;
+      const lists: types.TTasklists = action.payload.tasklists;
+      const ids: types.IIDs = {};
+      for (let i = 0; i < lists.length; i++) {
+        ids[lists[i]._id] = i;
       }
       return {
-        tasklists: list2,
-        ids: ids2,
+        tasklists: lists,
+        ids: ids,
       };
-    case types.ADD_TASK:
-      return state.map((item) =>
-        action.payload.tasklistID === item._id
-          ? { ...item, tasks: [...item.tasks, action.payload.task] }
-          : item
-      );
-    case types.MODIFY_TASK:
-      return state.map((item) =>
-        action.payload.tasklistID === item._id
-          ? {
-              ...item,
-              tasks: item.tasks.map((task) =>
-                task._id === action.payload.task._id
-                  ? action.payload.task
-                  : task
-              ),
-            }
-          : item
-      );
-    case types.REMOVE_TASK:
-      return state.map((item) =>
-        action.payload.tasklistID === item._id
-          ? {
-              ...item,
-              tasks: item.tasks.filter(
-                (task) => task._id !== action.payload.task._id
-              ),
-            }
-          : item
-      );
+    case types.ADD_TASKLIST:
+      return {
+        tasklists: [...state.tasklists, action.payload.tasklist],
+        ids: {
+          ...state.ids,
+          [action.payload.tasklist._id]: state.tasklists.length,
+        },
+      };
+    case types.MODIFY_TASKLIST:
+      const index1: number | undefined = state.ids[action.payload.tasklist._id];
+      // want to allow modifications to the zero state
+      if (!index1 && index1 !== 0) return state;
+      let sliced = state.tasklists.slice();
+      sliced[index1] = action.payload.tasklist;
+      return {
+        tasklists: sliced,
+        ids: state.ids,
+      };
+    case types.REMOVE_TASKLIST:
+      const index2: number | undefined = state.ids[action.payload.tasklist._id];
+      if (!index2 && index2 !== 0) return state;
+      const lists1 = [
+        ...state.tasklists.slice(0, index2),
+        ...state.tasklists.slice(index2 + 1),
+      ];
+      const ids1: types.IIDs = {};
+      // probably faster to recreate from scratch anyway
+      for (let i = 0; i < lists1.length; i++) {
+        ids1[lists1[i]._id] = i;
+      }
+      return {
+        tasklists: lists1,
+        ids: ids1,
+      };
     default:
       return state;
   }

@@ -1,4 +1,4 @@
-import throttle from "lodash/throttle";
+import { throttle }from "lodash";
 import { createStore } from "redux";
 import rootReducer from "./reducers";
 
@@ -15,3 +15,4 @@ const configureStore = () => {
 }
 
 export default configureStore;
+export type RootStore = ReturnType<typeof configureStore>;

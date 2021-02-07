@@ -1,4 +1,4 @@
-import { TasklistsHolder } from "../staticData/types";
+import { ITasklistsHolder } from "../staticData/types";
 import { RootState } from "./reducers";
 
 const FreezeState = (state: RootState) => {
@@ -7,7 +7,7 @@ const FreezeState = (state: RootState) => {
   Object.freeze(state);
 };
 
-export const FreezeTasklists = (holder: TasklistsHolder) => {
+export const FreezeTasklists = (holder: ITasklistsHolder) => {
   for (let i = 0; i < holder.tasklists.length; i++) {
     for (let j = 0; j < holder.tasklists[i].tasks.length; i++) {
       Object.freeze(holder.tasklists[i].tasks[j]);
