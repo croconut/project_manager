@@ -3,7 +3,7 @@ import faker from "faker";
 import { v4 as idgen } from "uuid";
 import * as actions from "../redux/actions";
 import * as selectors from "../redux/selectors";
-import { ITask, ITasklist, TTasklists, TTasks } from "src/staticData/types";
+import { ITasklist, TTasklists, TTasks } from "src/staticData/types";
 import { TaskStage } from "src/staticData/ModelConstants";
 
 // essentially the unit tests for the redux library
@@ -16,7 +16,7 @@ describe("store actions and selection tests", () => {
   const tasklistArray: TTasklists = new Array(1000);
 
   const createTasklist = (): ITasklist => {
-    const tasks: TTasks = new Array(Math.ceil(Math.random() * 5));
+    const tasks: TTasks = new Array(Math.ceil(Math.random() * 35));
     for (let j = 0; j < tasks.length; j++) {
       tasks[j] = {
         _id: idgen(),
