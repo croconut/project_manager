@@ -1,6 +1,5 @@
 import * as types from "../../staticData/types";
 import { TaskStage } from "src/staticData/ModelConstants";
-import { v4 as genid } from "uuid";
 
 // ids gives the array index for the associated tasklist
 // this should have all the copy information required

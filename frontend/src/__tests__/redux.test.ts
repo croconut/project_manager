@@ -46,7 +46,7 @@ describe("store actions and selection tests", () => {
 
   // helper functions (just make it easier to write the tests tbh)
 
-  const getRandomList = (store: RootStore):ITasklist | undefined => {
+  const getRandomList = (store: RootStore): ITasklist | undefined => {
     let index = Math.floor(Math.random() * 1000) % getTLs(store).length;
     return selectors.getTasklistByIndex(store.getState(), { index });
   };
@@ -81,7 +81,7 @@ describe("store actions and selection tests", () => {
 
   const getTLByID = (store: RootStore, id: string) => {
     return selectors.getTasklistById(store.getState(), { id });
-  }
+  };
 
   let currentTasklists: TTasklists;
 
@@ -110,22 +110,47 @@ describe("store actions and selection tests", () => {
     expect(ids[serverInit[0]?._id]).toEqual(list.length - 1);
   });
 
-  it("tasklists can be modified", () => {
+  it("tasklists cannot be modified without using the store", () => {
     // const is such a joke in js haha
     const tasklistToModify =
       tasklistArray[Math.floor(Math.random() * 1000) % tasklistArray.length];
-    tasklistToModify.name = "hey what up";
-    var newTask: ITask = {
-      name: "task2",
-      description: "bruuuuh",
-      _id: "balgho",
-      assignedUserIcon: "",
-      assignedUsername: "",
-      stage: TaskStage[3],
-    };
-    tasklistToModify.tasks = [...tasklistToModify.tasks, newTask];
-    modTList(store, tasklistToModify);
+    // cant modify when i get an object like this :d
+    expect(() => (tasklistToModify.name = "hey")).toThrowError();
+    const moddableTask = { ...tasklistToModify };
+    moddableTask.tasks = [
+      ...moddableTask.tasks,
+      {
+        _id: "blah",
+        assignedUserIcon: "aga",
+        assignedUsername: "apgoisna",
+        description: "a;posdigj ",
+        name: "aspgdoia",
+        stage: TaskStage[1],
+      },
+    ];
     expect(getTLByID(store, tasklistToModify._id)).toEqual(tasklistToModify);
+  });
+
+  it("tasklists can be modified through store", () => {
+    const tasklistToModify =
+      tasklistArray[Math.floor(Math.random() * 1000) % tasklistArray.length];
+    // cant modify when i get an object like this :d
+    expect(() => (tasklistToModify.name = "hey")).toThrowError();
+    // dont forget, const is still a joke :)
+    const moddableTask = { ...tasklistToModify };
+    moddableTask.tasks = [
+      ...moddableTask.tasks,
+      {
+        _id: "blah",
+        assignedUserIcon: "aga",
+        assignedUsername: "apgoisna",
+        description: "a;posdigj ",
+        name: "aspgdoia",
+        stage: TaskStage[1],
+      },
+    ];
+    modTList(store, moddableTask);
+    expect(getTLByID(store, tasklistToModify._id)).toEqual(moddableTask);
   });
 
   it("tasklists can be removed", () => {
@@ -152,7 +177,10 @@ describe("store actions and selection tests", () => {
   it("cant modify or remove tasklist if id is changed", () => {
     let tasklist: ITasklist | undefined = getRandomList(store);
     // if somehow we didn't get something, should never happen in this test @.@
-    if (!tasklist) return;
+    if (!tasklist) {
+      console.error("tasklist not returned from getRandomList");
+      return;
+    }
     const oldId = tasklist._id;
     // an id that cannot exist
     const id = "129385070";
