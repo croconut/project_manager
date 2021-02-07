@@ -1,10 +1,10 @@
 import { throttle }from "lodash";
-import { applyMiddleware, createStore } from "redux";
-import { Freezer } from "./freezer";
+import { createStore } from "redux";
+import Freezer from "./freezer";
 import rootReducer from "./reducers";
 
 const configureStore = () => {
-  const store = createStore(rootReducer, applyMiddleware(Freezer));
+  const store = createStore(Freezer(rootReducer));
 
 
   // probably wanna parse for updates

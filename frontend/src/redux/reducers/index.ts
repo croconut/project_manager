@@ -10,3 +10,4 @@ const rootReducer = combineReducers({ tasklistHolder });
 
 export default rootReducer;
 export type RootState = ReturnType<typeof rootReducer>;
+export type RootReducer = typeof rootReducer;

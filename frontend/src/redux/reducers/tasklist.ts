@@ -34,6 +34,7 @@ var defaultTasklists: types.ITasklistsHolder = {
 // changing this from anyaction to specifically the actions it's set up to work with
 // based on types
 export const tasklistHolder = (
+  // ensures that undefined case still has defined initial state
   state: types.ITasklistsHolder = defaultTasklists,
   action: types.AllTasklistActions
 ): types.ITasklistsHolder => {
@@ -86,3 +87,5 @@ export const tasklistHolder = (
       return state;
   }
 };
+
+export type TTasklistReducer = ReturnType<typeof tasklistHolder>;

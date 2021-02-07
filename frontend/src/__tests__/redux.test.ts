@@ -112,11 +112,17 @@ describe("store actions and selection tests", () => {
 
   it("tasklists cannot be modified without using the store", () => {
     // const is such a joke in js haha
-    const tasklistToModify =
-      tasklistArray[Math.floor(Math.random() * 1000) % tasklistArray.length];
-    // cant modify when i get an object like this :d
-    expect(() => (tasklistToModify.name = "hey")).toThrowError();
+    const tasklistToModify = getRandomList(store);
+    if (!tasklistToModify) {
+      console.error("tasklist not returned from getRandomList");
+      return;
+    }
+    // this doesn't change the store's state
+    expect(() => (tasklistToModify.name = "heybud")).toThrowError(
+      "Cannot assign to read only property 'name' of object '#<Object>'"
+    );
     const moddableTask = { ...tasklistToModify };
+    // neither does this
     moddableTask.tasks = [
       ...moddableTask.tasks,
       {
@@ -128,14 +134,23 @@ describe("store actions and selection tests", () => {
         stage: TaskStage[1],
       },
     ];
-    expect(getTLByID(store, tasklistToModify._id)).toEqual(tasklistToModify);
+    expect(getTLByID(store, tasklistToModify._id)?.tasks).toEqual(
+      tasklistToModify.tasks
+    );
+    // confirmed here
+    expect(getTLByID(store, tasklistToModify._id)?.name).not.toEqual("heybud");
   });
 
   it("tasklists can be modified through store", () => {
-    const tasklistToModify =
-      tasklistArray[Math.floor(Math.random() * 1000) % tasklistArray.length];
+    const tasklistToModify = getRandomList(store);
+    if (tasklistToModify === undefined) {
+      console.error("tasklist not returned from getRandomList");
+      return;
+    }
     // cant modify when i get an object like this :d
-    expect(() => (tasklistToModify.name = "hey")).toThrowError();
+    expect(() => (tasklistToModify.name = "heybud")).toThrowError(
+      "Cannot assign to read only property 'name' of object '#<Object>'"
+    );
     // dont forget, const is still a joke :)
     const moddableTask = { ...tasklistToModify };
     moddableTask.tasks = [
@@ -151,6 +166,7 @@ describe("store actions and selection tests", () => {
     ];
     modTList(store, moddableTask);
     expect(getTLByID(store, tasklistToModify._id)).toEqual(moddableTask);
+    expect(getTLByID(store, tasklistToModify._id)?.name).not.toEqual("heybud");
   });
 
   it("tasklists can be removed", () => {
@@ -175,7 +191,7 @@ describe("store actions and selection tests", () => {
 
   // also tests immutability of an item retrieved with selector
   it("cant modify or remove tasklist if id is changed", () => {
-    let tasklist: ITasklist | undefined = getRandomList(store);
+    const tasklist: ITasklist | undefined = getRandomList(store);
     // if somehow we didn't get something, should never happen in this test @.@
     if (!tasklist) {
       console.error("tasklist not returned from getRandomList");
@@ -184,8 +200,12 @@ describe("store actions and selection tests", () => {
     const oldId = tasklist._id;
     // an id that cannot exist
     const id = "129385070";
-    tasklist._id = id;
-    modTList(store, tasklist);
+    expect(() => tasklist._id = id).toThrowError(
+      "Cannot assign to read only property '_id' of object '#<Object>'"
+    );
+    const moddable = {...tasklist};
+    moddable._id = id;
+    modTList(store, moddable);
     var ids = getTLids(store);
     var listBeforeRemove = getTLs(store);
     // ensure modification to tasklist's id
@@ -196,7 +216,7 @@ describe("store actions and selection tests", () => {
 
     expect(listBeforeRemove[ids[oldId]]._id).toEqual(oldId);
 
-    removeTList(store, tasklist);
+    removeTList(store, moddable);
     var listAfterRemove = getTLs(store);
     var idsAfterRemove = getTLids(store);
     // same for removing SINCE that tasklist._id doesn't exist
