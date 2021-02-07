@@ -1,17 +1,15 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, /*useEffect,*/ FC } from "react";
 import DatePicker from "react-date-picker";
-import axios from "axios";
-import { apiRoutes } from "../staticData/Routes";
+// import axios from "axios";
 
-const CreateExercise = (props) => {
+interface Props { none?: string };
+
+const CreateExercise: FC<Props> = (_props) => {
   const userInput = useRef(null);
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [duration, setDuration] = useState("");
+  const [duration, setDuration] = useState(0);
   const [date, setDate] = useState(new Date());
-  const [users, setUsers] = useState([]);
-
-  const { getUsers, addExercise } = apiRoutes;
 
   // useEffect(() => {
   //   axios
@@ -34,35 +32,35 @@ const CreateExercise = (props) => {
   // }, [getUsers]);
 
   // console.log("create exercise rerender");
-  const updateUsername = (e) => {
+  const updateName = (e: string) => {
     // validation checks here
     if (e === null || e === undefined) return;
     console.log("updating username");
-    setUsername(e);
+    setName(e);
   };
 
-  const updateDescription = (e) => {
+  const updateDescription = (e: string) => {
     setDescription(e);
   };
 
-  const updateDuration = (e) => {
+  const updateDuration = (e: string) => {
     const num = Number(e);
     if (!isNaN(num)) setDuration(num);
   };
 
-  const updateDate = (e) => {
-    setDate(e);
+  const updateDate = (e: Date | Date[]) => {
+    if (e instanceof Date)
+      setDate(e);
+    else if (e.length > 0)
+      setDate(e[0]);
   };
 
-  const updateUsers = (e) => {
-    setUsers(e);
-  };
-
-  const onSubmit = (submission) => {
+  const onSubmit = (submission: any) => {
     submission.preventDefault();
+    if (name === "") return;
 
     const exercise = {
-      username: username === "" ? users[0] : username,
+      username: name,
       description: description,
       duration: duration,
       date: date,
@@ -83,9 +81,9 @@ const CreateExercise = (props) => {
 
     // return to homepage on submission
     // window.location = "/";
-    updateUsername(users[0]);
+    updateName("");
     setDescription("");
-    setDuration("");
+    setDuration(0);
     setDate(new Date());
   };
 
@@ -95,22 +93,14 @@ const CreateExercise = (props) => {
       <p />
       <form onSubmit={onSubmit}>
         <div className="form-group">
-          <label>Username: </label>
-          <select
+          <label>Exercise Name: </label>
+          <input
             ref={userInput}
             required
             className="form-control"
-            value={username}
-            onChange={(e) => updateUsername(e.target.value)}
-          >
-            {users.map((user) => {
-              return (
-                <option key={user} value={user}>
-                  {user}
-                </option>
-              );
-            })}
-          </select>
+            value={name}
+            onChange={(e) => updateName(e.target.value)}
+          />
         </div>
         <div className="form-group">
           <label>Description: </label>
