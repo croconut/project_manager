@@ -9,19 +9,18 @@ interface IDProps { id: string };
 
 export const getTasklistByName = (state: RootState, props: NameProps) => {
   var tasklists = getTasklists(state);
-  if (!tasklists) return undefined;
+  // this check is like entirely unnecessary
   for (let i = 0; i < tasklists.length; i++) {
     if (tasklists[i].name === props.name) {
       return tasklists[i];
     }
   }
-  return undefined;
+  return null;
 };
 
 export const getTasklistByIndex = (state: RootState, props: IndexProps) => {
   var tasklists = getTasklists(state);
-  if (!tasklists) return undefined;
-  if (tasklists.length <= props.index) return undefined;
+  if (tasklists.length <= props.index || props.index < 0) return null;
   return tasklists[props.index];
 };
 
@@ -30,9 +29,9 @@ export const getTasklistById = (state: RootState, props: IDProps) => {
   var tasklists = getTasklists(state);
   var ids = getTasklistIDS(state);
   const id = ids[props.id];
-  if (!id && id !== 0)
-    return undefined;
-  return tasklists[ids[props.id]];
+  if (id === undefined || id < 0 || id >= tasklists.length)
+    return null;
+  return tasklists[id];
 };
 
 // todo after userinfo reducer created

@@ -46,7 +46,7 @@ describe("store actions and selection tests", () => {
 
   // helper functions (just make it easier to write the tests tbh)
 
-  const getRandomList = (store: RootStore): ITasklist | undefined => {
+  const getRandomList = (store: RootStore): ITasklist | null => {
     let index = Math.floor(Math.random() * 1000) % getTLs(store).length;
     return selectors.getTasklistByIndex(store.getState(), { index });
   };
@@ -143,7 +143,7 @@ describe("store actions and selection tests", () => {
 
   it("tasklists can be modified through store", () => {
     const tasklistToModify = getRandomList(store);
-    if (tasklistToModify === undefined) {
+    if (tasklistToModify === null) {
       console.error("tasklist not returned from getRandomList");
       return;
     }
@@ -191,9 +191,9 @@ describe("store actions and selection tests", () => {
 
   // also tests immutability of an item retrieved with selector
   it("cant modify or remove tasklist if id is changed", () => {
-    const tasklist: ITasklist | undefined = getRandomList(store);
+    const tasklist = getRandomList(store);
     // if somehow we didn't get something, should never happen in this test @.@
-    if (!tasklist) {
+    if (tasklist === null) {
       console.error("tasklist not returned from getRandomList");
       return;
     }
