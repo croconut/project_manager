@@ -1,8 +1,8 @@
-import configureStore, { RootStore } from "../redux/configureStore";
+import configureStore, { RootStore } from "src/redux/configureStore";
 import faker from "faker";
 import { v4 as idgen } from "uuid";
-import * as actions from "../redux/actions";
-import * as selectors from "../redux/selectors";
+import * as actions from "src/redux/actions";
+import * as selectors from "src/redux/selectors";
 import { ITasklist, TTasklists, TTasks } from "src/staticData/types";
 import { TaskStage } from "src/staticData/Constants";
 

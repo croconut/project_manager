@@ -2,12 +2,11 @@ import React, { FC, useEffect } from "react";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import { connect } from "react-redux";
-import { updateTasklistsFromServer } from "../redux/actions";
-import { getTasklists } from "../redux/selectors";
+import { updateTasklistsFromServer } from "src/redux/actions";
+import { getTasklists } from "src/redux/selectors";
 import Navbar from "./Navbar";
 import Homepage from "./Homepage";
 import EditExercise from "./EditExercise";
-import CreateExercise from "./CreateExercise";
 import CreateUser from "./CreateUser";
 import Login from "./Login";
 
@@ -54,7 +53,6 @@ const App: FC<Props> = ({ tasklists, replaceTasklists }): React.ReactElement => 
         <Switch>
           <Route exact path={mainRoute.route} component={Homepage} />
           <Route path={loggedInRoutes[0].route} component={EditExercise} />
-          <Route path={loggedInRoutes[1].route} component={CreateExercise} />
           <Route path={navbarRoutes[0].route} component={CreateUser} />
           <Route path={navbarRoutes[1].route} component={Login} />
 

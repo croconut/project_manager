@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import App from "../components/App";
-import Routes from "../staticData/Routes";
+import { mainRoute, navbarRoutes, loggedInRoutes } from "src/staticData/Routes";
 
-const homepageLink = Routes.mainRoute.route;
-const appName = Routes.mainRoute.name;
-const secondaryRoutes = Routes.navbarRoutes;
-const unrenderedRoutes = Routes.loggedInRoutes;
+const homepageLink = mainRoute.route;
+const appName = mainRoute.name;
+const secondaryRoutes = navbarRoutes;
+const unrenderedRoutes = loggedInRoutes;
 
 describe("<App />", () => {
   // it('renders a link to the homepage', () => {
