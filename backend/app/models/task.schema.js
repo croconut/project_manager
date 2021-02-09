@@ -16,7 +16,7 @@ const taskSchema = new mongoose.Schema({
   assignedUserIcon: {
     type: String,
     required: false,
-    defaut: "",
+    default: "",
   },
   description: {
     type: String,

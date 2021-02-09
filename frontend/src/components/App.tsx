@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import axios from "axios";
+import React, { FC, useEffect } from "react";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import { connect } from "react-redux";
 import { updateTasklistsFromServer } from "../redux/actions";
@@ -10,23 +10,39 @@ import EditExercise from "./EditExercise";
 import CreateExercise from "./CreateExercise";
 import CreateUser from "./CreateUser";
 import Login from "./Login";
+
 import {
   mainRoute,
   navbarRoutes,
   loggedInRoutes,
   usersPrivateInfo,
 } from "../staticData/Routes";
+import { RootState } from "src/redux/reducers";
+import { TTasklists } from "src/staticData/types";
 
-const App = ({ tasklists, replaceTasklists }) => {
+
+type Props = {
+  replaceTasklists: Function;
+  tasklists: TTasklists;
+};
+
+const App: FC<Props> = ({ tasklists, replaceTasklists }): React.ReactElement => {
+  console.log(tasklists[0]._id);
   useEffect(() => {
     const initUser = async () => {
-      const response = await axios.get(usersPrivateInfo.route, {
+      axios.get(usersPrivateInfo.route, {
         withCredentials: true,
+      })
+      .then((response: AxiosResponse) => {
+        replaceTasklists(response.data.tasklists);
+      })
+      .catch((error: AxiosError) => {
+        console.error(error);
       });
       // here imma update the tasklists assuming it came
       // TODO check for error code and wait for login signal complete if
       // error out in some way
-      replaceTasklists(response.data.tasklists);
+      
     };
     initUser();
   }, [replaceTasklists]);
@@ -52,7 +68,7 @@ const App = ({ tasklists, replaceTasklists }) => {
 
 // not sure i'll need to look at the tasklists at any point from this component
 // TODO remove when component complete and deemed unnecessary
-const mapStateToProps = (state) => {
+const mapStateToProps = (state: RootState) => {
   // BAD
   // const tasklists = state.tasklistHolder.tasklists;
   // GOOD cuz using a selector

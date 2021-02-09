@@ -1,10 +1,17 @@
-import React, { useState } from "react";
+import React, { FC, useState } from "react";
+import { FrontendRoute } from "../staticData/Routes";
 import { Link } from "react-router-dom";
 
 // main route has .name and .route
 // secondary routes is array of objects with same parameters
 // .name and .route
-const Navbar = ({ mainRoute, secondaryRoutes }) => {
+
+interface Props {
+  mainRoute: FrontendRoute,
+  secondaryRoutes: Array<FrontendRoute>;
+}
+
+const Navbar: FC<Props> = ({ mainRoute, secondaryRoutes }) => {
   const [collapse, setCollapse] = useState(true);
 
   const toggleCollapse = () => {
@@ -14,7 +21,7 @@ const Navbar = ({ mainRoute, secondaryRoutes }) => {
   // console.log("navbar rerender");
 
   const createNavLinks = () => {
-    const arrItems = new Array(secondaryRoutes.length);
+    const arrItems: Array<JSX.Element> = new Array(secondaryRoutes.length);
     for (let i = 0; i < arrItems.length; i++) {
       arrItems[i] = (
         // the link is extremely likely to be unique in any use case for this
