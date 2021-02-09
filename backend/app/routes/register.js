@@ -37,15 +37,11 @@ router.get("/existence/:username?/:email?", (req, res) => {
 router.post("/", (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) return missingParameters(res);
-
   if (!User.passwordAcceptable(password))
-    return res
-      .status(400)
-      .json({
-        weakPassword:
-          "password must be 32 characters or 14 with capitals, lowercase and numbers",
-      });
-
+    return res.status(400).json({
+      weakPassword:
+        "password must be 32 characters or 14 with capitals, lowercase and numbers",
+    });
   const tasklist = { name: "To-Do", tasks: [{ name: "My first task!" }] };
   const newUser = new User({
     username,
@@ -85,31 +81,25 @@ function ContinueRegistration(req, res, newUser) {
     // first cb is successful add, second is failure to add but well
     // formed request (didn't pass model's validation methods, may be
     // missing something)
-    .then(
-      () => {
-        User.findOne(
-          { username: newUser.username },
-          "_id",
-          {
-            lean: true,
-          },
-          (err, doc) => {
-            if (err) return res.status(400).json("Error " + err);
-            else {
-              req.session.user = doc;
-              return res.status(201).json("User added!");
-            }
+    .then(() => {
+      User.findOne(
+        { username: newUser.username },
+        "_id",
+        {
+          lean: true,
+        },
+        (err, doc) => {
+          if (err) return res.status(400).json("Error " + err);
+          else {
+            req.session.user = doc;
+            return res.status(201).json("User added!");
           }
-        );
-      },
-      (error) =>
-        res.status(400).json({
-          msg: "User rejected, possible validation error!",
-          request: req.body,
-          error: error,
-        })
-    )
-    .catch((err) => res.status(400).json("Error " + err));
+        }
+      );
+    })
+    .catch((err) => {
+      return res.status(400).json("Error " + err);
+    });
 }
 
 module.exports = router;

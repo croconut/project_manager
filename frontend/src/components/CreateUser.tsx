@@ -1,26 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, FC } from "react";
 import { useHistory } from "react-router-dom";
-import axios from "axios";
-import crypto from "crypto";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import { registerRouter } from "../staticData/Routes";
-
-const MIN_CHAR = 14;
-const MAX_CHAR = 128;
-const MIN_NO_RESTRICTIONS = 32;
-
-// just says i need at least one uppercase, lowercase
-// and one number and optionally special characters
-const PASSWORD_REQ = new RegExp(
-  `^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*()_-]{${MIN_CHAR},${MAX_CHAR}}$`
-);
-
-const USER_REGEX = new RegExp("^[A-Za-z][a-zA-Z0-9_-]*$");
-
-const EMAIL_REGEX = new RegExp(`^.+[@]+(?=.*[.]).+$`);
+import {
+  hashPassword,
+  // EMAIL_REGEX,
+  MAX_CHAR,
+  MIN_CHAR,
+  MIN_NO_RESTRICTIONS,
+  PASSWORD_REQ,
+  USER_REGEX,
+} from "../staticData/Constants";
 
 // general summary of logic: just add user when they
 
-const CreateUser = (props) => {
+const CreateUser: FC<any> = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordDuplicate, setPasswordDuplicate] = useState("");
@@ -31,19 +25,14 @@ const CreateUser = (props) => {
   );
   const [passwordOkay, setPasswordOkay] = useState("");
   const [email, setEmail] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const history = useHistory();
-  const resetState = () => {
-    setUsername("");
-    updatePassword("");
-    setPasswordMatches("");
-    setEmail("");
-  };
 
-  const checkMatches = (p, p2) => {
+  const checkMatches = (p: string, p2: string) => {
     setPasswordMatches(p === p2);
   };
 
-  const validatePassword = (password, duplicate) => {
+  const validatePassword = (password: string, duplicate: string) => {
     checkMatches(password, duplicate);
     setPasswordMinChar(
       MAX_CHAR >= password.length && password.length >= MIN_CHAR
@@ -53,17 +42,17 @@ const CreateUser = (props) => {
     );
   };
 
-  const updatePasswordDuplicate = (e) => {
+  const updatePasswordDuplicate = (e: string) => {
     setPasswordDuplicate(e);
     checkMatches(password, e);
   };
 
-  const updatePassword = (e) => {
+  const updatePassword = (e: string) => {
     setPassword(e);
     validatePassword(e, passwordDuplicate);
   };
 
-  const updateEmail = (e) => {
+  const updateEmail = (e: string) => {
     setEmail(e);
   };
 
@@ -75,49 +64,69 @@ const CreateUser = (props) => {
     }
   }, [passwordMatches, passwordMinChar, passwordHasAlphaNumerics]);
 
-  const updateUsername = (e) => {
+  useEffect(() => {
+    if (errorMessage !== "") {
+      let localErr = errorMessage;
+      let timer = setTimeout(() => {
+        if (localErr === errorMessage) {
+          setErrorMessage("");
+        }
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+    return;
+  }, [errorMessage]);
+
+  const updateUsername = (e: string) => {
     if (e === "" || USER_REGEX.test(e)) setUsername(e);
   };
 
-  const onSubmit = (submission) => {
+  const onSubmit = (submission: React.FormEvent) => {
     if (password !== passwordDuplicate) {
       return;
     }
     submission.preventDefault();
-    const sha = crypto.createHash("sha512").update(String(password));
-    const result = sha.digest("hex");
     const user = {
       username: username,
       email: email,
-      password: result,
+      password: hashPassword(password),
     };
     console.log(user);
     //TODO check that not hitting database with duplicate to our knowledge
     axios
       .post(registerRouter.route, user)
-      .then((result) => {
+      .then((result: AxiosResponse) => {
         console.log(result.status);
-        if (result.status !== 201) {
-          //TODO display we hit database with duplicate
-          console.error("failed to add");
-        }
-        else {
-          history.push("/");
-        }
+        // need to fill in user info from online
+        history.push("/");
       })
-      .catch((err) => {
-        console.error(err);
+      .catch((err: AxiosError) => {
+        if (err.response === undefined || err.response.status !== 409) {
+          setErrorMessage("Server did not respond, please try again later");
+          return;
+        }
+        if (err.response.data.username) {
+          if (err.response.data.email) {
+            setErrorMessage("Email and username already taken");
+            setUsername("");
+            setEmail("");
+          } else {
+            setErrorMessage("Username already taken");
+            setUsername("");
+          }
+        } else if (err.response.data.email) {
+          setErrorMessage("Email already taken");
+          setEmail("");
+        }
       });
-
-    //only reset information when form successfully submitted
-    //display specific error else
-    resetState();
   };
 
   return (
     <div>
       <h1>Sign Up</h1>
-      <p />
+      <ul style={{ color: errorMessage ? "red" : "white" }}>
+        <li>{errorMessage}</li>
+      </ul>
       <form onSubmit={onSubmit}>
         <div className="form-group">
           <div className="form-group row">

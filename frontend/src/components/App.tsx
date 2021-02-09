@@ -1,5 +1,5 @@
 import React, { FC, useEffect } from "react";
-import axios from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import { connect } from "react-redux";
 import { updateTasklistsFromServer } from "../redux/actions";
@@ -26,17 +26,23 @@ type Props = {
   tasklists: TTasklists;
 };
 
-const App: FC<Props> = ({ tasklists, replaceTasklists }): JSX.Element => {
-  console.log(tasklists[0]?._id);
+const App: FC<Props> = ({ tasklists, replaceTasklists }): React.ReactElement => {
+  console.log(tasklists[0]._id);
   useEffect(() => {
     const initUser = async () => {
-      const response = await axios.get(usersPrivateInfo.route, {
+      axios.get(usersPrivateInfo.route, {
         withCredentials: true,
+      })
+      .then((response: AxiosResponse) => {
+        replaceTasklists(response.data.tasklists);
+      })
+      .catch((error: AxiosError) => {
+        console.error(error);
       });
       // here imma update the tasklists assuming it came
       // TODO check for error code and wait for login signal complete if
       // error out in some way
-      replaceTasklists(response.data.tasklists);
+      
     };
     initUser();
   }, [replaceTasklists]);

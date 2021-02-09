@@ -4,7 +4,7 @@ import { v4 as idgen } from "uuid";
 import * as actions from "../redux/actions";
 import * as selectors from "../redux/selectors";
 import { ITasklist, TTasklists, TTasks } from "src/staticData/types";
-import { TaskStage } from "src/staticData/ModelConstants";
+import { TaskStage } from "src/staticData/Constants";
 
 // essentially the unit tests for the redux library
 // will not be using store.getState() or dispatches directly in

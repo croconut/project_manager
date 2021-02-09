@@ -1,5 +1,5 @@
 import * as types from "../../staticData/types";
-import { TaskStage } from "src/staticData/ModelConstants";
+import { TaskStage } from "src/staticData/Constants";
 
 // ids gives the array index for the associated tasklist
 // this should have all the copy information required
