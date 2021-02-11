@@ -6,34 +6,44 @@ import { updateTasklistsFromServer } from "src/redux/actions";
 import { getTasklists } from "src/redux/selectors";
 import Navbar from "./Navbar";
 import Homepage from "./Homepage";
-import EditExercise from "./EditExercise";
 import CreateUser from "./CreateUser";
 import Login from "./Login";
 
 import {
   mainRoute,
-  navbarRoutes,
+  loggedOutRoutes,
   loggedInRoutes,
   usersPrivateInfo,
+  nonNavbarRoutes,
 } from "../staticData/Routes";
 import { RootState } from "src/redux/reducers";
-import { TTasklists } from "src/staticData/types";
+import { isTasklists, TasklistsAction, TTasklists } from "src/staticData/types";
+import Logout from "./Logout";
+import Tasklists from "./Tasklists";
+import Profile from "./Profile";
+import Organizations from "./Organizations";
+import Tasklist from "./Tasklist";
+import Organization from "./Organization";
 
 
 type Props = {
-  replaceTasklists: Function;
+  replaceTasklists: (tasklists: TTasklists) => TasklistsAction;
   tasklists: TTasklists;
 };
 
 const App: FC<Props> = ({ tasklists, replaceTasklists }): React.ReactElement => {
-  console.log(tasklists[0]._id);
   useEffect(() => {
     const initUser = async () => {
       axios.get(usersPrivateInfo.route, {
         withCredentials: true,
       })
       .then((response: AxiosResponse) => {
-        replaceTasklists(response.data.tasklists);
+        if (isTasklists(response.data.tasklists)) {
+          replaceTasklists(response.data.tasklists);
+        } else {
+          //errored out, we're not logged in yet
+          console.log(response.data);
+        }
       })
       .catch((error: AxiosError) => {
         console.error(error);
@@ -41,21 +51,28 @@ const App: FC<Props> = ({ tasklists, replaceTasklists }): React.ReactElement => 
       // here imma update the tasklists assuming it came
       // TODO check for error code and wait for login signal complete if
       // error out in some way
-      
+      /*  { name: "My Tasklists", route: "/tasklists" },
+  { name: "My Organizations", route: "/organizations" },
+  { name: "Profile", route: "/profile"},
+  { name: "Logout", route: "/logout" }, */
     };
     initUser();
   }, [replaceTasklists]);
   return (
     <Router>
-      <Navbar mainRoute={mainRoute} secondaryRoutes={navbarRoutes} />
+      <Navbar mainRoute={mainRoute} loggedInRoutes={loggedInRoutes} loggedOutRoutes={loggedOutRoutes} />
       <br />
       <div className="container">
         <Switch>
           <Route exact path={mainRoute.route} component={Homepage} />
-          <Route path={loggedInRoutes[0].route} component={EditExercise} />
-          <Route path={navbarRoutes[0].route} component={CreateUser} />
-          <Route path={navbarRoutes[1].route} component={Login} />
-
+          <Route path={loggedOutRoutes[0].route} component={CreateUser} />
+          <Route path={loggedOutRoutes[1].route} component={Login} />
+          <Route path={loggedInRoutes[0].route} component={Tasklists} />
+          <Route path={loggedInRoutes[1].route} component={Organizations} />
+          <Route path={loggedInRoutes[2].route} component={Profile} />
+          <Route path={loggedInRoutes[3].route} component={Logout} />
+          <Route path={nonNavbarRoutes[0].route} component={Tasklist} />
+          <Route path={nonNavbarRoutes[1].route} component={Organization} />
           <Route path={"/*"} component={Homepage} />
           {/* just redirect to home when the thing fails */}
         </Switch>

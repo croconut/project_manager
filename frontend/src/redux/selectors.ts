@@ -34,5 +34,11 @@ export const getTasklistById = (state: RootState, props: IDProps) => {
   return tasklists[id];
 };
 
+// TODO when userinfo gets updated from default, update this :x
+export const getLoggedIn = (state: RootState) => {
+  return state.tasklistHolder.tasklists.length > 0 && state.tasklistHolder.tasklists[0]._id.search("RANDOM") === -1;
+}
+
+
 // todo after userinfo reducer created
-// export const getUserInfo = (state: RootState) => ({ ...state.userInfo });
+// export const getUserInfo = (state: RootState) => .state.userInfo;

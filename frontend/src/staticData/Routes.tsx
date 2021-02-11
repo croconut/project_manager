@@ -9,14 +9,20 @@ export interface BackendRoute {
 }
 
 export const mainRoute: FrontendRoute = { name: "ProjectManager", route: "/" };
-export const navbarRoutes: Array<FrontendRoute> = [
+export const loggedOutRoutes: Array<FrontendRoute> = [
   /* TODO: create a view tasklist page, user profile page, create project page */
   { name: "Sign Up", route: "/join" },
   { name: "Login", route: "/login" },
 ];
 export const loggedInRoutes: Array<FrontendRoute> = [
+  { name: "My Tasklists", route: "/tasklists" },
+  { name: "My Organizations", route: "/organizations" },
+  { name: "Profile", route: "/profile" },
   { name: "Logout", route: "/logout" },
-  { name: "Create a Tasklist", route: "/tasklist/create" },
+];
+export const nonNavbarRoutes: Array<FrontendRoute> = [
+  { name: "Tasklist", route: "/tasklist/:id" },
+  { name: "Organization", route: "/organization/:id" },
 ];
 export const loginRouter: BackendRoute = {
   route: "/api/login",

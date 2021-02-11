@@ -42,7 +42,7 @@ router.post("/", (req, res) => {
         return passwordFailed(res);
       }
       req.session.user = { _id: doc._id };
-      res.status(200).json({ success: "Login success" }).send();
+      return res.status(200).json({ success: "Login success" }).send();
     });
   });
 });

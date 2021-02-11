@@ -3,7 +3,7 @@ import { TaskStage } from "src/staticData/Constants";
 
 // ids gives the array index for the associated tasklist
 // this should have all the copy information required
-var defaultTasklists: types.ITasklistsHolder = {
+export const defaultTasklists: types.ITasklistsHolder = {
   tasklists: [
     {
       description: "",

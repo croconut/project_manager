@@ -1,10 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import App from "../components/App";
-import { mainRoute, navbarRoutes, loggedInRoutes } from "src/staticData/Routes";
+import { mainRoute, loggedOutRoutes, loggedInRoutes } from "src/staticData/Routes";
 
 const homepageLink = mainRoute.route;
 const appName = mainRoute.name;
-const secondaryRoutes = navbarRoutes;
+const secondaryRoutes = loggedOutRoutes;
 const unrenderedRoutes = loggedInRoutes;
 
 describe("<App />", () => {
