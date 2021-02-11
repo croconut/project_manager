@@ -119,9 +119,7 @@ const Login: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
     // username and password to submit form
     if (!username) return;
     if (!password) return;
-    submission.preventDefault();
     setSubmitting(true);
-    console.log("login attempt");
     let userAuth: UserAuth = { password: hashPassword(password) };
     if (username.search("@") !== -1) {
       userAuth.email = username;
@@ -170,7 +168,6 @@ const Login: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
       <Card className={classes.card}>
         <form
           onSubmit={onSubmit}
-          noValidate
           autoComplete="on"
           className={classes.cardContent}
         >
@@ -180,6 +177,7 @@ const Login: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
 
             <TextField
               className={classes.inputs}
+              required
               id="username"
               label="Username / Email"
               variant="outlined"
@@ -190,6 +188,7 @@ const Login: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
             <p />
             <TextField
               className={classes.inputs}
+              required
               id="password"
               type={showPassword ? "text" : "password"}
               label="Password"

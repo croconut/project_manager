@@ -7,13 +7,14 @@ import {
   Menu,
   Toolbar,
   Typography,
-  makeStyles
+  makeStyles,
+  useScrollTrigger,
 } from "@material-ui/core";
 import { Menu as MenuIcon } from "@material-ui/icons";
 import { useHistory } from "react-router";
 import { connect } from "react-redux";
 import { v4 as genid } from "uuid";
-
+import logo from "src/assets/images/logo.png";
 import { FrontendRoute } from "src/staticData/Routes";
 import { getLoggedIn } from "src/redux/selectors";
 import { RootState } from "src/redux/reducers";
@@ -48,7 +49,14 @@ const createLoggedInIcon = (
 };
 
 const styles = makeStyles({
-  title: { flexGrow: 1 }
+  title: { flexGrow: 100 },
+  root: {
+    position: "sticky",
+    paper: {
+      backgroundColor: "#fffff",
+    },
+  },
+  image: { width: "32px", height: "32px" },
 });
 
 const Navbar: FC<Props & StoreProps> = ({
@@ -62,6 +70,7 @@ const Navbar: FC<Props & StoreProps> = ({
   const open = Boolean(anchorEl);
   const history = useHistory();
   const classes = styles();
+  const scrolling = useScrollTrigger({ threshold: 10 });
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -133,16 +142,24 @@ const Navbar: FC<Props & StoreProps> = ({
   const loggedInIcon = createLoggedInIcon(handleMenu);
 
   return (
-    <AppBar position="sticky" color="primary">
-      <Toolbar>
-        <Typography variant="h5" className={classes.title}>
-          {mainRoute.name}
-        </Typography>
-        {loggedIn && loggedInIcon}
-        {loggedIn && loggedInItems}
-        {!loggedIn && loggedOutItems}
-      </Toolbar>
-    </AppBar>
+    <React.Fragment>
+      <AppBar position="fixed" color={scrolling ? "primary" : "transparent"} elevation={scrolling ? 4 : 0}>
+        <Toolbar>
+          <img
+            src={logo}
+            className={classes.image}
+            alt="project manager logo"
+          />
+          <Typography variant="h5" className={classes.title}>
+            {mainRoute.name}
+          </Typography>
+          {loggedIn && loggedInIcon}
+          {loggedIn && loggedInItems}
+          {!loggedIn && loggedOutItems}
+        </Toolbar>
+      </AppBar>
+      <Toolbar />
+    </React.Fragment>
   );
 };
 

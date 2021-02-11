@@ -36,7 +36,6 @@ const Logout: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
     const logoutRequest = (loggedIn: boolean) => {
       if (!loggedIn) {
         // just redirect
-        history.goBack();
         history.push("/");
       }
     };
@@ -54,7 +53,6 @@ const Logout: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
           history.push("/");
         })
         .catch((error: AxiosError) => {
-          history.goBack();
           history.push("/");
         });
     } else {

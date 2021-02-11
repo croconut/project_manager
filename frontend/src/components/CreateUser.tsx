@@ -4,7 +4,6 @@ import {
   Card,
   TextField,
   CardContent,
-  makeStyles,
   Button,
   InputAdornment,
   IconButton,
@@ -12,7 +11,11 @@ import {
   Typography,
 } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
-import { Input, Visibility, VisibilityOff } from "@material-ui/icons";
+import {
+  Input as InputIcon,
+  Visibility,
+  VisibilityOff,
+} from "@material-ui/icons";
 
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { registerRouter, usersPrivateInfo } from "../staticData/Routes";
@@ -41,14 +44,13 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordDuplicate, setShowPasswordDuplicate] = useState(false);
   const [passwordDuplicate, setPasswordDuplicate] = useState("");
+  // set to true for now, then as user writes in form it gets updated to not okay
+  // as needed
   const [passwordMatches, setPasswordMatches] = useState(true);
-  const [passwordMinChar, setPasswordMinChar] = useState(false);
-  const [passwordHasAlphaNumerics, setPasswordHasAlphaNumerics] = useState(
-    false
-  );
-  const [passwordOkay, setPasswordOkay] = useState("");
+  const [passwordOkay, setPasswordOkay] = useState(true);
   const [email, setEmail] = useState("");
-  const [emailOkay, setEmailOkay] = useState(false);
+  const [emailOkay, setEmailOkay] = useState(true);
+  const [usernameOkay, setUsernameOkay] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [alertActive, setAlertActive] = useState(false);
@@ -90,11 +92,9 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
 
   const validatePassword = (password: string, duplicate: string) => {
     checkMatches(password, duplicate);
-    setPasswordMinChar(
-      MAX_CHAR >= password.length && password.length >= MIN_CHAR
-    );
-    setPasswordHasAlphaNumerics(
-      password.length >= MIN_NO_RESTRICTIONS || PASSWORD_REQ.test(password)
+    setPasswordOkay(
+      password.length <= MAX_CHAR &&
+        (password.length >= MIN_NO_RESTRICTIONS || PASSWORD_REQ.test(password))
     );
   };
 
@@ -113,26 +113,41 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
     setEmailOkay(EMAIL_REGEX.test(e));
   };
 
-  useEffect(() => {
-    if (passwordMatches && passwordMinChar && passwordHasAlphaNumerics) {
-      setPasswordOkay("text-success");
-    } else {
-      setPasswordOkay("");
-    }
-  }, [passwordMatches, passwordMinChar, passwordHasAlphaNumerics]);
-
   const updateUsername = (e: string) => {
     if (e === "" || USER_REGEX.test(e)) setUsername(e);
+    setUsernameOkay(e.length > 2);
   };
 
-  const onSubmit = (submission: React.FormEvent) => {
-    if (submitting) return;
-    if (!emailOkay) return;
+  const CheckSubmittable = () => {
+    let earlyReturn = false;
+    if (!emailOkay) {
+      earlyReturn = true;
+    }
     if (password !== passwordDuplicate) {
+      earlyReturn = true;
+    }
+    if (email === "") {
+      earlyReturn = true;
+      setEmailOkay(false);
+    }
+    if (username === "") {
+      earlyReturn = true;
+      setUsernameOkay(false);
+    }
+    if (password === "") {
+      earlyReturn = true;
+      setPasswordOkay(false);
+    }
+    return earlyReturn;
+  };
+
+  const onSubmit = (_submission: React.FormEvent) => {
+    if (submitting) return;
+    if (CheckSubmittable()) {
+      setErrorMessage("Missing required information!");
+      setAlertActive(true);
       return;
     }
-    if (!passwordOkay) return;
-    if (!email || !username || !password) return;
     setSubmitting(true);
     const user = {
       username: username,
@@ -204,7 +219,6 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
       <Card className={classes.card}>
         <form
           onSubmit={onSubmit}
-          noValidate
           autoComplete="on"
           className={classes.cardContent}
         >
@@ -213,6 +227,9 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
             <p />
             <TextField
               className={classes.inputs}
+              required
+              error={!usernameOkay}
+              helperText={usernameOkay ? "" : "min. 3 characters"}
               id="username"
               label="Username"
               variant="outlined"
@@ -223,6 +240,9 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
             <p />
             <TextField
               className={classes.inputs}
+              required
+              error={!emailOkay}
+              helperText={emailOkay ? "" : "must have '@' and '.'"}
               id="email"
               label="Email"
               variant="outlined"
@@ -233,6 +253,11 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
             <p />
             <TextField
               className={classes.inputs}
+              required
+              error={!passwordOkay}
+              helperText={
+                !passwordOkay ? "must meet requirements stated below" : ""
+              }
               id="password"
               type={showPassword ? "text" : "password"}
               label="Password"
@@ -259,6 +284,13 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
             <p />
             <TextField
               className={classes.inputs}
+              required
+              error={!passwordMatches && password !== ""}
+              helperText={
+                !passwordMatches && password !== ""
+                  ? "passwords must match"
+                  : ""
+              }
               id="password"
               type={showPasswordDuplicate ? "text" : "password"}
               label="Confirm Password"
@@ -289,33 +321,25 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
               onChange={(e) => updatePasswordDuplicate(e.target.value)}
             />
             <br />
-            {!passwordMatches && (
-              <Typography variant="subtitle2" color="error">
-                Passwords must match
-              </Typography>
-            )}
-            {!passwordHasAlphaNumerics && (
-              <Typography variant="subtitle2" color="error">
-                Passwords must have lower and uppercase letters and numbers OR
-                be {MIN_NO_RESTRICTIONS}+ characters long
-                <br />
-                Passwords may also use special characters: !@#$%^*()_-
-                <br />
-              </Typography>
-            )}
-            {!passwordMinChar && (
-              <Typography variant="subtitle2" color="error">
-                Passwords must be {MIN_CHAR}-{MAX_CHAR} characters long
-                <br />
-              </Typography>
-            )}
+            <Typography variant="subtitle2" color="primary">
+              Passwords must have lower and uppercase letters and numbers OR be{" "}
+              {MIN_NO_RESTRICTIONS}+ characters long
+              <br />
+              Passwords may also use special characters: !@#$%^*()_-
+              <br />
+            </Typography>
+
+            <Typography variant="subtitle2" color="primary">
+              Passwords must be {MIN_CHAR}-{MAX_CHAR} characters long
+              <br />
+            </Typography>
           </CardContent>
           <CardContent className={classes.cardActions}>
             <Button
+              onClick={onSubmit}
               variant="outlined"
               value="Sign Up"
-              endIcon={<Input />}
-              onClick={onSubmit}
+              endIcon={<InputIcon />}
             >
               Sign Up
             </Button>
