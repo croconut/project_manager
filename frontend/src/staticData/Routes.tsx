@@ -21,9 +21,9 @@ export const loggedInRoutes: Array<FrontendRoute> = [
   { name: "Logout", route: "/logout" },
 ];
 export const nonNavbarRoutes: Array<FrontendRoute> = [
-  { name: "Tasklist", route: "/tasklist/:id" },
+  { name: "Tasklist", route: "/tasklist/" },
   { name: "Create Tasklist", route: "/create/tasklist" },
-  { name: "Organization", route: "/organization/:id" },
+  { name: "Organization", route: "/organization/" },
   { name: "Create Organization", route: "/create/organization" },
 ];
 export const loginRouter: BackendRoute = {

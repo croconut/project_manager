@@ -6,9 +6,16 @@ import {
   Grid,
   Button,
   CardHeader,
+  Zoom,
+  Collapse,
+  Fade,
+  CardActions,
+  IconButton,
+  Toolbar,
 } from "@material-ui/core";
-import { AddCircle } from "@material-ui/icons";
-import React, { FC } from "react";
+
+import { AddCircle, Edit, OpenInNew } from "@material-ui/icons";
+import React, { FC, useState } from "react";
 import { connect } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { RootState } from "src/redux/reducers";
@@ -18,8 +25,9 @@ import {
   getTaskStageCounts,
 } from "src/redux/selectors";
 import { nonNavbarRoutes } from "src/staticData/Routes";
-import { TTasklists } from "src/staticData/types";
+import { ITasklist, TTasklists } from "src/staticData/types";
 import { v4 as genid } from "uuid";
+import Tasklist from "./Tasklist";
 
 interface StoreProps {
   tasklists: TTasklists;
@@ -31,27 +39,60 @@ const style = makeStyles({
     flexGrow: 1,
     paddingLeft: "25px",
     paddingRight: "25px",
+    marginTop: "40px",
+  },
+  outer: {
+    margin: "15px",
+  },
+  toolbar: {
+    flexGrow: 1,
   },
   card: {
     maxWidth: "300px",
     minWidth: "300px",
   },
   create: {
-    backgroundColor: "#05ac72",
-    color: "#fff"
+    backgroundColor: "#329760",
+    color: "#fff",
+  },
+  createHover: {
+    backgroundColor: "#33b864",
+  },
+  addButton: {
+    fontSize: 70,
+    backgroundColor: "transparent",
+  },
+  zoom: {
+    maxWidth: "500px",
+    maxHeight: "500px",
   },
 });
 
 type styletype = ReturnType<typeof style>;
 
-const createTasklistCard = (classes: styletype, callback: Function) => {
+interface CreateProps {
+  classes: styletype;
+  callback: Function;
+}
+
+const CreateTasklistCard: FC<CreateProps> = ({ classes, callback }) => {
+  const [hover, setHover] = useState(false);
   return (
     <Grid item key={genid()} className={classes.card}>
-      <Card className={classes.create}>
+      <Card
+        className={hover ? classes.createHover : classes.create}
+        onMouseOver={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        elevation={hover ? 4 : 12}
+      >
         <Button onClick={() => callback()}>
           <CardContent>
-            <Typography variant="h5" className={classes.create}>Create a new tasklist</Typography>
-            <AddCircle fontSize="large" className={classes.create} />
+            <Fade in={hover} timeout={500}>
+              <Typography variant="h5" className={hover ? classes.createHover : classes.create}>
+                Create a new tasklist
+              </Typography>
+            </Fade>
+            <AddCircle className={classes.addButton} />
           </CardContent>
         </Button>
       </Card>
@@ -59,35 +100,67 @@ const createTasklistCard = (classes: styletype, callback: Function) => {
   );
 };
 
-const displayTasklists = (
-  tasklists: TTasklists,
-  classes: styletype
-): Array<JSX.Element> => {
-  const tasklistArr = new Array<JSX.Element>(tasklists.length);
-  for (let i = 0; i < tasklistArr.length; i++) {
-    const taskStages = getTaskStageCounts(tasklists[i].tasks);
-    const date = new Date(tasklists[i].createdAt);
-    const dateString =
-      date.getMonth() + "/" + date.getDay() + "/" + date.getFullYear();
-    tasklistArr[i] = (
-      <Grid item key={tasklists[i]._id} className={classes.card}>
+interface TasklistStubProps {
+  classes: styletype;
+  tasklist: ITasklist;
+  callback: Function;
+}
+
+const TasklistStub: FC<TasklistStubProps> = ({
+  classes,
+  tasklist,
+  callback,
+}) => {
+  const taskStages = getTaskStageCounts(tasklist.tasks);
+  const date = new Date(tasklist.createdAt);
+  const dateString =
+    date.getMonth() + "/" + date.getDay() + "/" + date.getFullYear();
+  return (
+    <Zoom in appear>
+      <Grid item className={classes.card}>
         <Card variant="outlined">
           <CardHeader
-            title={tasklists[i].name}
+            title={tasklist.name}
             subheader={`created: ${dateString}`}
           ></CardHeader>
           <CardContent>
-            <Typography variant="subtitle1">
-              {tasklists[i].description}
-            </Typography>
+            <Typography variant="subtitle1">{tasklist.description}</Typography>
             <br />
             <Typography variant="h6">Tasks</Typography>
-            <Typography variant="body2" color="textSecondary">
-              Active: {taskStages[0] + taskStages[1]} Completed: {taskStages[2]}
-            </Typography>
+            <Toolbar disableGutters className={classes.toolbar}>
+              <Typography variant="body2" color="textSecondary" className={classes.toolbar}>
+                Active: {taskStages[0] + taskStages[1]}
+                <br />
+                Completed: {taskStages[2]}
+              </Typography>
+              <IconButton onClick={() => callback(tasklist._id, false)} >
+                <OpenInNew fontSize="large" />
+              </IconButton>
+              <IconButton onClick={() => callback(tasklist._id, true)} >
+                <Edit fontSize="large" />
+              </IconButton>
+            </Toolbar>
           </CardContent>
         </Card>
       </Grid>
+    </Zoom>
+  );
+};
+
+const displayTasklists = (
+  tasklists: TTasklists,
+  classes: styletype,
+  callback: Function
+): Array<JSX.Element> => {
+  const tasklistArr = new Array<JSX.Element>(tasklists.length);
+  for (let i = 0; i < tasklistArr.length; i++) {
+    tasklistArr[i] = (
+      <TasklistStub
+        key={tasklists[i]._id}
+        tasklist={tasklists[i]}
+        classes={classes}
+        callback={callback}
+      />
     );
   }
   return tasklistArr;
@@ -96,17 +169,33 @@ const displayTasklists = (
 const Homepage: FC<StoreProps> = ({ tasklists, loggedIn }) => {
   const classes = style();
   const history = useHistory();
-  const createTasklist = () => history.push(nonNavbarRoutes[1].route);
-  const displayable = displayTasklists(tasklists, classes);
-  const createNew = createTasklistCard(classes, createTasklist);
+  const [leaving, setLeaving] = useState(false);
+  const createTasklist = () => {
+    if (leaving) return;
+    setLeaving(true);
+    setTimeout(() => history.push(nonNavbarRoutes[1].route), 200);
+  };
+
+  const openTasklist = (id: string, edit: boolean) => {
+    if (leaving) return;
+    setLeaving(true);
+    setTimeout(() => history.push(nonNavbarRoutes[0].route + id, { edit }), 200);
+  };
+
+  const displayable = displayTasklists(tasklists, classes, openTasklist);
+  const createNew = CreateTasklistCard({ classes, callback: createTasklist });
   return (
-    <Grid className={classes.root} container spacing={2}>
-      {createNew}
-      {loggedIn && displayable}
-      {loggedIn && displayable}
-      {loggedIn && displayable}
-      {loggedIn && displayable}
-    </Grid>
+    <div className={classes.outer}>
+      <Typography variant="h3">Tasklists</Typography>
+      <hr />
+      <Grid className={classes.root} container spacing={2}>
+        {createNew}
+        {loggedIn && displayable}
+        {loggedIn && displayable}
+        {loggedIn && displayable}
+        {loggedIn && displayable}
+      </Grid>
+    </div>
   );
 };
 
