@@ -22,7 +22,9 @@ export const loggedInRoutes: Array<FrontendRoute> = [
 ];
 export const nonNavbarRoutes: Array<FrontendRoute> = [
   { name: "Tasklist", route: "/tasklist/:id" },
+  { name: "Create Tasklist", route: "/create/tasklist" },
   { name: "Organization", route: "/organization/:id" },
+  { name: "Create Organization", route: "/create/organization" },
 ];
 export const loginRouter: BackendRoute = {
   route: "/api/login",

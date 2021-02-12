@@ -49,7 +49,7 @@ const createLoggedInIcon = (
 };
 
 const styles = makeStyles({
-  title: { flexGrow: 100 },
+  title: { flexGrow: 100, display: "flex", justifyContent: "left" },
   root: {
     position: "sticky",
     paper: {
@@ -57,6 +57,7 @@ const styles = makeStyles({
     },
   },
   image: { width: "32px", height: "32px" },
+  lowercase: { textTransform: "none" },
 });
 
 const Navbar: FC<Props & StoreProps> = ({
@@ -143,16 +144,25 @@ const Navbar: FC<Props & StoreProps> = ({
 
   return (
     <React.Fragment>
-      <AppBar position="fixed" color={scrolling ? "primary" : "transparent"} elevation={scrolling ? 4 : 0}>
+      <AppBar
+        position="fixed"
+        color={scrolling ? "primary" : "transparent"}
+        elevation={scrolling ? 4 : 0}
+      >
         <Toolbar>
-          <img
-            src={logo}
-            className={classes.image}
-            alt="project manager logo"
-          />
-          <Typography variant="h5" className={classes.title}>
-            {mainRoute.name}
-          </Typography>
+          <div className={classes.title}>
+            <Button
+              className={classes.lowercase}
+              onClick={() => history.push(mainRoute.route)}
+            >
+              <img
+                src={logo}
+                className={classes.image}
+                alt="project manager logo"
+              />
+              <Typography variant="h5">{mainRoute.name}</Typography>
+            </Button>
+          </div>
           {loggedIn && loggedInIcon}
           {loggedIn && loggedInItems}
           {!loggedIn && loggedOutItems}

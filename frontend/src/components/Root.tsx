@@ -24,24 +24,25 @@ const theme = responsiveFontSizes(
     },
   },
   */
-    // palette: {
-    //   primary: {
-    //     main: "#444",
-    //   },
-    //   secondary: {
-    //     main: "#19857b",
-    //   },
-    //   error: {
-    //     main: "#ff1744",
-    //   },
-    //   background: {
-    //     default: "#222",
-    //     paper: "#444",
-    //   },
-    //   text: {
-    //     primary: "#ddd"
-    //   },
-    // },
+    palette: {
+      primary: {
+        main: "#444",
+      },
+      secondary: {
+        main: "#19857b",
+      },
+      error: {
+        main: "#ff1744",
+      },
+      background: {
+        default: "#222",
+        paper: "#0244a1",
+      },
+      text: {
+        primary: "#fff",
+        secondary: "#ddd",
+      },
+    },
     typography: {
       fontFamily: "Roboto",
     },

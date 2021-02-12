@@ -83,6 +83,18 @@ describe("store actions and selection tests", () => {
     return selectors.getTasklistById(store.getState(), { id });
   };
 
+  const getTLByIndex = (store: RootStore, index: number) => {
+    return selectors.getTasklistByIndex(store.getState(), { index });
+  }
+
+  const getTasksSplitFromID = (store: RootStore, id: string) => {
+    return selectors.getTasksSplitByStageID(store.getState(), { id });
+  }
+
+  const getTasksSplitFromIndex = (store: RootStore, index: number) => {
+    return selectors.getTasksSplitByStageIndex(store.getState(), { index });
+  }
+
   let currentTasklists: TTasklists;
 
   afterEach(() => {
@@ -224,6 +236,44 @@ describe("store actions and selection tests", () => {
     expect(idsAfterRemove[oldId]).toBeDefined();
     expect(listBeforeRemove.length).toEqual(listAfterRemove.length);
   });
+
+  it("selectors that separate tasks by stage work", () => {
+    const tasklist = getRandomList(store);
+    // if somehow we didn't get something, should never happen in this test @.@
+    if (tasklist === null) {
+      console.error("tasklist not returned from getRandomList");
+      return;
+    }
+    const splitTasks = getTasksSplitFromID(store, tasklist._id);
+    const checkSplit = (tasks: Array<TTasks> | null, listHolder: ITasklist) => {
+      if (tasks === null) {
+        console.error("tasklist somehow has no tasks");
+        return;
+      }
+      // want last array to be empty
+      expect(tasks[TaskStage.length].length).toEqual(0);
+      // want each array to only contain tasks with appropriate stages
+      let count = 0;
+      for (let i = 0; i < tasks.length - 1; i++) { 
+        const sublist = tasks[i];
+        count += sublist.length;
+        for (let j = 0; j < sublist.length; j++) {
+          expect(sublist[j].stage).toEqual(TaskStage[i]);
+        }
+      }
+      // want to have ALL the tasks in the tasklist
+      expect(count).toEqual(listHolder.tasks.length);
+    }
+    checkSplit(splitTasks, tasklist);
+    const splitTasks2 = getTasksSplitFromIndex(store, 90);
+    const tasklist2 = getTLByIndex(store, 90);
+    if (tasklist2 === null) {
+      console.error("tasklist not returned from index 90");
+      return;
+    }
+    checkSplit(splitTasks2, tasklist2);
+  });
+
   it.todo("state returned from a selector cannot be modified");
   it.todo("selectors return correct tasklists");
   it.todo("task CRUD with tasklist id and task only");
