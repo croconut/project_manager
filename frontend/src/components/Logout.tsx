@@ -78,11 +78,11 @@ const Logout: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
         {"Are you sure you want to log out?"}
       </DialogTitle>
       <DialogActions>
-        <Button onClick={() => handleClose(false)}>
-          <Typography color="textPrimary">No</Typography>
+        <Button color="primary" onClick={() => handleClose(false)}>
+          No
         </Button>
-        <Button onClick={() => handleClose(true)} autoFocus>
-          <Typography color="textPrimary">Yes</Typography>
+        <Button color="primary" onClick={() => handleClose(true)} autoFocus>
+          Yes
         </Button>
       </DialogActions>
     </Dialog>

@@ -39,7 +39,7 @@ const createLoggedInIcon = (
   return (
     <IconButton
       edge="start"
-      color="inherit"
+      color="primary"
       onClick={menuHandler}
       aria-label="menu"
     >
@@ -124,7 +124,9 @@ const Navbar: FC<Props & StoreProps> = ({
     for (let i = 0; i < arrItems.length; i++) {
       arrItems[i] = (
         <Button
-          color="inherit"
+          color="primary"
+          variant="outlined"
+          style={{ marginLeft: "15px" }}
           onClick={(_e) => {
             handleClose();
             history.push(routes[i].route);
@@ -146,7 +148,7 @@ const Navbar: FC<Props & StoreProps> = ({
     <React.Fragment>
       <AppBar
         position="fixed"
-        color={scrolling ? "primary" : "transparent"}
+        color={scrolling ? "inherit" : "transparent"}
         elevation={scrolling ? 4 : 0}
       >
         <Toolbar>

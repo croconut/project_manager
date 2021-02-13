@@ -47,32 +47,25 @@ const style = makeStyles({
     flexGrow: 1,
   },
   card: {
-    maxWidth: "300px",
-    minWidth: "300px",
+    width: "300px",
   },
   create: {
-    backgroundColor: "#329760",
-    color: "#fff",
+    backgroundColor: "#ddd",
+    color: "#329760",
   },
   createHover: {
-    backgroundColor: "#33b864",
+    backgroundColor: "#ccc",
+    color: "#33b864",
   },
   addButton: {
     fontSize: 70,
     backgroundColor: "transparent",
-    color: "#fff"
+    color: "#329760",
   },
   createText: {
     backgroundColor: "transparent",
-    color: "#fff"
+    color: "#329760",
   },
-  zoom: {
-    maxWidth: "500px",
-    maxHeight: "500px",
-  },
-  icons: {
-    color: "#ccc"
-  }
 });
 
 type styletype = ReturnType<typeof style>;
@@ -95,10 +88,15 @@ const CreateTasklistCard: FC<CreateProps> = ({ classes, callback }) => {
         <Button onClick={() => callback()}>
           <CardContent>
             <Fade in={hover} timeout={500}>
-              <Typography variant="h5" className={hover ? classes.createText : classes.create}>
+              <Typography
+                variant="h5"
+                className={hover ? classes.createText : classes.create}
+              >
                 Create a new tasklist
               </Typography>
             </Fade>
+            <br />
+            <br />
             <AddCircle className={classes.addButton} />
           </CardContent>
         </Button>
@@ -131,20 +129,32 @@ const TasklistStub: FC<TasklistStubProps> = ({
             subheader={`created: ${dateString}`}
           ></CardHeader>
           <CardContent>
-            <Typography variant="subtitle1">{tasklist.description}</Typography>
+            <Typography noWrap color="textSecondary" variant="subtitle1">
+              {tasklist.description}
+            </Typography>
             <br />
             <Typography variant="h6">Tasks</Typography>
             <Toolbar disableGutters className={classes.toolbar}>
-              <Typography variant="body2" color="textSecondary" className={classes.toolbar}>
+              <Typography
+                variant="body2"
+                color="textSecondary"
+                className={classes.toolbar}
+              >
                 Active: {taskStages[0] + taskStages[1]}
                 <br />
                 Completed: {taskStages[2]}
               </Typography>
-              <IconButton onClick={() => callback(tasklist._id, false)} >
-                <OpenInNew fontSize="large" className={classes.icons} />
+              <IconButton
+                color="primary"
+                onClick={() => callback(tasklist._id, false)}
+              >
+                <OpenInNew fontSize="large" />
               </IconButton>
-              <IconButton onClick={() => callback(tasklist._id, true)} >
-                <Edit fontSize="large" className={classes.icons} />
+              <IconButton
+                color="primary"
+                onClick={() => callback(tasklist._id, true)}
+              >
+                <Edit fontSize="large" />
               </IconButton>
             </Toolbar>
           </CardContent>
@@ -186,22 +196,27 @@ const Homepage: FC<StoreProps> = ({ tasklists, loggedIn }) => {
   const openTasklist = (id: string, edit: boolean) => {
     if (leaving) return;
     setLeaving(true);
-    setTimeout(() => history.push(nonNavbarRoutes[0].route + id, { edit }), 200);
+    setTimeout(
+      () => history.push(nonNavbarRoutes[0].route + id, { edit }),
+      200
+    );
   };
 
   const displayable = displayTasklists(tasklists, classes, openTasklist);
   const createNew = CreateTasklistCard({ classes, callback: createTasklist });
   return (
     <div className={classes.outer}>
-      <Typography variant="h3">Tasklists</Typography>
-      <hr />
-      <Grid className={classes.root} container spacing={2}>
-        {createNew}
-        {loggedIn && displayable}
-        {loggedIn && displayable}
-        {loggedIn && displayable}
-        {loggedIn && displayable}
-      </Grid>
+      {loggedIn && (
+        <React.Fragment>
+          <Typography variant="h3">Tasklists</Typography>
+          <hr />
+          <Grid className={classes.root} container spacing={2}>
+            {createNew}
+            {displayable}
+          </Grid>
+        </React.Fragment>
+      )}
+      {!loggedIn && <React.Fragment></React.Fragment>}
     </div>
   );
 };

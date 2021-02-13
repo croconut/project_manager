@@ -216,6 +216,7 @@ const Login: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
           <CardContent className={classes.cardActions}>
             <Button
               variant="outlined"
+              color="primary"
               value="Login"
               endIcon={<Input />}
               onClick={onSubmit}

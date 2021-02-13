@@ -25,22 +25,21 @@ const theme = responsiveFontSizes(
   },
   */
     palette: {
+      // primary: {
+      //   main: "#444",
+      // },
+      // secondary: {
+      //   main: "#19857b",
+      // },
+      // error: {
+      //   main: "#ff1744",
+      // },
+      type: "dark",
       primary: {
-        main: "#444",
+        main: "#00b0ff"
       },
       secondary: {
-        main: "#19857b",
-      },
-      error: {
-        main: "#ff1744",
-      },
-      background: {
-        default: "#222",
-        paper: "#0244a1",
-      },
-      text: {
-        primary: "#fff",
-        secondary: "#ddd",
+        main: "#ff7043"
       },
     },
     typography: {

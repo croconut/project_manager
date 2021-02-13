@@ -321,7 +321,7 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
               onChange={(e) => updatePasswordDuplicate(e.target.value)}
             />
             <br />
-            <Typography variant="subtitle2" color="primary">
+            <Typography variant="subtitle2" >
               Passwords must have lower and uppercase letters and numbers OR be{" "}
               {MIN_NO_RESTRICTIONS}+ characters long
               <br />
@@ -329,7 +329,7 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
               <br />
             </Typography>
 
-            <Typography variant="subtitle2" color="primary">
+            <Typography variant="subtitle2" >
               Passwords must be {MIN_CHAR}-{MAX_CHAR} characters long
               <br />
             </Typography>
@@ -337,6 +337,7 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
           <CardContent className={classes.cardActions}>
             <Button
               onClick={onSubmit}
+              color="primary"
               variant="outlined"
               value="Sign Up"
               endIcon={<InputIcon />}
