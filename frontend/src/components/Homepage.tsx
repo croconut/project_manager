@@ -8,7 +8,7 @@ import {
   CardHeader,
   Zoom,
   Collapse,
-  Fade,
+  Fade as Fader,
   CardActions,
   IconButton,
   Toolbar,
@@ -27,6 +27,8 @@ import {
 import { nonNavbarRoutes } from "src/staticData/Routes";
 import { ITasklist, TTasklists } from "src/staticData/types";
 import { v4 as genid } from "uuid";
+import Expand from "./animations/Expand";
+import Fade from "./animations/Fade";
 
 interface StoreProps {
   tasklists: TTasklists;
@@ -87,14 +89,14 @@ const CreateTasklistCard: FC<CreateProps> = ({ classes, callback }) => {
       >
         <Button onClick={() => callback()}>
           <CardContent>
-            <Fade in={hover} timeout={500}>
+            <Fader in={hover} timeout={500}>
               <Typography
                 variant="h5"
                 className={hover ? classes.createText : classes.create}
               >
                 Create a new tasklist
               </Typography>
-            </Fade>
+            </Fader>
             <br />
             <br />
             <AddCircle className={classes.addButton} />
@@ -187,6 +189,7 @@ const Homepage: FC<StoreProps> = ({ tasklists, loggedIn }) => {
   const classes = style();
   const history = useHistory();
   const [leaving, setLeaving] = useState(false);
+  const [active, setActive] = useState(false);
   const createTasklist = () => {
     if (leaving) return;
     setLeaving(true);
@@ -206,6 +209,18 @@ const Homepage: FC<StoreProps> = ({ tasklists, loggedIn }) => {
   const createNew = CreateTasklistCard({ classes, callback: createTasklist });
   return (
     <div className={classes.outer}>
+      <Expand in={active} timeout={100} start={0.8} end={1}>
+        <Card
+          onMouseOver={() => setActive(true)}
+          onMouseLeave={() => setActive(false)}
+        >
+          <CardContent>
+            <Typography variant="h2" color="primary">
+              WHAT UP YO
+            </Typography>
+          </CardContent>
+        </Card>
+      </Expand>
       {loggedIn && (
         <React.Fragment>
           <Typography variant="h3">Tasklists</Typography>
