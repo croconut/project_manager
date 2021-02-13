@@ -54,7 +54,7 @@ const style = makeStyles({
     color: "#329760",
   },
   createHover: {
-    backgroundColor: "#ccc",
+    backgroundColor: "#eee",
     color: "#33b864",
   },
   addButton: {
@@ -83,7 +83,7 @@ const CreateTasklistCard: FC<CreateProps> = ({ classes, callback }) => {
         className={hover ? classes.createHover : classes.create}
         onMouseOver={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
-        elevation={hover ? 4 : 12}
+        elevation={hover ? 12 : 2}
       >
         <Button onClick={() => callback()}>
           <CardContent>
