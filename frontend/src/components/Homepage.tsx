@@ -27,7 +27,6 @@ import {
 import { nonNavbarRoutes } from "src/staticData/Routes";
 import { ITasklist, TTasklists } from "src/staticData/types";
 import { v4 as genid } from "uuid";
-import Tasklist from "./Tasklist";
 
 interface StoreProps {
   tasklists: TTasklists;
@@ -61,11 +60,19 @@ const style = makeStyles({
   addButton: {
     fontSize: 70,
     backgroundColor: "transparent",
+    color: "#fff"
+  },
+  createText: {
+    backgroundColor: "transparent",
+    color: "#fff"
   },
   zoom: {
     maxWidth: "500px",
     maxHeight: "500px",
   },
+  icons: {
+    color: "#ccc"
+  }
 });
 
 type styletype = ReturnType<typeof style>;
@@ -88,7 +95,7 @@ const CreateTasklistCard: FC<CreateProps> = ({ classes, callback }) => {
         <Button onClick={() => callback()}>
           <CardContent>
             <Fade in={hover} timeout={500}>
-              <Typography variant="h5" className={hover ? classes.createHover : classes.create}>
+              <Typography variant="h5" className={hover ? classes.createText : classes.create}>
                 Create a new tasklist
               </Typography>
             </Fade>
@@ -134,10 +141,10 @@ const TasklistStub: FC<TasklistStubProps> = ({
                 Completed: {taskStages[2]}
               </Typography>
               <IconButton onClick={() => callback(tasklist._id, false)} >
-                <OpenInNew fontSize="large" />
+                <OpenInNew fontSize="large" className={classes.icons} />
               </IconButton>
               <IconButton onClick={() => callback(tasklist._id, true)} >
-                <Edit fontSize="large" />
+                <Edit fontSize="large" className={classes.icons} />
               </IconButton>
             </Toolbar>
           </CardContent>

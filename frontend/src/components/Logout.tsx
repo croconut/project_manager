@@ -6,6 +6,7 @@ import {
   DialogActions,
   Button,
   makeStyles,
+  Typography,
 } from "@material-ui/core";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { useHistory } from "react-router-dom";
@@ -77,11 +78,11 @@ const Logout: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
         {"Are you sure you want to log out?"}
       </DialogTitle>
       <DialogActions>
-        <Button onClick={() => handleClose(false)} color="primary">
-          No
+        <Button onClick={() => handleClose(false)}>
+          <Typography color="textPrimary">No</Typography>
         </Button>
-        <Button onClick={() => handleClose(true)} color="primary" autoFocus>
-          Yes
+        <Button onClick={() => handleClose(true)} autoFocus>
+          <Typography color="textPrimary">Yes</Typography>
         </Button>
       </DialogActions>
     </Dialog>
