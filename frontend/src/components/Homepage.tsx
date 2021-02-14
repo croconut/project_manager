@@ -6,10 +6,6 @@ import {
   Grid,
   Button,
   CardHeader,
-  Zoom,
-  Collapse,
-  Fade as Fader,
-  CardActions,
   IconButton,
   Toolbar,
 } from "@material-ui/core";
@@ -49,7 +45,7 @@ const style = makeStyles({
     flexGrow: 1,
   },
   card: {
-    width: "300px",
+    width: "325px",
   },
   create: {
     backgroundColor: "#ddd",
@@ -80,30 +76,27 @@ interface CreateProps {
 const CreateTasklistCard: FC<CreateProps> = ({ classes, callback }) => {
   const [hover, setHover] = useState(false);
   return (
-    <Grid item key={genid()} className={classes.card}>
-      <Card
-        className={hover ? classes.createHover : classes.create}
-        onMouseOver={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
-        elevation={hover ? 12 : 2}
-      >
-        <Button onClick={() => callback()}>
-          <CardContent>
-            <Fader in={hover} timeout={500}>
-              <Typography
-                variant="h5"
-                className={hover ? classes.createText : classes.create}
-              >
+    <Expand in={hover} timeout={150} start={0.9} end={1.05}>
+      <Grid item key={genid()} className={classes.card}>
+        <Card
+          className={classes.create}
+          onMouseOver={() => setHover(true)}
+          onMouseLeave={() => setHover(false)}
+          elevation={hover ? 12 : 2}
+        >
+          <Button fullWidth onClick={() => callback()}>
+            <CardContent>
+              <Typography variant="h5" className={classes.create}>
                 Create a new tasklist
               </Typography>
-            </Fader>
-            <br />
-            <br />
-            <AddCircle className={classes.addButton} />
-          </CardContent>
-        </Button>
-      </Card>
-    </Grid>
+              <br />
+              <br />
+              <AddCircle className={classes.addButton} />
+            </CardContent>
+          </Button>
+        </Card>
+      </Grid>
+    </Expand>
   );
 };
 
@@ -118,14 +111,19 @@ const TasklistStub: FC<TasklistStubProps> = ({
   tasklist,
   callback,
 }) => {
+  const [hover, setHover] = useState(false);
   const taskStages = getTaskStageCounts(tasklist.tasks);
   const date = new Date(tasklist.createdAt);
   const dateString =
     date.getMonth() + "/" + date.getDay() + "/" + date.getFullYear();
   return (
-    <Zoom in appear>
+    <Expand in={hover} timeout={150} start={0.9} end={1.05}>
       <Grid item className={classes.card}>
-        <Card variant="outlined">
+        <Card
+          variant="outlined"
+          onMouseOver={() => setHover(true)}
+          onMouseLeave={() => setHover(false)}
+        >
           <CardHeader
             title={tasklist.name}
             subheader={`created: ${dateString}`}
@@ -162,7 +160,7 @@ const TasklistStub: FC<TasklistStubProps> = ({
           </CardContent>
         </Card>
       </Grid>
-    </Zoom>
+    </Expand>
   );
 };
 
@@ -189,7 +187,6 @@ const Homepage: FC<StoreProps> = ({ tasklists, loggedIn }) => {
   const classes = style();
   const history = useHistory();
   const [leaving, setLeaving] = useState(false);
-  const [active, setActive] = useState(false);
   const createTasklist = () => {
     if (leaving) return;
     setLeaving(true);
@@ -200,7 +197,7 @@ const Homepage: FC<StoreProps> = ({ tasklists, loggedIn }) => {
     if (leaving) return;
     setLeaving(true);
     setTimeout(
-      () => history.push(nonNavbarRoutes[0].route + id, { edit }),
+      () => history.push(nonNavbarRoutes[0].route, { id, edit }),
       200
     );
   };
@@ -209,21 +206,9 @@ const Homepage: FC<StoreProps> = ({ tasklists, loggedIn }) => {
   const createNew = CreateTasklistCard({ classes, callback: createTasklist });
   return (
     <div className={classes.outer}>
-      <Expand in={active} timeout={100} start={0.8} end={1}>
-        <Card
-          onMouseOver={() => setActive(true)}
-          onMouseLeave={() => setActive(false)}
-        >
-          <CardContent>
-            <Typography variant="h2" color="primary">
-              WHAT UP YO
-            </Typography>
-          </CardContent>
-        </Card>
-      </Expand>
       {loggedIn && (
         <React.Fragment>
-          <Typography variant="h3">Tasklists</Typography>
+          <Typography variant="h3">Recent Tasklists</Typography>
           <hr />
           <Grid className={classes.root} container spacing={2}>
             {createNew}

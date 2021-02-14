@@ -153,15 +153,16 @@ const Navbar: FC<Props & StoreProps> = ({
       >
         <Toolbar>
           <div className={classes.title}>
+            <img
+              src={logo}
+              className={classes.image}
+              alt="project manager logo"
+            />
             <Button
               className={classes.lowercase}
+              color="primary"
               onClick={() => history.push(mainRoute.route)}
             >
-              <img
-                src={logo}
-                className={classes.image}
-                alt="project manager logo"
-              />
               <Typography variant="h5">{mainRoute.name}</Typography>
             </Button>
           </div>
