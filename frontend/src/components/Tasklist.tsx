@@ -1,29 +1,21 @@
 import {
-  Button,
   Card,
   CardContent,
   CardHeader,
   Grid,
-  IconButton,
   makeStyles,
-  Typography,
 } from "@material-ui/core";
-import {
-  ArrowRight,
-  ArrowRightAltOutlined,
-  Check,
-  Close,
-} from "@material-ui/icons";
-import React, { FC, useEffect, useState } from "react";
+
+import { DragDropContext, DropResult } from "react-beautiful-dnd";
+import React, { FC } from "react";
 import { connect } from "react-redux";
-import { RouteComponentProps, RouteProps } from "react-router-dom";
+import { RouteComponentProps } from "react-router-dom";
 import { RootState } from "src/redux/reducers";
 import { getTasklistById, separateTasksByType } from "src/redux/selectors";
 import { TaskStage } from "src/staticData/Constants";
-import { ITask, ITasklist, TTasks } from "src/staticData/types";
+import { ITask, ITasklist } from "src/staticData/types";
 
-import { v4 as genid } from "uuid";
-import Expand from "./animations/Expand";
+import TaskColumn from "./Tasklist/TaskColumn";
 
 interface ReduxProps {
   tasklist: ITasklist | null;
@@ -40,90 +32,21 @@ const styles = makeStyles({
     marginLeft: "5%",
     marginRight: "5%",
   },
-  taskCard: {
-    width: "300px",
-  },
-  innerTaskCard: {
-    backgroundColor: "#222",
-  },
-  grow: {
-    width: "100%",
-    backgroundColor: "#666",
-    marginTop: "10px",
-    marginBottom: "10px",
-  },
-  taskButton: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "start",
-    textTransform: "none"
-  },
-  moveTaskButton: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    textTransform: "none"
-  },
-  buttonRow: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
 });
 
-type styletype = ReturnType<typeof styles>;
-
-const TaskViews = (separatedTasks: ITask[][], classes: styletype) => {
+const TaskViews = (separatedTasks: ITask[][]) => {
   const arr2d = new Array<JSX.Element>(separatedTasks.length);
-  for (let i = 0; i < separatedTasks.length; i++) {
-    if (separatedTasks[i].length < 1) continue;
-    const individualTasks = new Array<JSX.Element>(separatedTasks[i].length);
-    for (let j = 0; j < separatedTasks[i].length; j++) {
-      const task = separatedTasks[i][j];
-      individualTasks[j] = (
-        <Card className={classes.grow} key={task._id}>
-          <Expand in={true} timeout={200} start={0.8} end={1.0}>
-            <Grid item>
-              <Button
-                fullWidth
-                className={classes.taskButton}
-                color="primary"
-                onClick={() => {}}
-              >
-                <Typography noWrap>{task.name}</Typography>
-              </Button>
-              {/* {i < TaskStage.length - 2 && (
-                <div className={classes.buttonRow}>
-                  <Button fullWidth className={classes.moveTaskButton} color="primary" >
-                    <Typography color="textPrimary" >Move task to {TaskStage[i + 1]}</Typography>  
-                    <ArrowRightAltOutlined />
-                  </Button>
-                </div>
-              )} */}
-            </Grid>
-          </Expand>
-        </Card>
-      );
-    }
+  // the big question here is allowing task cancellation from the
+  // drag and drop, and then keeping cancelled tasks always viewable?
+  // i guess it should be allowed
+  for (let i = 0; i < separatedTasks.length - 1; i++) {
     arr2d[i] = (
-      <Grid item key={genid()} className={classes.taskCard}>
-        <Card elevation={3}>
-          <CardHeader
-            className={classes.innerTaskCard}
-            title={TaskStage[i] || "Other Tasks"}
-          />
-          <CardContent>
-            <Grid
-              container
-              direction="column"
-              justify="flex-start"
-              alignItems="flex-start"
-            >
-              {individualTasks}
-            </Grid>
-          </CardContent>
-        </Card>
-      </Grid>
+      <TaskColumn
+        key={i}
+        id={i.toString()}
+        title={TaskStage[i]}
+        tasks={separatedTasks[i]}
+      ></TaskColumn>
     );
   }
   return arr2d;
@@ -135,7 +58,32 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
   const classes = styles();
   if (tasklist === null) return <div>No tasklist selected!</div>;
   const separatedTasks = separateTasksByType(tasklist.tasks);
-  const taskCards = TaskViews(separatedTasks, classes);
+  const taskCards = TaskViews(separatedTasks);
+  const onDragEnd = (result: DropResult) => {
+    const { draggableId, source, destination, reason, type } = result;
+    if (!destination) return;
+    if (destination.droppableId === source.droppableId && 
+      destination.index === source.index) return;
+    console.log(source);
+    console.log(draggableId);
+    console.log(destination);
+    console.log(reason);
+    console.log(type);
+    // update task completion ===> change task (draggableId)'s taskstage to 
+    // destination.droppableId through store action
+    // should make specific action that does reordering and re-staging
+    // need to give ids a priority --> everything initially ordered
+    // by position in actual array, when reordered reorder it s.t.
+    // it is placed directly above closest task stage in array
+    // and below (check if there's task above and task below)
+    // OR
+    // give backend list items a priority value
+    // order based on priority value, give list starters priority of 1
+    // and each one increases, order ascending
+    // second option is easier will implement backend changes in support of
+    // frontend need
+  };
+
   return (
     <div>
       <Card className={classes.card}>
@@ -152,7 +100,7 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
             alignItems="flex-start"
             spacing={2}
           >
-            {taskCards}
+            <DragDropContext onDragEnd={onDragEnd}>{taskCards}</DragDropContext>
           </Grid>
         </CardContent>
       </Card>
@@ -161,6 +109,7 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
 };
 
 // we know that location is there but we cant guarantee state or id
+// explicitly any... gross
 const mapStateToProps = (state: RootState, otherProps: any) => {
   if (otherProps.location?.state?.id)
     return {
