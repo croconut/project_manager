@@ -10,12 +10,14 @@ import CSS from "csstype";
 interface ExpandProps {
   start: number;
   end: number;
+  style?: CSS.Properties;
 }
 
 const Fade: FC<TransitionProps & ExpandProps> = ({
   children,
   start,
   end,
+  style,
   ...transitionProps
 }) => {
   const defaultStyle: CSS.Properties = {
@@ -46,6 +48,7 @@ const Fade: FC<TransitionProps & ExpandProps> = ({
       {(state: TransitionStatus) => (
         <div
           style={{
+            ...style,
             ...defaultStyle,
             ...transitionStyles[state],
           }}
