@@ -34,6 +34,17 @@ const IconGeneration = ():Array<string> => {
   return arr;
 }
 
+export const hexToRGB = (hex: string) => {
+  if (hex.length !== 7) {
+    return null;
+  }
+  const newHex = hex.slice(1);
+  const r = parseInt(newHex.slice(0, 2), 16);
+  const g = parseInt(newHex.slice(2, 4), 16);
+  const b = parseInt(newHex.slice(4, 6), 16);
+  return [r, g, b];
+}
+
 export const hashPassword = (password: string) => {
   const sha = crypto.createHash("sha512").update(String(password));
   return sha.digest("hex");

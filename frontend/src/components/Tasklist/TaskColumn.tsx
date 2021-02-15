@@ -11,68 +11,80 @@ import React, { FC } from "react";
 import Task from "./Task";
 import { ITask, TTasks } from "src/staticData/types";
 import { useMediaQuery } from "react-responsive";
-import { AddCircleOutlineRounded } from "@material-ui/icons";
+import { Add } from "@material-ui/icons";
+import { hexToRGB } from "src/staticData/Constants";
 
-const styles = makeStyles((theme) => ({
-  taskCard: {
-    width: "300px",
-  },
-  header: {
-    backgroundColor: "#222",
-  },
-  headerComplete: {
-    backgroundColor: theme.palette.success.dark,
-  },
-  headerCancelled: {
-    backgroundColor: theme.palette.error.dark,
-  },
-  headerToDo: {
-    background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.dark}, #eee)`,
-    display: "flex",
-    flexDirection: "row",
-    alignContent: "stretch",
-  },
-  headerOngoing: {
-    backgroundColor: theme.palette.warning.dark,
-  },
-  taskCardContentOngoing: {
-    paddingLeft: "0px",
-    paddingRight: "0px",
-    backgroundColor: theme.palette.warning.light,
-  },
-  taskCardContentToDo: {
-    paddingLeft: "0px",
-    paddingRight: "0px",
-    backgroundColor: theme.palette.primary.light,
-  },
-  taskCardContentComplete: {
-    paddingLeft: "0px",
-    paddingRight: "0px",
-    backgroundColor: theme.palette.success.light,
-  },
-  taskCardContentCancelled: {
-    paddingLeft: "0px",
-    paddingRight: "0px",
-    backgroundColor: theme.palette.error.light,
-  },
-  taskCardContent: {
-    paddingLeft: "0px",
-    paddingRight: "0px",
-  },
-  notMobile: {
-    width: "33%",
-  },
-  normalGrid: {
-    flexDirection: "column",
-    paddingLeft: "8px",
-    paddingRight: "8px",
-  },
-  addButton: {
-    color: theme.palette.success.dark,
-    fontSize: "40px",
-    marginBottom: "-8px",
-  },
-}));
+const styles = makeStyles((theme) => {
+  const rgbSuccessLight = hexToRGB(theme.palette.success.main);
+  return {
+    taskCard: {
+      width: "300px",
+    },
+    header: {
+      backgroundColor: "#222",
+    },
+    headerComplete: {
+      backgroundColor: theme.palette.success.dark,
+    },
+    headerCancelled: {
+      backgroundColor: theme.palette.error.dark,
+    },
+    headerToDo: {
+      display: "flex",
+      flexDirection: "row",
+      alignContent: "stretch",
+      backgroundColor: theme.palette.primary.dark,
+    },
+    headerOngoing: {
+      backgroundColor: theme.palette.warning.dark,
+    },
+    taskCardContentOngoing: {
+      paddingLeft: "0px",
+      paddingRight: "0px",
+      backgroundColor: theme.palette.warning.light,
+    },
+    taskCardContentToDo: {
+      paddingLeft: "0px",
+      paddingRight: "0px",
+      backgroundColor: theme.palette.primary.light,
+    },
+    taskCardContentComplete: {
+      paddingLeft: "0px",
+      paddingRight: "0px",
+      backgroundColor: theme.palette.success.light,
+    },
+    taskCardContentCancelled: {
+      paddingLeft: "0px",
+      paddingRight: "0px",
+      backgroundColor: theme.palette.error.light,
+    },
+    taskCardContent: {
+      paddingLeft: "0px",
+      paddingRight: "0px",
+    },
+    notMobile: {
+      width: "33%",
+    },
+    normalGrid: {
+      flexDirection: "column",
+      paddingLeft: "8px",
+      paddingRight: "8px",
+    },
+    addButton: {
+      color: "white",
+      background: rgbSuccessLight !== null
+      ? `rgba(${rgbSuccessLight[0]},${rgbSuccessLight[1]},${rgbSuccessLight[2]}, 0.85)`
+      : "inherit",
+      fontSize: "42px",
+      marginBottom: "-10px",
+      marginRight: "2px",
+      padding: "0px 0px 0px 0px",
+      "&:hover": {
+        background: theme.palette.success.main,
+      },
+    },
+  };
+});
 
 interface TaskColumnProps {
   tasklistID: string;
@@ -144,7 +156,7 @@ const TaskColumn: FC<TaskColumnProps> = ({ tasklistID, title, id, tasks }) => {
                     className={classes.addButton}
                     onClick={taskAdder}
                   >
-                    <AddCircleOutlineRounded fontSize="inherit" />
+                    <Add fontSize="inherit" />
                   </IconButton>
                 )
               }
