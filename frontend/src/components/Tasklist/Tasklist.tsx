@@ -4,6 +4,7 @@ import {
   CardHeader,
   Grid,
   makeStyles,
+  Typography,
 } from "@material-ui/core";
 
 import { DragDropContext, DropResult } from "react-beautiful-dnd";
@@ -51,24 +52,25 @@ interface RouteParams {
   edit: string;
 }
 
-const styles = makeStyles({
+const styles = makeStyles((theme) => ({
   card: {
     width: "90%",
     marginLeft: "5%",
     marginRight: "5%",
   },
-});
 
-const TaskViews = (separatedTasks: ITask[][]) => {
+}));
+
+const TaskViews = (tasklistID: string, separatedTasks: ITask[][]) => {
   const arr2d = new Array<JSX.Element>(separatedTasks.length);
-  // the big question here is allowing task cancellation from the
-  // drag and drop, and then keeping cancelled tasks always viewable?
-  // i guess it should be allowed
-  for (let i = 0; i < separatedTasks.length - 1; i++) {
+  // not showing a cancelled tasklist, can hit a trash icon to ditch a task
+  // will just mark the task as cancelled
+  for (let i = 0; i < separatedTasks.length - 2; i++) {
     const tasks = sortAlreadySeparatedTasks(separatedTasks[i]);
     arr2d[i] = (
       <TaskColumn
         key={i}
+        tasklistID={tasklistID}
         id={i.toString()}
         title={TaskStage[i]}
         tasks={tasks}
@@ -87,7 +89,7 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
 
   if (tasklist === null) return <div>No tasklist selected!</div>;
   const separatedTasks = separateTasksByType(tasklist.tasks);
-  const taskCards = TaskViews(separatedTasks);
+  const taskCards = TaskViews(tasklist._id, separatedTasks);
   const onDragEnd = (result: DropResult) => {
     const { draggableId, source, destination } = result;
     if (!destination) return;
@@ -138,6 +140,8 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
           subheader={"Total tasks: " + tasklist.tasks.length}
         />
         <CardContent>
+          <Typography>{tasklist.description}</Typography>
+
           <Grid
             container
             direction="row"

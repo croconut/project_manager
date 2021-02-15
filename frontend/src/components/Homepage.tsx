@@ -24,14 +24,13 @@ import { nonNavbarRoutes } from "src/staticData/Routes";
 import { ITasklist, TTasklists } from "src/staticData/types";
 import { v4 as genid } from "uuid";
 import Expand from "./animations/Expand";
-import Fade from "./animations/Fade";
 
 interface StoreProps {
   tasklists: TTasklists;
   loggedIn: boolean;
 }
 
-const style = makeStyles({
+const style = makeStyles(theme => ({
   root: {
     flexGrow: 1,
     paddingLeft: "25px",
@@ -48,23 +47,19 @@ const style = makeStyles({
     width: "325px",
   },
   create: {
-    backgroundColor: "#ddd",
-    color: "#329760",
-  },
-  createHover: {
     backgroundColor: "#eee",
-    color: "#33b864",
+    color: theme.palette.success.dark,
   },
   addButton: {
     fontSize: 70,
     backgroundColor: "transparent",
-    color: "#329760",
+    color: theme.palette.success.dark,
   },
   createText: {
     backgroundColor: "transparent",
-    color: "#329760",
+    color: theme.palette.success.dark,
   },
-});
+}));
 
 type styletype = ReturnType<typeof style>;
 

@@ -6,7 +6,6 @@ import {
   DialogActions,
   Button,
   makeStyles,
-  Typography,
 } from "@material-ui/core";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { useHistory } from "react-router-dom";

@@ -41,6 +41,9 @@ const theme = responsiveFontSizes(
       secondary: {
         main: "#ff7043"
       },
+      warning: {
+        main: "#00CAAA"
+      }
     },
     typography: {
       fontFamily: "Roboto",

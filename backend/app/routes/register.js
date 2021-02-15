@@ -47,7 +47,7 @@ router.post("/", (req, res) => {
     name: "[FAKE-LIST]",
     tasks: [
       { name: "My first task!", priority: 1 },
-      { name: "Second task", stage: TaskStage[3], priority: 0 },
+      { name: "Pre-completed task", stage: TaskStage[2], priority: 0 },
       {
         name: "soon these will all only be visible to me while developing",
         stage: TaskStage[1],

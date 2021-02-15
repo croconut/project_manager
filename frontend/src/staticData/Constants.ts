@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-export const TaskStage = ["To-Do", "Ongoing", "Complete", "Cancelled"] as const;
+export const TaskStage = ["To-Do", "In Progress", "Complete", "Cancelled"] as const;
 export type Stage = typeof TaskStage[number];
 
 export const MIN_CHAR = 14;
