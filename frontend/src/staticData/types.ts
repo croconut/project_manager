@@ -16,6 +16,10 @@ export const REPLACE_ALL_TASKLISTS = "REPLACE_ALL_TASKLISTS" as const;
 type replace_tasklists = typeof REPLACE_ALL_TASKLISTS;
 export const UPDATE_USER = "UPDATE_USER" as const;
 type update_user = typeof UPDATE_USER;
+export const RESTAGE_TASK = "RESTAGE_TASK" as const;
+type restage_task = typeof RESTAGE_TASK;
+export const REORDER_TASK = "REORDER_TASK" as const;
+type reorder_task = typeof REORDER_TASK;
 
 export interface IUserInfo {
   icon: string;
@@ -61,6 +65,7 @@ export interface ITask {
   _id: string;
   name: string;
   due?: Date;
+  priority: number;
 }
 
 // these typeguards should only be necessary for server updates
@@ -93,6 +98,7 @@ export const isTask = (obj: any): obj is ITask => {
     task._id !== undefined &&
     task.description !== undefined &&
     task.name !== undefined &&
+    task.priority !== undefined &&
     TaskStage.includes(task.stage)
   );
 };
@@ -111,9 +117,32 @@ export type TaskAction = {
   payload: { tasklistID: string; task: ITask };
 };
 
+export type TaskStageAction = {
+  type: restage_task;
+  payload: {
+    tasklistID: string;
+    taskID: string;
+    priority: number;
+    oldPriority: number;
+    stage: Stage;
+    oldStage: Stage;
+  };
+};
+
+export type TaskOrderAction = {
+  type: reorder_task;
+  payload: {
+    tasklistID: string;
+    taskID: string;
+    stage: Stage;
+    priority: number;
+    oldPriority: number;
+  };
+};
+
 export type UserAction = {
   type: update_user;
   payload: { user: IUserInfo };
 };
 
-export type AllTasklistActions = TasklistAction | TasklistsAction | TaskAction;
+export type AllTasklistActions = TasklistAction | TasklistsAction | TaskAction | TaskStageAction | TaskOrderAction;

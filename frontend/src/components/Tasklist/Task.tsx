@@ -1,8 +1,6 @@
-import React, { FC, useState } from "react";
-import { makeStyles, Card, Grid, Button, Typography } from "@material-ui/core";
-import Expand from "src/components/animations/Expand";
+import React, { FC } from "react";
+import { makeStyles, Card, Grid, Typography } from "@material-ui/core";
 import { ITask } from "src/staticData/types";
-import CSS from "csstype";
 import { Draggable } from "react-beautiful-dnd";
 
 interface TaskProps {
@@ -41,17 +39,9 @@ const Task: FC<TaskProps> = ({ task, index }) => {
           innerRef={provided.innerRef}
         >
           <Grid item>
-            <Typography className={classes.text} noWrap>
+            <Typography className={classes.text}>
               {task.name}
             </Typography>
-            {/* {i < TaskStage.length - 2 && (
-                <div className={classes.buttonRow}>
-                  <Button fullWidth className={classes.moveTaskButton} color="primary" >
-                    <Typography color="textPrimary" >Move task to {TaskStage[i + 1]}</Typography>  
-                    <ArrowRightAltOutlined />
-                  </Button>
-                </div>
-              )} */}
           </Grid>
         </Card>
       )}

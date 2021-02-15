@@ -246,7 +246,7 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
               id="email"
               label="Email"
               variant="outlined"
-              autoComplete="Email"
+              autoComplete="email"
               value={email}
               onChange={(e) => updateEmail(e.target.value)}
             />

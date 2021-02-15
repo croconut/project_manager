@@ -19,6 +19,7 @@ export const defaultTasklists: types.ITasklistsHolder = {
           assignedUsername: "",
           stage: TaskStage[0],
           assignedUserIcon: "",
+          priority: 0,
         },
       ],
     },
@@ -82,6 +83,74 @@ export const tasklistHolder = (
       return {
         tasklists: lists1,
         ids: ids1,
+      };
+    case types.RESTAGE_TASK:
+      return {
+        tasklists: state.tasklists.map((tasklist) => {
+          if (tasklist._id !== action.payload.tasklistID) return tasklist;
+          const newTL = { ...tasklist };
+          return {
+            ...newTL,
+            tasks: newTL.tasks.map((task) => {
+              if (task._id !== action.payload.taskID) {
+                if (
+                  task.stage === action.payload.stage &&
+                  task.priority >= action.payload.priority
+                )
+                  return { ...task, priority: task.priority + 1 };
+                else if (
+                  task.stage === action.payload.oldStage &&
+                  task.priority >= action.payload.oldPriority
+                ) {
+                  return { ...task, priority: task.priority - 1 };
+                } else return task;
+              }
+              return {
+                ...task,
+                stage: action.payload.stage,
+                priority: action.payload.priority,
+              };
+            }),
+          };
+        }),
+        ids: state.ids,
+      };
+    case types.REORDER_TASK:
+      return {
+        tasklists: state.tasklists.map((tasklist) => {
+          if (tasklist._id !== action.payload.tasklistID) return tasklist;
+          const newTL = { ...tasklist };
+          return {
+            ...newTL,
+            tasks: newTL.tasks.map((task) => {
+              if (task._id !== action.payload.taskID) {
+                if (task.stage !== action.payload.stage) return task;
+                if (action.payload.priority > action.payload.oldPriority) {
+                  if (
+                    task.priority >= action.payload.oldPriority &&
+                    task.priority <= action.payload.priority
+                  ) {
+                    return { ...task, priority: task.priority - 1 };
+                  }
+                  return task;
+                } else {
+                  if (
+                    task.priority >= action.payload.priority &&
+                    task.priority <= action.payload.oldPriority
+                  ) {
+                    return { ...task, priority: task.priority + 1 };
+                  }
+                  return task;
+                }
+              }
+              return {
+                ...task,
+                priority: action.payload.priority,
+              };
+            }),
+          };
+        }),
+        ids: state.ids,
       };
     default:
       return state;

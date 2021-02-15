@@ -22,7 +22,7 @@ import Logout from "./Logout";
 import Tasklists from "./Tasklists";
 import Profile from "./Profile";
 import Organizations from "./Organizations";
-import Tasklist from "./Tasklist";
+import Tasklist from "./Tasklist/Tasklist";
 import Organization from "./Organization";
 
 

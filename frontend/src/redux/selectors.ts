@@ -133,5 +133,9 @@ export const separateTasksByType = (tasks: TTasks) => {
   return twoDArr;
 };
 
+export const sortAlreadySeparatedTasks = (tasks: TTasks) => {
+  return tasks.sort((a, b) => a.priority - b.priority);
+}
+
 // todo after userinfo reducer created
 // export const getUserInfo = (state: RootState) => .state.userInfo;

@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const User = require("../models/user.model");
+const { TaskStage } = require("../staticData/ModelConstants");
 
 const missingParameters = (res) => {
   return res.status(400).json({
@@ -42,7 +43,25 @@ router.post("/", (req, res) => {
       weakPassword:
         "password must be 32 characters or 14 with capitals, lowercase and numbers",
     });
-  const tasklist = { name: "To-Do", tasks: [{ name: "My first task!" }] };
+  const tasklist = {
+    name: "[FAKE-LIST]",
+    tasks: [
+      { name: "My first task!", priority: 1 },
+      { name: "Second task", stage: TaskStage[3], priority: 0 },
+      {
+        name: "soon these will all only be visible to me while developing",
+        stage: TaskStage[1],
+        priority: 1
+      },
+      {
+        name: "until then, i shall be able to see this fake assed list",
+        stage: TaskStage[1],
+        priority: 0,
+      },
+      { name: "another one", priority: 0 },
+      { name: "once more, with vigor", priority: 2 },
+    ],
+  };
   const newUser = new User({
     username,
     email,

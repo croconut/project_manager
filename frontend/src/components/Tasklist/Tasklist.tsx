@@ -11,14 +11,39 @@ import React, { FC } from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router-dom";
 import { RootState } from "src/redux/reducers";
-import { getTasklistById, separateTasksByType } from "src/redux/selectors";
-import { TaskStage } from "src/staticData/Constants";
-import { ITask, ITasklist } from "src/staticData/types";
+import {
+  getTasklistById,
+  separateTasksByType,
+  sortAlreadySeparatedTasks,
+} from "src/redux/selectors";
+import { Stage, TaskStage } from "src/staticData/Constants";
+import {
+  ITask,
+  ITasklist,
+  TaskOrderAction,
+  TaskStageAction,
+} from "src/staticData/types";
 
-import TaskColumn from "./Tasklist/TaskColumn";
+import TaskColumn from "./TaskColumn";
+import { reorderTask, restageTask } from "src/redux/actions";
 
 interface ReduxProps {
   tasklist: ITasklist | null;
+  reorderTasks: (
+    tasklistID: string,
+    taskID: string,
+    stage: Stage,
+    priority: number,
+    oldPriority: number
+  ) => TaskOrderAction;
+  restageTasks: (
+    tasklistID: string,
+    taskID: string,
+    stage: Stage,
+    oldStage: Stage,
+    priority: number,
+    oldPriority: number
+  ) => TaskStageAction;
 }
 
 interface RouteParams {
@@ -40,12 +65,13 @@ const TaskViews = (separatedTasks: ITask[][]) => {
   // drag and drop, and then keeping cancelled tasks always viewable?
   // i guess it should be allowed
   for (let i = 0; i < separatedTasks.length - 1; i++) {
+    const tasks = sortAlreadySeparatedTasks(separatedTasks[i]);
     arr2d[i] = (
       <TaskColumn
         key={i}
         id={i.toString()}
         title={TaskStage[i]}
-        tasks={separatedTasks[i]}
+        tasks={tasks}
       ></TaskColumn>
     );
   }
@@ -54,22 +80,41 @@ const TaskViews = (separatedTasks: ITask[][]) => {
 
 const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
   tasklist,
+  reorderTasks,
+  restageTasks,
 }) => {
   const classes = styles();
+
   if (tasklist === null) return <div>No tasklist selected!</div>;
   const separatedTasks = separateTasksByType(tasklist.tasks);
   const taskCards = TaskViews(separatedTasks);
   const onDragEnd = (result: DropResult) => {
-    const { draggableId, source, destination, reason, type } = result;
+    const { draggableId, source, destination } = result;
     if (!destination) return;
-    if (destination.droppableId === source.droppableId && 
-      destination.index === source.index) return;
-    console.log(source);
-    console.log(draggableId);
-    console.log(destination);
-    console.log(reason);
-    console.log(type);
-    // update task completion ===> change task (draggableId)'s taskstage to 
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    )
+      return;
+    if (destination.droppableId === source.droppableId) {
+      reorderTasks(
+        tasklist._id,
+        draggableId,
+        TaskStage[parseInt(destination.droppableId)],
+        destination.index,
+        source.index
+      );
+    } else {
+      restageTasks(
+        tasklist._id,
+        draggableId,
+        TaskStage[parseInt(destination.droppableId)],
+        TaskStage[parseInt(source.droppableId)],
+        destination.index,
+        source.index
+      );
+    }
+    // update task completion ===> change task (draggableId)'s taskstage to
     // destination.droppableId through store action
     // should make specific action that does reordering and re-staging
     // need to give ids a priority --> everything initially ordered
@@ -118,4 +163,9 @@ const mapStateToProps = (state: RootState, otherProps: any) => {
   return { tasklist: null };
 };
 
-export default connect(mapStateToProps)(Tasklist);
+const mapActionsToProps = {
+  reorderTasks: reorderTask,
+  restageTasks: restageTask,
+};
+
+export default connect(mapStateToProps, mapActionsToProps)(Tasklist);

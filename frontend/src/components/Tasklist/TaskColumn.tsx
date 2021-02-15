@@ -1,17 +1,15 @@
 import {
-  Button,
   Card,
   CardContent,
   CardHeader,
   Grid,
-  IconButton,
   makeStyles,
-  Typography,
 } from "@material-ui/core";
 import { Droppable, DroppableProvided } from "react-beautiful-dnd";
-import React, { FC, useEffect, useState } from "react";
+import React, { FC } from "react";
 import Task from "./Task";
 import { ITask, TTasks } from "src/staticData/types";
+import { useMediaQuery } from "react-responsive";
 
 const styles = makeStyles({
   taskCard: {
@@ -24,6 +22,9 @@ const styles = makeStyles({
     paddingLeft: "8px",
     paddingRight: "8px",
   },
+  notMobile: {
+    width: "25%",
+  },
 });
 
 interface TaskColumnProps {
@@ -34,9 +35,13 @@ interface TaskColumnProps {
 
 const TaskColumn: FC<TaskColumnProps> = ({ title, id, tasks }) => {
   const classes = styles();
-
+  const isDesktop = useMediaQuery({ minWidth: 992 });
   return (
-    <Grid item key={"column-" + id} className={classes.taskCard}>
+    <Grid
+      item
+      key={"column-" + id}
+      className={isDesktop ? classes.notMobile : classes.taskCard}
+    >
       <Card elevation={3}>
         <CardHeader
           className={classes.innerTaskCard}

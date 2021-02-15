@@ -25,6 +25,7 @@ describe("store actions and selection tests", () => {
         assignedUserIcon: "fa folder",
         assignedUsername: faker.name.title(),
         stage: TaskStage[Math.floor(Math.random() * 12) % TaskStage.length],
+        priority: j,
       };
     }
     return {
@@ -144,6 +145,7 @@ describe("store actions and selection tests", () => {
         description: "a;posdigj ",
         name: "aspgdoia",
         stage: TaskStage[1],
+        priority: 5,
       },
     ];
     expect(getTLByID(store, tasklistToModify._id)?.tasks).toEqual(
@@ -174,6 +176,7 @@ describe("store actions and selection tests", () => {
         description: "a;posdigj ",
         name: "aspgdoia",
         stage: TaskStage[1],
+        priority: 3,
       },
     ];
     modTList(store, moddableTask);
