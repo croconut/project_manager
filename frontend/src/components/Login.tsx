@@ -63,7 +63,7 @@ export const styles = makeStyles({
   alert: {
     position: "absolute",
     top: "62px",
-  }
+  },
 });
 
 const Login: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
@@ -114,11 +114,8 @@ const Login: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
   };
 
   const onSubmit = (submission: React.FormEvent) => {
+    submission.preventDefault();
     if (submitting) return;
-    // set alert notification that they need to fill in the
-    // username and password to submit form
-    if (!username) return;
-    if (!password) return;
     setSubmitting(true);
     let userAuth: UserAuth = { password: hashPassword(password) };
     if (username.search("@") !== -1) {
@@ -172,12 +169,12 @@ const Login: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
           className={classes.cardContent}
         >
           <CardContent className={classes.cardContent}>
-            
             <h1 className={classes.inputs}>Login</h1>
 
             <TextField
               className={classes.inputs}
               required
+              autoFocus
               id="username"
               label="Username / Email"
               variant="outlined"
@@ -219,7 +216,7 @@ const Login: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
               color="primary"
               value="Login"
               endIcon={<Input />}
-              onClick={onSubmit}
+              type="submit"
             >
               Login
             </Button>

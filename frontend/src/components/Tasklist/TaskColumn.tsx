@@ -3,19 +3,20 @@ import {
   CardContent,
   CardHeader,
   Grid,
+  Grow,
   IconButton,
   makeStyles,
 } from "@material-ui/core";
 import { Droppable, DroppableProvided } from "react-beautiful-dnd";
-import React, { FC } from "react";
+import React, { FC, useState } from "react";
 import Task from "./Task";
 import { ITask, TTasks } from "src/staticData/types";
 import { useMediaQuery } from "react-responsive";
 import { Add } from "@material-ui/icons";
-import { hexToRGB } from "src/staticData/Constants";
+import CreateTask from "./CreateTask";
+import { TransitionProps } from "@material-ui/core/transitions";
 
 const styles = makeStyles((theme) => {
-  const rgbSuccessLight = hexToRGB(theme.palette.success.main);
   return {
     taskCard: {
       width: "300px",
@@ -72,15 +73,14 @@ const styles = makeStyles((theme) => {
     },
     addButton: {
       color: "white",
-      background: rgbSuccessLight !== null
-      ? `rgba(${rgbSuccessLight[0]},${rgbSuccessLight[1]},${rgbSuccessLight[2]}, 0.85)`
-      : "inherit",
+      background: theme.palette.primary.main,
       fontSize: "42px",
       marginBottom: "-10px",
       marginRight: "2px",
       padding: "0px 0px 0px 0px",
       "&:hover": {
-        background: theme.palette.success.main,
+        background: theme.palette.primary.light,
+        color: "white",
       },
     },
   };
@@ -125,7 +125,16 @@ const getContentClass = (columnId: number, classes: styletype) => {
   }
 };
 
+// should i credit docs? ...
+const Transition = React.forwardRef(function Transition(
+  props: TransitionProps & { children?: React.ReactElement<any, any> },
+  ref: React.Ref<unknown>
+) {
+  return <Grow ref={ref} {...props} />;
+});
+
 const TaskColumn: FC<TaskColumnProps> = ({ tasklistID, title, id, tasks }) => {
+  const [openAdd, setOpenAdd] = useState(false);
   const classes = styles();
   const isDesktop = useMediaQuery({ minWidth: 992 });
   const columnId = parseInt(id);
@@ -134,6 +143,10 @@ const TaskColumn: FC<TaskColumnProps> = ({ tasklistID, title, id, tasks }) => {
   const taskAdder = () => {
     // open up a create task component and pass it the addATask function
     // and the tasklistID and it'll create a task
+    setOpenAdd(true);
+  };
+  const closeDialog = () => {
+    setOpenAdd(false);
   };
   return (
     <Grid
@@ -141,26 +154,25 @@ const TaskColumn: FC<TaskColumnProps> = ({ tasklistID, title, id, tasks }) => {
       key={"column-" + id}
       className={isDesktop ? classes.notMobile : classes.taskCard}
     >
-      <Droppable droppableId={id}>
-        {(provided: DroppableProvided, _snapshot) => (
-          <Card elevation={3}>
-            <CardHeader
-              className={headerClass}
-              title={title}
-              action={
-                columnId === 0 && (
-                  <IconButton
-                    edge="end"
-                    size="small"
-                    color="primary"
-                    className={classes.addButton}
-                    onClick={taskAdder}
-                  >
-                    <Add fontSize="inherit" />
-                  </IconButton>
-                )
-              }
-            />
+      <Card elevation={3}>
+        <CardHeader
+          className={headerClass}
+          title={title}
+          action={
+            columnId === 0 && (
+              <IconButton
+                edge="end"
+                size="small"
+                className={classes.addButton}
+                onClick={taskAdder}
+              >
+                <Add fontSize="inherit" />
+              </IconButton>
+            )
+          }
+        />
+        <Droppable droppableId={id}>
+          {(provided: DroppableProvided, _snapshot) => (
             <CardContent className={contentClass}>
               <Grid
                 container
@@ -181,9 +193,16 @@ const TaskColumn: FC<TaskColumnProps> = ({ tasklistID, title, id, tasks }) => {
                 {provided.placeholder}
               </Grid>
             </CardContent>
-          </Card>
-        )}
-      </Droppable>
+          )}
+        </Droppable>
+      </Card>
+      <CreateTask
+        open={openAdd}
+        TransitionComponent={Transition}
+        onClose={closeDialog}
+        onComplete={closeDialog}
+        tasklistID={tasklistID}
+      />
     </Grid>
   );
 };

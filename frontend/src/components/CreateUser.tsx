@@ -121,30 +121,24 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
   const CheckSubmittable = () => {
     let earlyReturn = false;
     if (!emailOkay) {
+      setErrorMessage("Emails must have an '@' and a '.'");
       earlyReturn = true;
     }
     if (password !== passwordDuplicate) {
+      setErrorMessage("Passwords don't match");
       earlyReturn = true;
     }
-    if (email === "") {
+    if (!usernameOkay) {
+      setErrorMessage("Username must be 2+ characters");
       earlyReturn = true;
-      setEmailOkay(false);
-    }
-    if (username === "") {
-      earlyReturn = true;
-      setUsernameOkay(false);
-    }
-    if (password === "") {
-      earlyReturn = true;
-      setPasswordOkay(false);
     }
     return earlyReturn;
   };
 
-  const onSubmit = (_submission: React.FormEvent) => {
+  const onSubmit = (submission: React.FormEvent) => {
+    submission.preventDefault();
     if (submitting) return;
     if (CheckSubmittable()) {
-      setErrorMessage("Missing required information!");
       setAlertActive(true);
       return;
     }
@@ -154,7 +148,6 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
       email: email,
       password: hashPassword(password),
     };
-    console.log(user);
     //TODO check that not hitting database with duplicate to our knowledge
     axios
       .post(registerRouter.route, user)
@@ -227,6 +220,7 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
             <p />
             <TextField
               className={classes.inputs}
+              autoFocus
               required
               error={!usernameOkay}
               helperText={usernameOkay ? "" : "min. 3 characters"}
@@ -321,7 +315,7 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
               onChange={(e) => updatePasswordDuplicate(e.target.value)}
             />
             <br />
-            <Typography variant="subtitle2" >
+            <Typography variant="subtitle2">
               Passwords must have lower and uppercase letters and numbers OR be{" "}
               {MIN_NO_RESTRICTIONS}+ characters long
               <br />
@@ -329,17 +323,17 @@ const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
               <br />
             </Typography>
 
-            <Typography variant="subtitle2" >
+            <Typography variant="subtitle2">
               Passwords must be {MIN_CHAR}-{MAX_CHAR} characters long
               <br />
             </Typography>
           </CardContent>
           <CardContent className={classes.cardActions}>
             <Button
-              onClick={onSubmit}
               color="primary"
               variant="outlined"
               value="Sign Up"
+              type="submit"
               endIcon={<InputIcon />}
             >
               Sign Up
