@@ -1,5 +1,5 @@
-import { TaskStage } from "src/staticData/Constants";
-import { ITask, TTasks } from "src/staticData/types";
+import { Stage, TaskStage } from "src/staticData/Constants";
+import { ITask, ITasklist, TTasks } from "src/staticData/types";
 import { RootState } from "./reducers";
 
 export const getTasklists = (state: RootState) =>
@@ -78,13 +78,23 @@ export const getTaskStageCountsByID = (state: RootState, props: IDProps) => {
   const tasklist = getTasklistById(state, props);
   if (tasklist === null) return null;
   return getTaskStageCounts(tasklist.tasks);
-}
+};
 
-export const getTaskStageCountsByIndex = (state: RootState, props: IndexProps) => {
+export const getTaskStageCountsByIndex = (
+  state: RootState,
+  props: IndexProps
+) => {
   const tasklist = getTasklistByIndex(state, props);
   if (tasklist === null) return null;
   return getTaskStageCounts(tasklist.tasks);
-}
+};
+
+export const getStageCount = (tasklist: ITasklist, stage: Stage) => {
+  return tasklist.tasks.reduce(
+    (sum, task) => (task.stage === stage ? sum + 1 : sum),
+    0
+  );
+};
 
 // also requires knowledge of length of TaskStage
 export const getTaskStageCounts = (tasks: TTasks) => {
@@ -98,7 +108,7 @@ export const getTaskStageCounts = (tasks: TTasks) => {
     for (let j = 0; j < TaskStage.length; j++) {
       if (stage === TaskStage[j]) {
         counts[j]++;
-        // basically a break 
+        // basically a break
         j = TaskStage.length;
         inserted = true;
       }
@@ -108,10 +118,10 @@ export const getTaskStageCounts = (tasks: TTasks) => {
     }
   }
   return counts;
-}
+};
 
 export const separateTasksByType = (tasks: TTasks) => {
-  const twoDArr= new Array<Array<ITask>>(TaskStage.length + 1);
+  const twoDArr = new Array<Array<ITask>>(TaskStage.length + 1);
   for (let i = 0; i < twoDArr.length; i++) {
     twoDArr[i] = [];
   }
@@ -121,7 +131,7 @@ export const separateTasksByType = (tasks: TTasks) => {
     let stage = tasks[i].stage;
     for (let j = 0; j < TaskStage.length; j++) {
       if (stage === TaskStage[j]) {
-        twoDArr[j].push(task)
+        twoDArr[j].push(task);
         j = TaskStage.length;
         inserted = true;
       }
@@ -135,7 +145,7 @@ export const separateTasksByType = (tasks: TTasks) => {
 
 export const sortAlreadySeparatedTasks = (tasks: TTasks) => {
   return tasks.sort((a, b) => a.priority - b.priority);
-}
+};
 
 // todo after userinfo reducer created
 // export const getUserInfo = (state: RootState) => .state.userInfo;

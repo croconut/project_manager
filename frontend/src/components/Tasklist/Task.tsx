@@ -90,6 +90,7 @@ const Task: FC<TaskProps> = ({ task, index, columnId }) => {
         >
           <Grid item>
             <Typography className={classes.text}>{task.name}</Typography>
+            <Typography className={classes.text}>{task.priority}</Typography>
           </Grid>
         </Card>
       )}

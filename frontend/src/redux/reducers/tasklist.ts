@@ -1,5 +1,6 @@
 import * as types from "../../staticData/types";
 import { TaskStage } from "src/staticData/Constants";
+import { getStageCount } from "../selectors";
 
 // ids gives the array index for the associated tasklist
 // this should have all the copy information required
@@ -84,14 +85,30 @@ export const tasklistHolder = (
         tasklists: lists1,
         ids: ids1,
       };
+    case types.ADD_TASK:
+      return {
+        tasklists: state.tasklists.map((tasklist) => {
+          if (tasklist._id !== action.payload.tasklistID) return tasklist;
+          // add task
+          let count = getStageCount(tasklist, TaskStage[0]);
+          console.log(count);
+          return {
+            ...tasklist,
+            tasks: [
+              ...tasklist.tasks,
+              { ...action.payload.task, stage: TaskStage[0], priority: count },
+            ],
+          };
+        }),
+        ids: state.ids,
+      };
     case types.RESTAGE_TASK:
       return {
         tasklists: state.tasklists.map((tasklist) => {
           if (tasklist._id !== action.payload.tasklistID) return tasklist;
-          const newTL = { ...tasklist };
           return {
-            ...newTL,
-            tasks: newTL.tasks.map((task) => {
+            ...tasklist,
+            tasks: tasklist.tasks.map((task) => {
               if (task._id !== action.payload.taskID) {
                 if (
                   task.stage === action.payload.stage &&
@@ -119,10 +136,9 @@ export const tasklistHolder = (
       return {
         tasklists: state.tasklists.map((tasklist) => {
           if (tasklist._id !== action.payload.tasklistID) return tasklist;
-          const newTL = { ...tasklist };
           return {
-            ...newTL,
-            tasks: newTL.tasks.map((task) => {
+            ...tasklist,
+            tasks: tasklist.tasks.map((task) => {
               if (task._id !== action.payload.taskID) {
                 if (task.stage !== action.payload.stage) return task;
                 if (action.payload.priority > action.payload.oldPriority) {
