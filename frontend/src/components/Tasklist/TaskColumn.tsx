@@ -10,17 +10,17 @@ import {
 import { Droppable, DroppableProvided } from "react-beautiful-dnd";
 import React, { FC, useState } from "react";
 import Task from "./Task";
-import { ITask, TTasks } from "src/staticData/types";
+import { ITask, TaskAction, TTasks } from "src/staticData/types";
 import { useMediaQuery } from "react-responsive";
 import { Add } from "@material-ui/icons";
 import CreateTask from "./CreateTask";
 import { TransitionProps } from "@material-ui/core/transitions";
+import { removeTask } from "src/redux/actions";
+import { connect } from "react-redux";
 
 const styles = makeStyles((theme) => {
   return {
-    taskCard: {
-      width: "300px",
-    },
+    
     header: {
       backgroundColor: "#222",
     },
@@ -63,8 +63,15 @@ const styles = makeStyles((theme) => {
       paddingLeft: "0px",
       paddingRight: "0px",
     },
-    notMobile: {
+    large: {
       width: "33%",
+    },
+    medium: {
+      width: "50%",
+    },
+    small: {
+      width: "100%",
+      minWidth: "350px",
     },
     normalGrid: {
       flexDirection: "column",
@@ -91,6 +98,7 @@ interface TaskColumnProps {
   title: string;
   id: string;
   tasks: TTasks;
+  removeATask: (tasklistID: string, task: ITask) => TaskAction;
 }
 
 type styletype = ReturnType<typeof styles>;
@@ -133,10 +141,11 @@ const Transition = React.forwardRef(function Transition(
   return <Grow ref={ref} {...props} />;
 });
 
-const TaskColumn: FC<TaskColumnProps> = ({ tasklistID, title, id, tasks }) => {
+const TaskColumn: FC<TaskColumnProps> = ({ tasklistID, title, id, tasks, removeATask }) => {
   const [openAdd, setOpenAdd] = useState(false);
   const classes = styles();
   const isDesktop = useMediaQuery({ minWidth: 992 });
+  const isMedium = useMediaQuery({ minWidth: 700 });
   const columnId = parseInt(id);
   const headerClass = getHeaderClass(columnId, classes);
   const contentClass = getContentClass(columnId, classes);
@@ -145,14 +154,32 @@ const TaskColumn: FC<TaskColumnProps> = ({ tasklistID, title, id, tasks }) => {
     // and the tasklistID and it'll create a task
     setOpenAdd(true);
   };
+
+  const taskDeleter = (task: ITask) => {
+    removeATask(tasklistID, task);
+  };
+  const taskModifier = (task: ITask) => {
+    //TODO create a modify task dialog
+    //should be visually consistent with the create task dialog
+    //pass it the task and tasklistID information
+    //have it run the actual store modification
+    //we LIKELY want to have this be a function it pushes back up to tasklist 
+  };
   const closeDialog = () => {
     setOpenAdd(false);
   };
+
+  //TODO my grid is ugly when there's 3 items and we're at the medium size --> if the first column has
+  //less items than the second it looks scuffed as the grid won't autofill
+  // solution ==> when it's medium, we know we'll have two columns of equal size so we can declare
+  // a grid of two equal sized row items within which we declare a column grid container and 
+  // add alternating task columns to these columns
+
   return (
     <Grid
       item
       key={"column-" + id}
-      className={isDesktop ? classes.notMobile : classes.taskCard}
+      className={isDesktop ? classes.large : isMedium ? classes.medium : classes.small}
     >
       <Card elevation={3}>
         <CardHeader
@@ -178,6 +205,7 @@ const TaskColumn: FC<TaskColumnProps> = ({ tasklistID, title, id, tasks }) => {
                 container
                 justify="flex-start"
                 alignItems="flex-start"
+                alignContent="flex-start"
                 className={classes.normalGrid}
                 innerRef={provided.innerRef}
                 {...provided.droppableProps}
@@ -188,6 +216,8 @@ const TaskColumn: FC<TaskColumnProps> = ({ tasklistID, title, id, tasks }) => {
                     task={task}
                     index={index}
                     columnId={columnId}
+                    onDelete={taskDeleter}
+                    onUpdate={taskModifier}
                   />
                 ))}
                 {provided.placeholder}
@@ -207,4 +237,8 @@ const TaskColumn: FC<TaskColumnProps> = ({ tasklistID, title, id, tasks }) => {
   );
 };
 
-export default TaskColumn;
+const mapActionsToProps = {
+  removeATask: removeTask,
+};
+
+export default connect(null, mapActionsToProps)(TaskColumn);

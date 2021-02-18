@@ -1,6 +1,7 @@
 import * as types from "../../staticData/types";
 import { TaskStage } from "src/staticData/Constants";
 import { getStageCount } from "../selectors";
+import { removeTask } from "../actions";
 
 // ids gives the array index for the associated tasklist
 // this should have all the copy information required
@@ -26,6 +27,87 @@ export const defaultTasklists: types.ITasklistsHolder = {
     },
   ],
   ids: { RANDOM_garbageLOL1235: 0 },
+};
+
+const restageHelper = (
+  tasklist: types.ITasklist,
+  action: types.TaskStageAction
+) => {
+  return tasklist.tasks.map((task) => {
+    if (task._id !== action.payload.taskID) {
+      if (
+        task.stage === action.payload.stage &&
+        task.priority >= action.payload.priority
+      )
+        return { ...task, priority: task.priority + 1 };
+      else if (
+        task.stage === action.payload.oldStage &&
+        task.priority >= action.payload.oldPriority
+      ) {
+        return { ...task, priority: task.priority - 1 };
+      } else return task;
+    }
+    return {
+      ...task,
+      stage: action.payload.stage,
+      priority: action.payload.priority,
+    };
+  });
+};
+
+const reorderHelper = (
+  tasklist: types.ITasklist,
+  action: types.TaskOrderAction
+) => {
+  return tasklist.tasks.map((task) => {
+    if (task._id !== action.payload.taskID) {
+      if (task.stage !== action.payload.stage) return task;
+      if (action.payload.priority > action.payload.oldPriority) {
+        if (
+          task.priority >= action.payload.oldPriority &&
+          task.priority <= action.payload.priority
+        ) {
+          return { ...task, priority: task.priority - 1 };
+        }
+        return task;
+      } else {
+        if (
+          task.priority >= action.payload.priority &&
+          task.priority <= action.payload.oldPriority
+        ) {
+          return { ...task, priority: task.priority + 1 };
+        }
+        return task;
+      }
+    }
+    return {
+      ...task,
+      priority: action.payload.priority,
+    };
+  });
+};
+
+const removeTaskHelper = (
+  tasklist: types.ITasklist,
+  action: types.TaskAction
+) => {
+  return (
+    tasklist.tasks
+      // remove the offending task
+      .filter((task) => task._id !== action.payload.task._id)
+      // then walk through and decrement priorities above filtered task
+      .map((task) => {
+        if (
+          task.stage === action.payload.task.stage &&
+          task.priority >= action.payload.task.priority
+        )
+          return {
+            ...task,
+            priority: task.priority - 1,
+          };
+        return task;
+      })
+  );
 };
 
 // action payload has at least 2 required keys: .tasklist and .tasklist._id
@@ -91,7 +173,6 @@ export const tasklistHolder = (
           if (tasklist._id !== action.payload.tasklistID) return tasklist;
           // add task
           let count = getStageCount(tasklist, TaskStage[0]);
-          console.log(count);
           return {
             ...tasklist,
             tasks: [
@@ -102,32 +183,44 @@ export const tasklistHolder = (
         }),
         ids: state.ids,
       };
-    case types.RESTAGE_TASK:
+    // not allowed to restage or reprioritize task with the modify method
+    case types.MODIFY_TASK:
       return {
         tasklists: state.tasklists.map((tasklist) => {
           if (tasklist._id !== action.payload.tasklistID) return tasklist;
           return {
             ...tasklist,
             tasks: tasklist.tasks.map((task) => {
-              if (task._id !== action.payload.taskID) {
-                if (
-                  task.stage === action.payload.stage &&
-                  task.priority >= action.payload.priority
-                )
-                  return { ...task, priority: task.priority + 1 };
-                else if (
-                  task.stage === action.payload.oldStage &&
-                  task.priority >= action.payload.oldPriority
-                ) {
-                  return { ...task, priority: task.priority - 1 };
-                } else return task;
-              }
+              if (task._id !== action.payload.task._id) return task;
               return {
-                ...task,
-                stage: action.payload.stage,
-                priority: action.payload.priority,
+                ...action.payload.task,
+                // priority and stage are kept as original values
+                priority: task.priority,
+                stage: task.stage,
               };
             }),
+          };
+        }),
+        ids: state.ids,
+      };
+    case types.REMOVE_TASK:
+      return {
+        tasklists: state.tasklists.map((tasklist) => {
+          if (tasklist._id !== action.payload.tasklistID) return tasklist;
+          return {
+            ...tasklist,
+            tasks: removeTaskHelper(tasklist, action),
+          };
+        }),
+        ids: state.ids,
+      };
+    case types.RESTAGE_TASK:
+      return {
+        tasklists: state.tasklists.map((tasklist) => {
+          if (tasklist._id !== action.payload.tasklistID) return tasklist;
+          return {
+            ...tasklist,
+            tasks: restageHelper(tasklist, action),
           };
         }),
         ids: state.ids,
@@ -138,32 +231,7 @@ export const tasklistHolder = (
           if (tasklist._id !== action.payload.tasklistID) return tasklist;
           return {
             ...tasklist,
-            tasks: tasklist.tasks.map((task) => {
-              if (task._id !== action.payload.taskID) {
-                if (task.stage !== action.payload.stage) return task;
-                if (action.payload.priority > action.payload.oldPriority) {
-                  if (
-                    task.priority >= action.payload.oldPriority &&
-                    task.priority <= action.payload.priority
-                  ) {
-                    return { ...task, priority: task.priority - 1 };
-                  }
-                  return task;
-                } else {
-                  if (
-                    task.priority >= action.payload.priority &&
-                    task.priority <= action.payload.oldPriority
-                  ) {
-                    return { ...task, priority: task.priority + 1 };
-                  }
-                  return task;
-                }
-              }
-              return {
-                ...task,
-                priority: action.payload.priority,
-              };
-            }),
+            tasks: reorderHelper(tasklist, action),
           };
         }),
         ids: state.ids,

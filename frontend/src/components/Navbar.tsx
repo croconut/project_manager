@@ -4,7 +4,6 @@ import {
   IconButton,
   Button,
   MenuItem,
-  Menu,
   Toolbar,
   Typography,
   makeStyles,
@@ -18,6 +17,7 @@ import logo from "src/assets/images/logo.png";
 import { FrontendRoute } from "src/staticData/Routes";
 import { getLoggedIn } from "src/redux/selectors";
 import { RootState } from "src/redux/reducers";
+import PopupMenu from "src/components/helpers/PopupMenu";
 
 // main route has .name and .route
 // secondary routes is array of objects with same parameters
@@ -99,23 +99,13 @@ const Navbar: FC<Props & StoreProps> = ({
       );
     }
     return (
-      <Menu
-        id={menuID}
+      <PopupMenu
+        menuID={menuID}
         open={open}
-        anchorEl={anchorEl}
-        anchorOrigin={{
-          vertical: "top",
-          horizontal: "right",
-        }}
-        keepMounted
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "right",
-        }}
+        anchor={anchorEl}
         onClose={handleClose}
-      >
-        {arrItems}
-      </Menu>
+        children={arrItems}
+      />
     );
   };
 
