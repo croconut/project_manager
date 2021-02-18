@@ -58,7 +58,6 @@ const styles = makeStyles((theme) => ({
     marginLeft: "5%",
     marginRight: "5%",
   },
-
 }));
 
 const TaskViews = (tasklistID: string, separatedTasks: ITask[][]) => {
@@ -141,16 +140,17 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
         />
         <CardContent>
           <Typography>{tasklist.description}</Typography>
-
-          <Grid
-            container
-            direction="row"
-            justify="flex-start"
-            alignItems="flex-start"
-            spacing={2}
-          >
-            <DragDropContext onDragEnd={onDragEnd}>{taskCards}</DragDropContext>
-          </Grid>
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Grid
+              container
+              direction="row"
+              justify="flex-start"
+              alignItems="flex-start"
+              spacing={2}
+            >
+              {taskCards}
+            </Grid>
+          </DragDropContext>
         </CardContent>
       </Card>
     </div>
