@@ -54,15 +54,15 @@ const GridPlus: FC<GridProps & GridPlusProps> = ({
     for (let i = 0; i < arr.length; i++) {
       if (orderBy === "row") {
         arr[i] = (
-          <Row key={i} {...childProps} className={childClassName}>
-            {arr2D[i]}
-          </Row>
+          <Grid key={i} item className={childClassName}>
+            <Row {...childProps}>{arr2D[i]}</Row>
+          </Grid>
         );
       } else {
         arr[i] = (
-          <Column key={i} {...childProps} className={childClassName}>
-            {arr2D[i]}
-          </Column>
+          <Grid key={i} item className={childClassName}>
+            <Column {...childProps}>{arr2D[i]}</Column>
+          </Grid>
         );
       }
     }

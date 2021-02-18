@@ -2,7 +2,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  Grid,
   makeStyles,
   Typography,
 } from "@material-ui/core";
@@ -11,6 +10,7 @@ import { DragDropContext, DropResult } from "react-beautiful-dnd";
 import React, { FC } from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router-dom";
+import { useMediaQuery } from "react-responsive";
 import { RootState } from "src/redux/reducers";
 import {
   getTasklistById,
@@ -27,6 +27,7 @@ import {
 
 import TaskColumn from "./TaskColumn";
 import { reorderTask, restageTask } from "src/redux/actions";
+import GridPlus from "../helpers/GridPlus";
 
 interface ReduxProps {
   tasklist: ITasklist | null;
@@ -58,6 +59,19 @@ const styles = makeStyles((theme) => ({
     marginLeft: "5%",
     marginRight: "5%",
   },
+  gridChild: {
+    width: "33%",
+  },
+  gridChildMedium: {
+    width: "50%",
+  },
+  gridChildSmall: {
+    width: "100%",
+    minWidth: "300px",
+  },
+  gridParent: {
+    width: "100%",
+  },
 }));
 
 const TaskViews = (tasklistID: string, separatedTasks: ITask[][]) => {
@@ -85,6 +99,8 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
   restageTasks,
 }) => {
   const classes = styles();
+  const isDesktop = useMediaQuery({ minWidth: 992 });
+  const isMedium = useMediaQuery({ minWidth: 700 });
 
   if (tasklist === null) return <div>No tasklist selected!</div>;
   const separatedTasks = separateTasksByType(tasklist.tasks);
@@ -141,15 +157,27 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
         <CardContent>
           <Typography>{tasklist.description}</Typography>
           <DragDropContext onDragEnd={onDragEnd}>
-            <Grid
+            <GridPlus
               container
               direction="row"
+              crossFill
+              orderBy="column"
+              fillCount={isDesktop ? 3 : isMedium ? 2 : 1}
+              className={classes.gridParent}
               justify="flex-start"
               alignItems="flex-start"
               spacing={2}
+              childClassName={
+                isDesktop
+                  ? classes.gridChild
+                  : isMedium
+                  ? classes.gridChildMedium
+                  : classes.gridChildSmall
+              }
+              childProps={{ spacing: 2 }}
             >
               {taskCards}
-            </Grid>
+            </GridPlus>
           </DragDropContext>
         </CardContent>
       </Card>
