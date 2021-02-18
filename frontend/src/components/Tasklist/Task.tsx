@@ -36,7 +36,7 @@ const taskStyles = makeStyles((theme) => ({
   },
   growOngoing: {
     width: "100%",
-    backgroundColor: theme.palette.warning.dark,
+    background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.success.dark})`,
     marginTop: "5px",
     marginBottom: "5px",
   },

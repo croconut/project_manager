@@ -36,12 +36,12 @@ const styles = makeStyles((theme) => {
       backgroundColor: theme.palette.primary.dark,
     },
     headerOngoing: {
-      backgroundColor: theme.palette.warning.dark,
+      background: `linear-gradient( to right, ${theme.palette.primary.dark}, ${theme.palette.success.dark})`
     },
     taskCardContentOngoing: {
       paddingLeft: "0px",
       paddingRight: "0px",
-      backgroundColor: theme.palette.warning.light,
+      background: `linear-gradient( to right, ${theme.palette.primary.light}, ${theme.palette.success.light})`
     },
     taskCardContentToDo: {
       paddingLeft: "0px",
