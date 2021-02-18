@@ -1,7 +1,5 @@
 import React, { FC } from "react";
 import { Grid, GridProps } from "@material-ui/core";
-import Row from "./Row";
-import Column from "./Column";
 
 interface GridPlusProps {
   orderBy: "column" | "row";
@@ -25,7 +23,6 @@ const GridPlus: FC<GridProps & GridPlusProps> = ({
   ...props
 }) => {
   const createAndFillGrids = () => {
-    let arrIndex = 0;
     const arr2D = new Array<Array<JSX.Element>>(fillCount);
     for (let i = 0; i < arr2D.length; i++) arr2D[i] = [];
     const childrenArr = React.Children.map(children, (child) => {
@@ -35,36 +32,33 @@ const GridPlus: FC<GridProps & GridPlusProps> = ({
       return child;
     });
     if (childrenArr === undefined || childrenArr === null) return null;
+    // would have rather just filtered this... but react children only has map
+    const filteredChildren = childrenArr.filter((child) => child !== null);
     if (crossFill) {
+      let arrIndex = 0;
       for (
         let i = 0;
-        i < childrenArr.length;
+        i < filteredChildren.length;
         i++, arrIndex = (arrIndex + 1) % fillCount
       ) {
-        arr2D[arrIndex].push(childrenArr[i]);
+        arr2D[arrIndex].push(filteredChildren[i]);
       }
     } else {
-      for (let i = 0; i < childrenArr.length; i++) {
+      for (let i = 0; i < filteredChildren.length; i++) {
         let n = Math.floor(i / fillCount);
-        arr2D[n].push(childrenArr[i]);
+        arr2D[n].push(filteredChildren[i]);
       }
     }
 
     const arr = new Array<JSX.Element>(fillCount);
     for (let i = 0; i < arr.length; i++) {
-      if (orderBy === "row") {
-        arr[i] = (
-          <Grid key={i} item className={childClassName}>
-            <Row {...childProps}>{arr2D[i]}</Row>
+      arr[i] = (
+        <Grid key={i} item className={childClassName}>
+          <Grid {...childProps} container direction={orderBy}>
+            {arr2D[i]}
           </Grid>
-        );
-      } else {
-        arr[i] = (
-          <Grid key={i} item className={childClassName}>
-            <Column {...childProps}>{arr2D[i]}</Column>
-          </Grid>
-        );
-      }
+        </Grid>
+      );
     }
     return arr;
   };

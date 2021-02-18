@@ -1,4 +1,4 @@
-import { Stage, TaskStage } from "./Constants";
+import { Stage, TaskStage, TRequestFail } from "./Constants";
 
 export const ADD_TASK = "ADD_TASK" as const;
 type add_task = typeof ADD_TASK;
@@ -20,6 +20,14 @@ export const RESTAGE_TASK = "RESTAGE_TASK" as const;
 type restage_task = typeof RESTAGE_TASK;
 export const REORDER_TASK = "REORDER_TASK" as const;
 type reorder_task = typeof REORDER_TASK;
+export const LOGIN_USER = "LOGIN_USER" as const;
+type login_user = typeof LOGIN_USER;
+export const COOKIE_LOGIN = "COOKIE_LOGIN" as const;
+type cookie_login = typeof COOKIE_LOGIN;
+export const LOGIN_COMPLETE = "LOGIN_COMPLETE" as const;
+type login_complete = typeof LOGIN_COMPLETE;
+export const LOGIN_FAILURE = "export const " as const;
+type login_failure = typeof LOGIN_FAILURE;
 
 export interface IUserInfo {
   icon: string;
@@ -29,6 +37,12 @@ export interface IUserInfo {
   createdAt: Date;
   updatedAt: Date;
   __v: number;
+}
+
+export interface IUserCredentials {
+  username: string;
+  email: string;
+  password: string;
 }
 
 export interface ITasklistsHolder {
@@ -67,6 +81,42 @@ export interface ITask {
   due?: Date;
   priority: number;
 }
+
+export const extractUserInfo = (info: any): IUserInfo | null => {
+  if (!isUserInfo(info)) {
+    return null;
+  }
+  return {
+    __v: info.__v,
+    icon: info.icon,
+    color: info.color,
+    email: info.email,
+    username: info.username,
+    createdAt: info.createdAt,
+    updatedAt: info.updatedAt,
+  };
+};
+
+export const extractTasklists = (info: any): TTasklists | null => {
+  if (!isTasklists(info?.tasklists)) {
+    return null;
+  }
+  return info.tasklists;
+};
+
+export const isUserInfo = (info: any): info is IUserInfo => {
+  if (info === null || typeof info !== "object") return false;
+  const infoParsed = info as IUserInfo;
+  return (
+    typeof infoParsed.__v === "number" &&
+    typeof infoParsed.color === "string" &&
+    typeof infoParsed.createdAt === "string" &&
+    typeof infoParsed.email === "string" &&
+    typeof infoParsed.icon === "string" &&
+    typeof infoParsed.updatedAt === "string" &&
+    typeof infoParsed.username === "string"
+  );
+};
 
 // these typeguards should only be necessary for server updates
 export const isTasklists = (lists: any): lists is TTasklists => {
@@ -140,9 +190,49 @@ export type TaskOrderAction = {
   };
 };
 
+export type FailedFetchAction = {
+  type: login_failure;
+  payload: {
+    reason: TRequestFail;
+  };
+};
+
 export type UserAction = {
   type: update_user;
   payload: { user: IUserInfo };
 };
 
-export type AllTasklistActions = TasklistAction | TasklistsAction | TaskAction | TaskStageAction | TaskOrderAction;
+export type LoginCompleteAction = {
+  type: login_complete;
+  payload: { user: IUserInfo; tasklists: TTasklists };
+};
+
+export type LoginAction = {
+  type: login_user;
+  payload: { credentials: IUserCredentials };
+};
+
+export type CookieLoginAction = {
+  type: cookie_login;
+};
+
+export interface LoginReturn {
+  userInfo: IUserInfo;
+  tasklists: TTasklists;
+}
+
+// takes a login action and turns it into a full store update action
+export type DispatchLogin = (action: LoginAction) => LoginCompleteAction;
+// the initial attempt to retrieve user information when site is loaded
+// will load info into store if the user is logged in
+export type DispatchCookieLogin = (
+  action: CookieLoginAction
+) => LoginCompleteAction;
+
+export type AllTasklistActions =
+  | LoginCompleteAction
+  | TasklistAction
+  | TasklistsAction
+  | TaskAction
+  | TaskStageAction
+  | TaskOrderAction;

@@ -3,6 +3,9 @@ import crypto from "crypto";
 export const TaskStage = ["To-Do", "In Progress", "Complete", "Cancelled"] as const;
 export type Stage = typeof TaskStage[number];
 
+export const RequestFails = ["login", "lookup", "user_parse", "tasklists_parse"] as const;
+export type TRequestFail = typeof RequestFails[number];
+
 export const MIN_CHAR = 14;
 export const MAX_CHAR = 128;
 export const MIN_NO_RESTRICTIONS = 32;

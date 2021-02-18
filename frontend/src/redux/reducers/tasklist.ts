@@ -1,7 +1,6 @@
 import * as types from "../../staticData/types";
 import { TaskStage } from "src/staticData/Constants";
 import { getStageCount } from "../selectors";
-import { removeTask } from "../actions";
 
 // ids gives the array index for the associated tasklist
 // this should have all the copy information required
@@ -123,7 +122,7 @@ export const tasklistHolder = (
   action: types.AllTasklistActions
 ): types.ITasklistsHolder => {
   switch (action.type) {
-    case types.REPLACE_ALL_TASKLISTS:
+    case types.REPLACE_ALL_TASKLISTS: case types.LOGIN_COMPLETE:
       const lists: types.TTasklists = action.payload.tasklists;
       const ids: types.IIDs = {};
       for (let i = 0; i < lists.length; i++) {
