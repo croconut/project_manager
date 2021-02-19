@@ -1,9 +1,9 @@
-import { AllTasklistActions, ITasklistsHolder } from "src/staticData/types";
+import { AnyCustomAction, ITasklistsHolder, StoreStatus } from "src/staticData/types";
 import { RootReducer, RootState } from "./reducers";
-
 
 export const FreezeState = (state: RootState): RootState => {
   TasklistsHelper(state.tasklistHolder);
+  ServerStateHelper(state.serverState);
   Object.freeze(state);
   return state;
 };
@@ -11,7 +11,7 @@ export const FreezeState = (state: RootState): RootState => {
 const TasklistsHelper = (
   holder: ITasklistsHolder
 ): ITasklistsHolder => {
-  if (!holder) return holder;
+  if (holder === undefined) return holder;
   for (let i = 0; i < holder.tasklists.length; i++) {
     for (let j = 0; j < holder.tasklists[i].tasks.length; j++) {
       Object.freeze(holder.tasklists[i].tasks[j]);
@@ -23,9 +23,15 @@ const TasklistsHelper = (
   return holder;
 };
 
+const ServerStateHelper = (serverState: StoreStatus) => {
+  if (serverState === undefined) return serverState;
+  Object.freeze(serverState);
+  return serverState;
+}
+
 // middleware wont work for state freezing
 export function Freezer(reducer: RootReducer) {
-  return (state: RootState | undefined, action: AllTasklistActions): RootState => {
+  return (state: RootState | undefined, action: AnyCustomAction): RootState => {
     return FreezeState(reducer(state, action));
   };
 }

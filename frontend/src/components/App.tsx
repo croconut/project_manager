@@ -16,7 +16,7 @@ import {
   nonNavbarRoutes,
 } from "../staticData/Routes";
 import {
-  FailedFetchAction,
+  FetchFailedAction,
   LoginCompleteAction,
 } from "src/staticData/types";
 import Logout from "./Logout";
@@ -27,7 +27,7 @@ import Tasklist from "./Tasklist/Tasklist";
 import Organization from "./Organization";
 
 type Props = {
-  cookieLogin: () => Promise<FailedFetchAction | LoginCompleteAction>;
+  cookieLogin: () => Promise<FetchFailedAction | LoginCompleteAction>;
 };
 
 const App: FC<Props> = ({ cookieLogin }): React.ReactElement => {

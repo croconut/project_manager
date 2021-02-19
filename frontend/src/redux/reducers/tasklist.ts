@@ -119,7 +119,7 @@ const removeTaskHelper = (
 export const tasklistHolder = (
   // ensures that undefined case still has defined initial state
   state: types.ITasklistsHolder = defaultTasklists,
-  action: types.AllTasklistActions
+  action: types.AnyCustomAction
 ): types.ITasklistsHolder => {
   switch (action.type) {
     case types.REPLACE_ALL_TASKLISTS: case types.LOGIN_COMPLETE:
@@ -239,5 +239,7 @@ export const tasklistHolder = (
       return state;
   }
 };
+
+export default tasklistHolder;
 
 export type TTasklistReducer = ReturnType<typeof tasklistHolder>;

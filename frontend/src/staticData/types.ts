@@ -1,4 +1,4 @@
-import { Stage, TaskStage, TRequestFail } from "./Constants";
+import { Stage, TaskStage, TRequestFail, TStatus } from "./Constants";
 
 export const ADD_TASK = "ADD_TASK" as const;
 type add_task = typeof ADD_TASK;
@@ -20,14 +20,14 @@ export const RESTAGE_TASK = "RESTAGE_TASK" as const;
 type restage_task = typeof RESTAGE_TASK;
 export const REORDER_TASK = "REORDER_TASK" as const;
 type reorder_task = typeof REORDER_TASK;
-export const LOGIN_USER = "LOGIN_USER" as const;
-type login_user = typeof LOGIN_USER;
-export const COOKIE_LOGIN = "COOKIE_LOGIN" as const;
-type cookie_login = typeof COOKIE_LOGIN;
 export const LOGIN_COMPLETE = "LOGIN_COMPLETE" as const;
 type login_complete = typeof LOGIN_COMPLETE;
-export const LOGIN_FAILURE = "export const " as const;
-type login_failure = typeof LOGIN_FAILURE;
+export const FETCH_FAILURE = "FETCH_FAILURE" as const;
+type fetch_failure = typeof FETCH_FAILURE;
+export const FETCHING_DATA = "FETCHING_DATA" as const;
+type fetching = typeof FETCHING_DATA;
+export const UPDATING_SERVER = "UPDATING_SERVER" as const;
+type updating = typeof UPDATING_SERVER;
 
 export interface IUserInfo {
   icon: string;
@@ -37,6 +37,12 @@ export interface IUserInfo {
   createdAt: Date;
   updatedAt: Date;
   __v: number;
+}
+
+export interface StoreStatus {
+  status: TStatus;
+  lastFailure: TRequestFail;
+  loggedIn: boolean;
 }
 
 export interface IUserCredentials {
@@ -190,8 +196,8 @@ export type TaskOrderAction = {
   };
 };
 
-export type FailedFetchAction = {
-  type: login_failure;
+export type FetchFailedAction = {
+  type: fetch_failure;
   payload: {
     reason: TRequestFail;
   };
@@ -207,13 +213,12 @@ export type LoginCompleteAction = {
   payload: { user: IUserInfo; tasklists: TTasklists };
 };
 
-export type LoginAction = {
-  type: login_user;
-  payload: { credentials: IUserCredentials };
+export type FetchAction = {
+  type: fetching;
 };
 
-export type CookieLoginAction = {
-  type: cookie_login;
+export type UpdateAction = {
+  type: updating;
 };
 
 export interface LoginReturn {
@@ -221,18 +226,14 @@ export interface LoginReturn {
   tasklists: TTasklists;
 }
 
-// takes a login action and turns it into a full store update action
-export type DispatchLogin = (action: LoginAction) => LoginCompleteAction;
-// the initial attempt to retrieve user information when site is loaded
-// will load info into store if the user is logged in
-export type DispatchCookieLogin = (
-  action: CookieLoginAction
-) => LoginCompleteAction;
-
-export type AllTasklistActions =
-  | LoginCompleteAction
+export type AnyCustomAction =
+  | UserAction
   | TasklistAction
   | TasklistsAction
   | TaskAction
   | TaskStageAction
-  | TaskOrderAction;
+  | TaskOrderAction
+  | UpdateAction
+  | FetchAction
+  | FetchFailedAction
+  | LoginCompleteAction;

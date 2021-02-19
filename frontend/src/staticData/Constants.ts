@@ -1,10 +1,36 @@
 import crypto from "crypto";
 
-export const TaskStage = ["To-Do", "In Progress", "Complete", "Cancelled"] as const;
+export const TaskStage = [
+  "To-Do",
+  "In Progress",
+  "Complete",
+  "Cancelled",
+] as const;
 export type Stage = typeof TaskStage[number];
 
-export const RequestFails = ["login", "lookup", "user_parse", "tasklists_parse"] as const;
+// why whatever request might fail
+// should implement these as keys in backend so i can just check if the specific key exists on login
+// or register or whatever
+export const RequestFails = [
+  "login",
+  "lookup",
+  "user_parse",
+  "tasklists_parse",
+  "email_match",
+  "username_match",
+  "none_yet",
+] as const;
 export type TRequestFail = typeof RequestFails[number];
+
+export const CurrentStatus = [
+  "INITIAL",
+  "UPDATING",
+  "FETCHING",
+  "SYNCED",
+  "FETCH_NEEDED",
+  "UPDATE_NEEDED",
+] as const;
+export type TStatus = typeof CurrentStatus[number];
 
 export const MIN_CHAR = 14;
 export const MAX_CHAR = 128;
@@ -18,24 +44,22 @@ export const PASSWORD_REQ = new RegExp(
 export const USER_REGEX = new RegExp("^[A-Za-z][a-zA-Z0-9_-]*$");
 export const EMAIL_REGEX = new RegExp(`^.+[@]+(?=.*[.]).+$`);
 
-const IconGeneration = ():Array<string> => {
+const IconGeneration = (): Array<string> => {
   const max = 640;
   const arr = Array<string>(max);
   for (let i = 0; i < max; i++) {
     let strNum = i.toString(16);
     if (strNum.length === 1) {
       strNum = "\f00" + strNum;
-    }
-    else if (strNum.length === 2) {
+    } else if (strNum.length === 2) {
       strNum = "\f0" + strNum;
-    }
-    else {
+    } else {
       strNum = "\f" + strNum;
     }
     arr[i] = strNum;
   }
   return arr;
-}
+};
 
 export const hexToRGB = (hex: string) => {
   if (hex.length !== 7) {
@@ -46,11 +70,11 @@ export const hexToRGB = (hex: string) => {
   const g = parseInt(newHex.slice(2, 4), 16);
   const b = parseInt(newHex.slice(4, 6), 16);
   return [r, g, b];
-}
+};
 
 export const hashPassword = (password: string) => {
   const sha = crypto.createHash("sha512").update(String(password));
   return sha.digest("hex");
-}
+};
 
 export const Icons: Array<string> = IconGeneration();

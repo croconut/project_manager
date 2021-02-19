@@ -1,7 +1,11 @@
 import axios from "axios";
 import { ThunkDispatch, ThunkAction } from "redux-thunk";
 import { RequestFails, Stage, TRequestFail } from "src/staticData/Constants";
-import { loginRouter, usersPrivateInfo } from "src/staticData/Routes";
+import {
+  loginRouter,
+  registerRouter,
+  usersPrivateInfo,
+} from "src/staticData/Routes";
 import * as types from "../staticData/types";
 
 export const updateTasklistsFromServer = (
@@ -109,8 +113,23 @@ export const reorderTask = (
   },
 });
 
-export const loginFail = (reason: TRequestFail): types.FailedFetchAction => ({
-  type: types.LOGIN_FAILURE,
+export const fetching = (): types.FetchAction => ({
+  type: types.FETCHING_DATA,
+});
+
+export const updating = (): types.UpdateAction => ({
+  type: types.UPDATING_SERVER,
+});
+
+export const updateUser = (info: types.IUserInfo): types.UserAction => ({
+  type: types.UPDATE_USER,
+  payload: {
+    user: info,
+  },
+});
+
+export const loginFail = (reason: TRequestFail): types.FetchFailedAction => ({
+  type: types.FETCH_FAILURE,
   payload: {
     reason,
   },
@@ -131,6 +150,18 @@ const loginRequest = async (
 ): Promise<types.LoginReturn> => {
   const loginRes = await axios.post(loginRouter.route, credentials);
   if (loginRes.status >= 300) {
+    return Promise.reject(RequestFails[0]);
+  }
+  return await infoRequest();
+};
+
+const signupRequest = async (
+  credentials: types.IUserCredentials
+): Promise<types.LoginReturn> => {
+  const loginRes = await axios.post(registerRouter.route, credentials);
+  if (loginRes.status >= 300) {
+    // TODO
+    // parse the data to find out why it failed
     return Promise.reject(RequestFails[0]);
   }
   return await infoRequest();
@@ -160,18 +191,13 @@ const infoRequest = async (): Promise<types.LoginReturn> => {
 export const loginAttempt = (
   credentials: types.IUserCredentials
 ): ThunkAction<
-  Promise<types.FailedFetchAction | types.LoginCompleteAction>,
+  Promise<types.FetchFailedAction | types.LoginCompleteAction>,
   {},
   {},
-  types.LoginCompleteAction | types.FailedFetchAction
+  types.AnyCustomAction
 > => {
-  return function (
-    dispatch: ThunkDispatch<
-      {},
-      {},
-      types.LoginCompleteAction | types.FailedFetchAction
-    >
-  ) {
+  return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
+    dispatch(fetching());
     return loginRequest(credentials).then(
       (login: types.LoginReturn) => dispatch(loginSuccess(login)),
       (reason: TRequestFail) => dispatch(loginFail(reason))
@@ -181,19 +207,31 @@ export const loginAttempt = (
 
 // TODO slightly truncated version of login
 export const loginAttemptFromCookie = (): ThunkAction<
-  Promise<types.FailedFetchAction | types.LoginCompleteAction>,
+  Promise<types.FetchFailedAction | types.LoginCompleteAction>,
   {},
   {},
-  types.LoginCompleteAction | types.FailedFetchAction
+  types.AnyCustomAction
 > => {
-  return function (
-    dispatch: ThunkDispatch<
-      {},
-      {},
-      types.LoginCompleteAction | types.FailedFetchAction
-    >
-  ) {
+  return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
+    dispatch(fetching());
     return infoRequest().then(
+      (login: types.LoginReturn) => dispatch(loginSuccess(login)),
+      (reason: TRequestFail) => dispatch(loginFail(reason))
+    );
+  };
+};
+
+export const signUpAttempt = (
+  credentials: types.IUserCredentials
+): ThunkAction<
+  Promise<types.FetchFailedAction | types.LoginCompleteAction>,
+  {},
+  {},
+  types.AnyCustomAction
+> => {
+  return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
+    dispatch(fetching());
+    return signupRequest(credentials).then(
       (login: types.LoginReturn) => dispatch(loginSuccess(login)),
       (reason: TRequestFail) => dispatch(loginFail(reason))
     );
