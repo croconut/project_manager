@@ -38,7 +38,7 @@ import { RootState } from "src/redux/reducers";
 
 // general summary of logic: just add user when they
 
-const CreateUser: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
+const Register: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -359,4 +359,4 @@ const mapActionsToProps = {
   replaceTasklists: updateTasklistsFromServer,
 };
 
-export default connect(mapStateToProps, mapActionsToProps)(CreateUser);
+export default connect(mapStateToProps, mapActionsToProps)(Register);
