@@ -42,13 +42,17 @@ export const getTasklistById = (state: RootState, props: IDProps) => {
   return tasklists[id];
 };
 
-// TODO when userinfo gets updated from default, update this :x
 export const getLoggedIn = (state: RootState) => {
-  return (
-    state.tasklistHolder.tasklists.length > 0 &&
-    state.tasklistHolder.tasklists[0]._id.search("RANDOM") === -1
-  );
+  return state.serverState.loggedIn;
 };
+
+export const getStoreStatus = (state: RootState) => {
+  return state.serverState.status;
+}
+
+export const getLastFailure = (state: RootState) => {
+  return state.serverState.lastFailure;
+}
 
 // only really for extracting one tasklist if only one is needed
 // 0 - TaskStage.length, refer to the types inside it e.g. ongoing or todo

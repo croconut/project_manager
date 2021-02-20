@@ -160,9 +160,21 @@ const signupRequest = async (
 ): Promise<types.LoginReturn> => {
   const loginRes = await axios.post(registerRouter.route, credentials);
   if (loginRes.status >= 300) {
+    if (loginRes.status !== 409) {
+      return Promise.reject(RequestFails[7]);
+    }
+    if (loginRes.data.username) {
+      if (loginRes.data.email) {
+        return Promise.reject(RequestFails[5]);
+      } else {
+        return Promise.reject(RequestFails[4]);
+      }
+    } else if (loginRes.data.email) {
+      return Promise.reject(RequestFails[3]);
+    }
     // TODO
     // parse the data to find out why it failed
-    return Promise.reject(RequestFails[0]);
+    return Promise.reject(RequestFails[7]);
   }
   return await infoRequest();
 };
@@ -172,15 +184,15 @@ const infoRequest = async (): Promise<types.LoginReturn> => {
     withCredentials: true,
   });
   if (infoRes.status >= 300) {
-    return Promise.reject(RequestFails[1]);
+    return Promise.reject(RequestFails[6]);
   }
   const user = types.extractUserInfo(infoRes.data);
   if (user === null) {
-    return Promise.reject(RequestFails[2]);
+    return Promise.reject(RequestFails[1]);
   }
   const tasklists = types.extractTasklists(infoRes.data);
   if (tasklists === null) {
-    return Promise.reject(RequestFails[3]);
+    return Promise.reject(RequestFails[2]);
   }
   return { userInfo: user, tasklists: tasklists };
 };

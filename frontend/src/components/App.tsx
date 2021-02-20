@@ -6,7 +6,7 @@ import {
 } from "src/redux/actions";
 import Navbar from "./Navbar";
 import Homepage from "./Homepage";
-import CreateUser from "./CreateUser";
+import Register from "./Register";
 import Login from "./Login";
 
 import {
@@ -46,7 +46,7 @@ const App: FC<Props> = ({ cookieLogin }): React.ReactElement => {
       <div className="container">
         <Switch>
           <Route exact path={mainRoute.route} component={Homepage} />
-          <Route path={loggedOutRoutes[0].route} component={CreateUser} />
+          <Route path={loggedOutRoutes[0].route} component={Register} />
           <Route path={loggedOutRoutes[1].route} component={Login} />
           <Route path={loggedInRoutes[0].route} component={Tasklists} />
           <Route path={loggedInRoutes[1].route} component={Organizations} />

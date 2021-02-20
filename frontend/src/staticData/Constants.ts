@@ -13,11 +13,13 @@ export type Stage = typeof TaskStage[number];
 // or register or whatever
 export const RequestFails = [
   "login",
-  "lookup",
   "user_parse",
   "tasklists_parse",
   "email_match",
   "username_match",
+  "email_and_username_match",
+  "lookup",
+  "unknown",
   "none_yet",
 ] as const;
 export type TRequestFail = typeof RequestFails[number];
