@@ -1,4 +1,4 @@
-import { Stage, TaskStage, TRequestFail, TStatus } from "./Constants";
+import { Stage, TaskStage, TRequestFail, TStatus, TUpdateFail } from "./Constants";
 
 export const ADD_TASK = "ADD_TASK" as const;
 type add_task = typeof ADD_TASK;
@@ -22,10 +22,14 @@ export const REORDER_TASK = "REORDER_TASK" as const;
 type reorder_task = typeof REORDER_TASK;
 export const LOGIN_COMPLETE = "LOGIN_COMPLETE" as const;
 type login_complete = typeof LOGIN_COMPLETE;
+export const LOGOUT_COMPLETE = "LOGOUT_COMPLETE" as const;
+type logout_complete = typeof LOGOUT_COMPLETE;
 export const FETCH_FAILURE = "FETCH_FAILURE" as const;
 type fetch_failure = typeof FETCH_FAILURE;
 export const FETCHING_DATA = "FETCHING_DATA" as const;
 type fetching = typeof FETCHING_DATA;
+export const UPDATE_FAILURE = "UPDATE_FAILURE" as const;
+type update_failure = typeof UPDATE_FAILURE;
 export const UPDATING_SERVER = "UPDATING_SERVER" as const;
 type updating = typeof UPDATING_SERVER;
 
@@ -41,11 +45,16 @@ export interface IUserInfo {
 
 export interface StoreStatus {
   status: TStatus;
-  lastFailure: TRequestFail;
+  lastFetchFailure: TRequestFail;
+  lastUpdateFailure: TUpdateFail;
   loggedIn: boolean;
 }
 
-export interface IUserCredentials {
+export type TUserCredentials = {
+  password: string;
+} & ({ username: string; } | { email: string; })
+
+export interface IUserRegister {
   username: string;
   email: string;
   password: string;
@@ -203,6 +212,13 @@ export type FetchFailedAction = {
   };
 };
 
+export type UpdateFailedAction = {
+  type: update_failure;
+  payload: {
+    reason: TUpdateFail;
+  };
+};
+
 export type UserAction = {
   type: update_user;
   payload: { user: IUserInfo };
@@ -212,6 +228,10 @@ export type LoginCompleteAction = {
   type: login_complete;
   payload: { user: IUserInfo; tasklists: TTasklists };
 };
+
+export type LogoutCompleteAction = {
+  type: logout_complete;
+}
 
 export type FetchAction = {
   type: fetching;
@@ -234,6 +254,8 @@ export type AnyCustomAction =
   | TaskStageAction
   | TaskOrderAction
   | UpdateAction
+  | UpdateFailedAction
   | FetchAction
   | FetchFailedAction
-  | LoginCompleteAction;
+  | LoginCompleteAction
+  | LogoutCompleteAction;

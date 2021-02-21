@@ -1,5 +1,4 @@
 import React, { useState, FC, useEffect } from "react";
-import { loginRouter, usersPrivateInfo } from "../staticData/Routes";
 import {
   Card,
   TextField,
@@ -12,24 +11,20 @@ import {
 } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import { Input, Visibility, VisibilityOff } from "@material-ui/icons";
-import axios, { AxiosError, AxiosResponse } from "axios";
-import { hashPassword } from "../staticData/Constants";
+import { hashPassword, TRequestFail, TStatus } from "../staticData/Constants";
 import { useHistory } from "react-router-dom";
 import { connect } from "react-redux";
-import { getLoggedIn } from "src/redux/selectors";
+import { getLastFetchFailure, getLoggedIn, getStoreStatus } from "src/redux/selectors";
 import { RootState } from "src/redux/reducers";
-import { updateTasklistsFromServer } from "src/redux/actions";
-import { isTasklists, TasklistsAction, TTasklists } from "src/staticData/types";
+import { loginAttempt } from "src/redux/actions";
+import { FetchFailedAction, LoginCompleteAction, TUserCredentials } from "src/staticData/types";
 
-interface UserAuth {
-  email?: string;
-  username?: string;
-  password: string;
-}
 
 export interface StoreProps {
   loggedIn: boolean;
-  replaceTasklists: (tasklists: TTasklists) => TasklistsAction;
+  status: TStatus;
+  failReason: TRequestFail;
+  tryLogin: (creds: TUserCredentials) => Promise<LoginCompleteAction | FetchFailedAction>;
 }
 
 export const styles = makeStyles({
@@ -66,8 +61,7 @@ export const styles = makeStyles({
   },
 });
 
-const Login: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
-  const [submitting, setSubmitting] = useState(false);
+const Login: FC<StoreProps> = ({ loggedIn, tryLogin, status, failReason }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [alertActive, setAlertActive] = useState(false);
   const [username, setUsername] = useState("");
@@ -105,6 +99,17 @@ const Login: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
     return;
   }, [alertActive]);
 
+  useEffect(() => {
+    if (status !== "FETCH_NEEDED") return;
+    switch (failReason) {
+      case "login":
+        setAlertActive(true);
+        return;
+      default:
+        return;
+    }
+  }, [status, failReason]);
+
   const updatePassword = (e: string) => {
     setPassword(e);
   };
@@ -115,49 +120,15 @@ const Login: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
 
   const onSubmit = (submission: React.FormEvent) => {
     submission.preventDefault();
-    if (submitting) return;
-    setSubmitting(true);
-    let userAuth: UserAuth = { password: hashPassword(password) };
+    if (status === "FETCHING" || status === "UPDATING") return;
+    let userAuth;
     if (username.search("@") !== -1) {
-      userAuth.email = username;
+      userAuth = { password: hashPassword(password), email: username };
     } else {
-      userAuth.username = username;
+      userAuth = { password: hashPassword(password), username };
     }
-    axios
-      .post(loginRouter.route, userAuth, { withCredentials: true })
-      .then(async (_result: AxiosResponse) => {
-        // get myinfo after successful login
-        const initUser = async () => {
-          axios
-            .get(usersPrivateInfo.route, {
-              withCredentials: true,
-            })
-            .then((response: AxiosResponse) => {
-              if (isTasklists(response.data.tasklists)) {
-                replaceTasklists(response.data.tasklists);
-                history.push("/");
-              } else {
-                //errored out, we're not logged in yet
-                setAlertActive(true);
-                setSubmitting(false);
-              }
-            })
-            .catch((error: AxiosError) => {
-              setAlertActive(true);
-              setSubmitting(false);
-            });
-          // here imma update the tasklists assuming it came
-          // TODO check for error code and wait for login signal complete if
-          // error out in some way
-        };
-        await initUser();
-      })
-      .catch((err: AxiosError) => {
-        // failed to login somehow
-        setAlertActive(true);
-        setSubmitting(false);
-      });
-  };
+    tryLogin(userAuth);
+  }
 
   return (
     <div className={classes.root}>
@@ -229,16 +200,17 @@ const Login: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
 
 const mapStateToProps = (state: RootState) => {
   const loggedIn = getLoggedIn(state);
+  const status = getStoreStatus(state);
+  const failReason = getLastFetchFailure(state);
   // TODO
   // const getPageName = getCurrentPage(state);
   // whenever react-router is pushed to, also want to set the currentpage
   // name in the store for the navbar to render it
-  return { loggedIn };
+  return { loggedIn, status, failReason };
 };
 
 const mapActionsToProps = {
-  // renaming so i can use it without saying props.
-  replaceTasklists: updateTasklistsFromServer,
+  tryLogin: loginAttempt,
 };
 
 export default connect(mapStateToProps, mapActionsToProps)(Login);

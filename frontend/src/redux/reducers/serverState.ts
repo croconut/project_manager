@@ -15,7 +15,8 @@ import * as types from "src/staticData/types";
 
 const defaultStatus: types.StoreStatus = {
   status: "INITIAL",
-  lastFailure: "none_yet",
+  lastFetchFailure: "none_yet",
+  lastUpdateFailure: "none_yet",
   loggedIn: false,
 };
 
@@ -31,8 +32,12 @@ export const serverState = (
       return { ...state, status: "UPDATING" };
     case types.LOGIN_COMPLETE:
       return { ...state, loggedIn: true, status: "SYNCED" };
+    case types.LOGOUT_COMPLETE:
+      return { ...state, loggedIn: false, status: "INITIAL" };
     case types.FETCH_FAILURE:
-      return { loggedIn: false, status: "FETCH_NEEDED", lastFailure: action.payload.reason };
+      return { ...state, status: "FETCH_NEEDED", lastFetchFailure: action.payload.reason };
+    case types.UPDATE_FAILURE:
+      return { ...state, status: "UPDATE_NEEDED", lastUpdateFailure: action.payload.reason };
     case types.ADD_TASK:
     case types.ADD_TASKLIST:
     case types.MODIFY_TASK:

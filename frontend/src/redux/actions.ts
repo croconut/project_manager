@@ -1,8 +1,15 @@
-import axios from "axios";
+import axios, { AxiosResponse, AxiosStatic } from "axios";
 import { ThunkDispatch, ThunkAction } from "redux-thunk";
-import { RequestFails, Stage, TRequestFail } from "src/staticData/Constants";
+import {
+  RequestFails,
+  Stage,
+  TRequestFail,
+  TUpdateFail,
+  UpdateFails,
+} from "src/staticData/Constants";
 import {
   loginRouter,
+  logoutRouter,
   registerRouter,
   usersPrivateInfo,
 } from "src/staticData/Routes";
@@ -135,6 +142,13 @@ export const loginFail = (reason: TRequestFail): types.FetchFailedAction => ({
   },
 });
 
+export const updateFail = (reason: TUpdateFail): types.UpdateFailedAction => ({
+  type: types.UPDATE_FAILURE,
+  payload: {
+    reason,
+  },
+});
+
 export const loginSuccess = (
   login: types.LoginReturn
 ): types.LoginCompleteAction => ({
@@ -145,63 +159,80 @@ export const loginSuccess = (
   },
 });
 
-const loginRequest = async (
-  credentials: types.IUserCredentials
+export const logoutSuccess = (): types.LogoutCompleteAction => ({
+  type: types.LOGOUT_COMPLETE,
+});
+
+interface ErrorResponse {
+  response: AxiosResponse;
+}
+
+const loginRequest = (
+  credentials: types.TUserCredentials
 ): Promise<types.LoginReturn> => {
-  const loginRes = await axios.post(loginRouter.route, credentials);
-  if (loginRes.status >= 300) {
-    return Promise.reject(RequestFails[0]);
-  }
-  return await infoRequest();
+  return axios
+    .post(loginRouter.route, credentials)
+    .then(() => infoRequest())
+    .catch(({ response }: ErrorResponse) => Promise.reject(RequestFails[0]));
 };
 
-const signupRequest = async (
-  credentials: types.IUserCredentials
+const logoutRequest = (): Promise<AxiosStatic> => {
+  return axios.post(logoutRouter.route, { withCredentials: true });
+};
+
+const signupRequest = (
+  credentials: types.IUserRegister
 ): Promise<types.LoginReturn> => {
-  const loginRes = await axios.post(registerRouter.route, credentials);
-  if (loginRes.status >= 300) {
-    if (loginRes.status !== 409) {
-      return Promise.reject(RequestFails[7]);
-    }
-    if (loginRes.data.username) {
-      if (loginRes.data.email) {
-        return Promise.reject(RequestFails[5]);
-      } else {
-        return Promise.reject(RequestFails[4]);
+  return axios
+    .post(registerRouter.route, credentials)
+    .then(() => infoRequest())
+    .catch(({ response }: ErrorResponse) => {
+      if (response === undefined) {
+        return Promise.reject(RequestFails[7]);
       }
-    } else if (loginRes.data.email) {
-      return Promise.reject(RequestFails[3]);
-    }
-    // TODO
-    // parse the data to find out why it failed
-    return Promise.reject(RequestFails[7]);
-  }
-  return await infoRequest();
+      if (response.status !== 409) {
+        return Promise.reject(RequestFails[7]);
+      }
+      if (response.data.username) {
+        if (response.data.email) {
+          return Promise.reject(RequestFails[5]);
+        } else {
+          return Promise.reject(RequestFails[4]);
+        }
+      } else if (response.data.email) {
+        return Promise.reject(RequestFails[3]);
+      }
+      return Promise.reject(RequestFails[7]);
+    });
 };
 
-const infoRequest = async (): Promise<types.LoginReturn> => {
-  const infoRes = await axios.get(usersPrivateInfo.route, {
-    withCredentials: true,
-  });
-  if (infoRes.status >= 300) {
-    return Promise.reject(RequestFails[6]);
-  }
-  const user = types.extractUserInfo(infoRes.data);
-  if (user === null) {
-    return Promise.reject(RequestFails[1]);
-  }
-  const tasklists = types.extractTasklists(infoRes.data);
-  if (tasklists === null) {
-    return Promise.reject(RequestFails[2]);
-  }
-  return { userInfo: user, tasklists: tasklists };
+const infoRequest = (cookieLogin = false): Promise<types.LoginReturn> => {
+  return axios
+    .get(usersPrivateInfo.route, {
+      withCredentials: true,
+    })
+    .then((response: AxiosResponse) => {
+      const user = types.extractUserInfo(response.data);
+      if (user === null) {
+        return Promise.reject(RequestFails[1]);
+      }
+      const tasklists = types.extractTasklists(response.data);
+      if (tasklists === null) {
+        return Promise.reject(RequestFails[2]);
+      }
+      return { userInfo: user, tasklists: tasklists };
+    })
+    .catch(({ response }: ErrorResponse) => {
+      if (cookieLogin) return Promise.reject(RequestFails[9]);
+      else return Promise.reject(RequestFails[6]);
+    });
 };
 
 // thunks
 // NOTE on return type of these thunks
 // use the top level argument types and the return type of the last function
 export const loginAttempt = (
-  credentials: types.IUserCredentials
+  credentials: types.TUserCredentials
 ): ThunkAction<
   Promise<types.FetchFailedAction | types.LoginCompleteAction>,
   {},
@@ -210,10 +241,9 @@ export const loginAttempt = (
 > => {
   return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
     dispatch(fetching());
-    return loginRequest(credentials).then(
-      (login: types.LoginReturn) => dispatch(loginSuccess(login)),
-      (reason: TRequestFail) => dispatch(loginFail(reason))
-    );
+    return loginRequest(credentials)
+      .then((login: types.LoginReturn) => dispatch(loginSuccess(login)))
+      .catch((reason: TRequestFail) => dispatch(loginFail(reason)));
   };
 };
 
@@ -226,15 +256,14 @@ export const loginAttemptFromCookie = (): ThunkAction<
 > => {
   return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
     dispatch(fetching());
-    return infoRequest().then(
-      (login: types.LoginReturn) => dispatch(loginSuccess(login)),
-      (reason: TRequestFail) => dispatch(loginFail(reason))
-    );
+    return infoRequest(true)
+      .then((login: types.LoginReturn) => dispatch(loginSuccess(login)))
+      .catch((reason: TRequestFail) => dispatch(loginFail(reason)));
   };
 };
 
 export const signUpAttempt = (
-  credentials: types.IUserCredentials
+  credentials: types.IUserRegister
 ): ThunkAction<
   Promise<types.FetchFailedAction | types.LoginCompleteAction>,
   {},
@@ -243,9 +272,22 @@ export const signUpAttempt = (
 > => {
   return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
     dispatch(fetching());
-    return signupRequest(credentials).then(
-      (login: types.LoginReturn) => dispatch(loginSuccess(login)),
-      (reason: TRequestFail) => dispatch(loginFail(reason))
-    );
+    return signupRequest(credentials)
+      .then((login: types.LoginReturn) => dispatch(loginSuccess(login)))
+      .catch((reason: TRequestFail) => dispatch(loginFail(reason)));
+  };
+};
+
+export const logoutAttempt = (): ThunkAction<
+  Promise<types.UpdateFailedAction | types.LogoutCompleteAction>,
+  {},
+  {},
+  types.AnyCustomAction
+> => {
+  return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
+    dispatch(fetching());
+    return logoutRequest()
+      .then(() => dispatch(logoutSuccess()))
+      .catch(() => dispatch(updateFail(UpdateFails[0])));
   };
 };

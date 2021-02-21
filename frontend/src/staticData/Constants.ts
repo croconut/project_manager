@@ -21,8 +21,16 @@ export const RequestFails = [
   "lookup",
   "unknown",
   "none_yet",
+  "no_cookie",
 ] as const;
 export type TRequestFail = typeof RequestFails[number];
+
+export const UpdateFails = [
+  "logout",
+  "unknown",
+  "none_yet",
+] as const;
+export type TUpdateFail = typeof UpdateFails[number];
 
 export const CurrentStatus = [
   "INITIAL",

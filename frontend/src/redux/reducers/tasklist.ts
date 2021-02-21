@@ -122,7 +122,10 @@ export const tasklistHolder = (
   action: types.AnyCustomAction
 ): types.ITasklistsHolder => {
   switch (action.type) {
-    case types.REPLACE_ALL_TASKLISTS: case types.LOGIN_COMPLETE:
+    case types.LOGOUT_COMPLETE:
+      return defaultTasklists;
+    case types.REPLACE_ALL_TASKLISTS:
+    case types.LOGIN_COMPLETE:
       const lists: types.TTasklists = action.payload.tasklists;
       const ids: types.IIDs = {};
       for (let i = 0; i < lists.length; i++) {

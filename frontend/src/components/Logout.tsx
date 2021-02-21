@@ -1,5 +1,4 @@
 import React, { FC, useEffect } from "react";
-import { logoutRouter } from "../staticData/Routes";
 import {
   DialogTitle,
   Dialog,
@@ -7,18 +6,17 @@ import {
   Button,
   makeStyles,
 } from "@material-ui/core";
-import axios, { AxiosError, AxiosResponse } from "axios";
+
 import { useHistory } from "react-router-dom";
 import { connect } from "react-redux";
-import { getLoggedIn } from "src/redux/selectors";
+import { getLastUpdateFailure, getLoggedIn, getStoreStatus } from "src/redux/selectors";
 import { RootState } from "src/redux/reducers";
-import { updateTasklistsFromServer } from "src/redux/actions";
-import { defaultTasklists } from "src/redux/reducers/tasklist";
-import { TasklistsAction, TTasklists } from "src/staticData/types";
+import { logoutAttempt } from "src/redux/actions";
+import { LogoutCompleteAction, UpdateFailedAction } from "src/staticData/types";
 
 interface StoreProps {
   loggedIn: boolean;
-  replaceTasklists: (tasklists: TTasklists) => TasklistsAction;
+  tryLogout: () => Promise<UpdateFailedAction | LogoutCompleteAction>;
 }
 
 const styles = makeStyles({
@@ -29,7 +27,7 @@ const styles = makeStyles({
 });
 
 //todo convert to modal pop up --> asks if you're sure you want to log out?
-const Logout: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
+const Logout: FC<StoreProps> = ({ loggedIn, tryLogout }) => {
   const history = useHistory();
   const classes = styles();
   useEffect(() => {
@@ -40,21 +38,12 @@ const Logout: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
       }
     };
     logoutRequest(loggedIn);
-  }, [loggedIn, history, replaceTasklists]);
+  }, [loggedIn, history]);
 
   const handleClose = (logoutRequested: boolean) => {
     // axios to log out
     if (logoutRequested) {
-      axios
-        .post(logoutRouter.route, {}, { withCredentials: true })
-        .then((_response: AxiosResponse) => {
-          // replace store data with defaults
-          replaceTasklists(defaultTasklists.tasklists);
-          history.push("/");
-        })
-        .catch((error: AxiosError) => {
-          history.push("/");
-        });
+      tryLogout();
     } else {
       history.goBack();
       history.push("/");
@@ -90,16 +79,13 @@ const Logout: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
 
 const mapStateToProps = (state: RootState) => {
   const loggedIn = getLoggedIn(state);
-  // TODO
-  // const getPageName = getCurrentPage(state);
-  // whenever react-router is pushed to, also want to set the currentpage
-  // name in the store for the navbar to render it
-  return { loggedIn };
+  const status = getStoreStatus(state);
+  const failReason = getLastUpdateFailure(state);
+  return { loggedIn, status, failReason };
 };
 
 const mapActionsToProps = {
-  // renaming so i can use it without saying props.
-  replaceTasklists: updateTasklistsFromServer,
+  tryLogout: logoutAttempt,
 };
 
 export default connect(mapStateToProps, mapActionsToProps)(Logout);

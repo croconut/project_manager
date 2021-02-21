@@ -50,8 +50,12 @@ export const getStoreStatus = (state: RootState) => {
   return state.serverState.status;
 }
 
-export const getLastFailure = (state: RootState) => {
-  return state.serverState.lastFailure;
+export const getLastFetchFailure = (state: RootState) => {
+  return state.serverState.lastFetchFailure;
+}
+
+export const getLastUpdateFailure = (state: RootState) => {
+  return state.serverState.lastUpdateFailure;
 }
 
 // only really for extracting one tasklist if only one is needed

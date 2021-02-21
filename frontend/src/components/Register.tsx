@@ -17,28 +17,44 @@ import {
   VisibilityOff,
 } from "@material-ui/icons";
 
-import axios, { AxiosError, AxiosResponse } from "axios";
-import { registerRouter, usersPrivateInfo } from "../staticData/Routes";
 import {
   EMAIL_REGEX,
   hashPassword,
-  // EMAIL_REGEX,
   MAX_CHAR,
   MIN_CHAR,
   MIN_NO_RESTRICTIONS,
   PASSWORD_REQ,
+  TRequestFail,
+  TStatus,
   USER_REGEX,
 } from "../staticData/Constants";
-import { styles, StoreProps } from "./Login";
-import { isTasklists } from "src/staticData/types";
+import { styles } from "./Login";
+import {
+  FetchFailedAction,
+  LoginCompleteAction,
+  IUserRegister,
+} from "src/staticData/types";
 import { connect } from "react-redux";
-import { getLoggedIn } from "src/redux/selectors";
-import { updateTasklistsFromServer } from "src/redux/actions";
+import {
+  getLastFetchFailure,
+  getLoggedIn,
+  getStoreStatus,
+} from "src/redux/selectors";
+import { signUpAttempt } from "src/redux/actions";
 import { RootState } from "src/redux/reducers";
 
 // general summary of logic: just add user when they
 
-const Register: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
+interface StoreProps {
+  loggedIn: boolean;
+  status: TStatus;
+  failReason: TRequestFail;
+  signUp: (
+    user: IUserRegister
+  ) => Promise<FetchFailedAction | LoginCompleteAction>;
+}
+
+const Register: FC<StoreProps> = ({ loggedIn, status, failReason, signUp }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -51,7 +67,6 @@ const Register: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
   const [email, setEmail] = useState("");
   const [emailOkay, setEmailOkay] = useState(true);
   const [usernameOkay, setUsernameOkay] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [alertActive, setAlertActive] = useState(false);
   const history = useHistory();
@@ -84,7 +99,39 @@ const Register: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
     if (loggedIn) {
       history.push("/");
     }
-  }, [loggedIn, history]);
+  }, [loggedIn, history, status]);
+
+  useEffect(() => {
+    if (status !== "FETCH_NEEDED") return;
+    switch (failReason) {
+      case "email_and_username_match":
+        setErrorMessage("Email and username already taken");
+        setUsername("");
+        setEmail("");
+        setAlertActive(true);
+        return;
+      case "email_match":
+        setErrorMessage("Email already taken");
+        setEmail("");
+        setAlertActive(true);
+        return;
+      case "username_match":
+        setErrorMessage("Username already taken");
+        setUsername("");
+        setAlertActive(true);
+        return;
+      case "lookup":
+        setErrorMessage("User information error, try refreshing the page");
+        setAlertActive(true);
+        return;
+      case "unknown":
+        setErrorMessage("Server did not respond, please try again later");
+        setAlertActive(true);
+        return;
+      default:
+        return;
+    }
+  }, [failReason, status]);
 
   const checkMatches = (p: string, p2: string) => {
     setPasswordMatches(p === p2);
@@ -137,73 +184,17 @@ const Register: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
 
   const onSubmit = (submission: React.FormEvent) => {
     submission.preventDefault();
-    if (submitting) return;
+    if (status === "UPDATING" || status === "FETCHING") return;
     if (CheckSubmittable()) {
       setAlertActive(true);
       return;
     }
-    setSubmitting(true);
-    const user = {
+    const user: IUserRegister = {
       username: username,
       email: email,
       password: hashPassword(password),
     };
-    //TODO check that not hitting database with duplicate to our knowledge
-    axios
-      .post(registerRouter.route, user)
-      .then((result: AxiosResponse) => {
-        const initUser = async () => {
-          axios
-            .get(usersPrivateInfo.route, {
-              withCredentials: true,
-            })
-            .then((response: AxiosResponse) => {
-              setSubmitting(false);
-              if (isTasklists(response.data.tasklists)) {
-                replaceTasklists(response.data.tasklists);
-                history.push("/");
-              } else {
-                //errored out, we're not logged in yet
-                setErrorMessage("User information error, try refreshing");
-                setAlertActive(true);
-              }
-            })
-            .catch((error: AxiosError) => {
-              setErrorMessage(
-                "Information could not be retrieved, try refreshing"
-              );
-              setAlertActive(true);
-              setSubmitting(false);
-            });
-          // here imma update the tasklists assuming it came
-          // TODO check for error code and wait for login signal complete if
-          // error out in some way
-        };
-        initUser();
-      })
-      .catch((err: AxiosError) => {
-        setSubmitting(false);
-        setAlertActive(true);
-        if (err.response === undefined || err.response.status !== 409) {
-          console.log(err);
-          console.log(err.response);
-          setErrorMessage("Server did not respond, please try again later");
-          return;
-        }
-        if (err.response.data.username) {
-          if (err.response.data.email) {
-            setErrorMessage("Email and username already taken");
-            setUsername("");
-            setEmail("");
-          } else {
-            setErrorMessage("Username already taken");
-            setUsername("");
-          }
-        } else if (err.response.data.email) {
-          setErrorMessage("Email already taken");
-          setEmail("");
-        }
-      });
+    signUp(user);
   };
 
   return (
@@ -285,7 +276,7 @@ const Register: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
                   ? "passwords must match"
                   : ""
               }
-              id="password"
+              id="password-duplicate"
               type={showPasswordDuplicate ? "text" : "password"}
               label="Confirm Password"
               autoComplete="current-password"
@@ -347,16 +338,17 @@ const Register: FC<StoreProps> = ({ loggedIn, replaceTasklists }) => {
 
 const mapStateToProps = (state: RootState) => {
   const loggedIn = getLoggedIn(state);
+  const status = getStoreStatus(state);
+  const failReason = getLastFetchFailure(state);
   // TODO
   // const getPageName = getCurrentPage(state);
   // whenever react-router is pushed to, also want to set the currentpage
   // name in the store for the navbar to render it
-  return { loggedIn };
+  return { loggedIn, status, failReason };
 };
 
 const mapActionsToProps = {
-  // renaming so i can use it without saying props.
-  replaceTasklists: updateTasklistsFromServer,
+  signUp: signUpAttempt,
 };
 
 export default connect(mapStateToProps, mapActionsToProps)(Register);
