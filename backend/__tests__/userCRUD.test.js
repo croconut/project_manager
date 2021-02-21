@@ -74,7 +74,7 @@ describe("user model can perform CRUD ops", () => {
     // ensure user is initialized with one tasklist with one task
     expect(tasklists.length).toEqual(1);
     // ensure tasklist has required subdoc array
-    expect(tasklists[0].tasks.length).toEqual(1);
+    expect(tasklists[0].tasks.length).toEqual(6);
     // ensure tasklist has required information
     expect(tasklists[0]).toHaveProperty("name");
     // ensure task has the important information
