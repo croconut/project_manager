@@ -82,9 +82,89 @@ describe("can perform tasklist CRUD operations", () => {
     expect(response.body.tasklists[1].name).not.toEqual(
       currentUser.tasklists[1].name
     );
-    expect(response.body.tasklists[1].description).toEqual(currentUser.tasklists[1].description);
+    expect(response.body.tasklists[1].description).toEqual(
+      currentUser.tasklists[1].description
+    );
     expect(response.body.tasklists[1].name).toEqual(tasklist.name);
     currentUser = response.body;
     delete currentUser.updatedAt;
+  });
+
+  it("can delete tasklists", async () => {
+    await request(server)
+    .delete(api.tasklistDelete.route + currentUser.tasklists[1]._id)
+    .set("Cookie", cookie)
+    .expect(204);
+    const response = await request(server)
+      .get(api.usersPrivateInfo.route)
+      .set("Cookie", cookie)
+      .expect(200);
+    expect(response.body.tasklists.length).toEqual(
+      currentUser.tasklists.length - 1
+    );
+    currentUser = response.body;
+    delete currentUser.updatedAt;
+  });
+
+  it("no tasklist operations without session cookie", async () => {
+    const promises = [];
+    promises.push(request(server).get(api.tasklistReadAll.route).expect(302));
+    promises.push(
+      request(server)
+        .get(api.tasklistReadOne.route + currentUser.tasklists[0]._id)
+        .expect(302)
+    );
+    promises.push(
+      request(server)
+        .post(api.tasklistUpdate.route + currentUser.tasklists[0]._id)
+        .send({ name: "lol" })
+        .expect(302)
+    );
+    promises.push(
+      request(server)
+        .post(api.tasklistAdd.route)
+        .send({ name: "lmao" })
+        .expect(302)
+    );
+    await Promise.all(promises);
+    const response = await request(server)
+      .get(api.usersPrivateInfo.route)
+      .set("Cookie", cookie)
+      .expect(200);
+    expect(response.body.tasklists).toEqual(currentUser.tasklists);
+  });
+
+  it("refuses to add tasklists missing required arguments", async () => {
+    const promises = [];
+    promises.push(
+      request(server)
+        .post(api.tasklistAdd.route)
+        .send({})
+        .set("Cookie", cookie)
+        .expect(400)
+    );
+    promises.push(
+      request(server)
+        .post(api.tasklistAdd.route)
+        .send({ nae: "lmao" })
+        .set("Cookie", cookie)
+        .expect(400)
+    );
+    promises.push(
+      request(server)
+        .post(api.tasklistAdd.route)
+        .send({ description: "lmao" })
+        .set("Cookie", cookie)
+        .expect(400)
+    );
+    promises.push(
+      request(server)
+        .post(api.tasklistAdd.route)
+        .send({ description: "lmao", tasks: [] })
+        .set("Cookie", cookie)
+        .expect(400)
+    );
+
+    await Promise.all(promises);
   });
 });
