@@ -10,31 +10,6 @@ const missingParameters = (res) => {
   });
 };
 
-router.get("/existence/:username?/:email?", (req, res) => {
-  // accepts queries or parameters :x
-  let { username, email } = req.params;
-  username = username || req.query.username;
-  email = email || req.query.email;
-  if (!username && !email) {
-    return res
-      .status(400)
-      .json({ missing: "Missing parameters: username or email" });
-  }
-
-  let orArr = [];
-  if (username) orArr.push({ username: username });
-  if (email) orArr.push({ email: email });
-
-  User.find(
-    { $or: orArr },
-    "username email",
-    { lean: true, limit: 2 },
-    (err, docs) => {
-      return ExistenceCheck(err, docs, req, res, username, email, false);
-    }
-  );
-});
-
 router.post("/", (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) return missingParameters(res);
@@ -82,11 +57,7 @@ router.post("/", (req, res) => {
 function ExistenceCheck(err, docs, req, res, username, email, newUser) {
   let failureObj = {};
   if (err || docs.length < 1)
-    if (newUser) return ContinueRegistration(req, res, newUser);
-    else
-      return res
-        .status(200)
-        .json({ accepted: "username and/or email not found" });
+    return ContinueRegistration(req, res, newUser);
   if (docs.length > 1)
     return res.status(409).json({ email: "match", username: "match" });
   if (docs[0].username === username) failureObj.username = "match";
