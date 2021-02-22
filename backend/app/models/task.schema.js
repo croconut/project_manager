@@ -40,4 +40,6 @@ const taskSchema = new mongoose.Schema({
   },
 });
 
-module.exports = { schema: taskSchema, stage: TaskStage };
+const Task = mongoose.model("Task", taskSchema);
+
+module.exports = { schema: taskSchema, stage: TaskStage, model: Task };
