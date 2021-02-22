@@ -133,11 +133,15 @@ router.post("/update/:listid/:taskid", async (req, res) => {
   User.updateOne(
     {
       _id: req.session.user._id,
-      "tasklists._id": req.params.listid,
-      "tasklists.$.tasks._id": req.params.taskid,
     },
     {
-      $set: { "tasklists.$.tasks.$$": realTask },
+      $set: { "tasklists.$[outer].tasks.$[inner]": realTask },
+    },
+    {
+      arrayFilters: [
+        { "outer._id": req.params.listid },
+        { "inner._id": req.params.taskid },
+      ],
     }
   )
     .lean()

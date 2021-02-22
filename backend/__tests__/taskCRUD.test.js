@@ -125,12 +125,19 @@ describe("can perform task CRUD operations", () => {
 
   it("can update a single task", async () => {
     const task = currentUser.tasklists[0].tasks[0];
+    task.name = "random assed name yo";
+    task.description = "something new";
     await request(server)
-      .post(api.taskSet.route + currentUser.tasklists[0]._id)
-      .send({ tasks: tasks })
+      .post(
+        api.taskUpdate.route +
+          currentUser.tasklists[0]._id +
+          "/" +
+          currentUser.tasklists[0].tasks[0]._id
+      )
+      .send({ task: task })
       .set("Cookie", cookie)
       .expect(204);
     const response = await getInfo();
-    expect(response.body.tasklists[0].tasks).toEqual(tasks);
+    expect(response.body.tasklists[0].tasks[0]).toEqual(task);
   });
 });
