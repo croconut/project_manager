@@ -1,4 +1,5 @@
 const request = require("supertest");
+const { TaskStage } = require("../app/staticData/ModelConstants");
 const api = require("../app/staticData/Routes");
 
 describe("can perform task CRUD operations", () => {
@@ -89,15 +90,47 @@ describe("can perform task CRUD operations", () => {
     await Promise.all(promises);
   });
 
-  // it.todo("can add a task to a tasklist", async () => {
-  //   const taskname = "task name is the only required argument";
-  //   await request(server)
-  //     .post(api.taskAdd.route + currentUser.tasklists[0]._id)
-  //     .send({ tasks: [{ name: taskname }] })
-  //     .set("Cookie", cookie)
-  //     .expect(201);
-  //   const response = await getInfo();
-  //   const tasks = response.body.tasklists[0].tasks;
-  //   expect(tasks[tasks.length - 1].name).toEqual(taskname);
-  // });
+  it("can add a valid task to a tasklist", async () => {
+    const taskname = "task name is the only required argument";
+    await request(server)
+      .post(api.taskAdd.route + currentUser.tasklists[0]._id)
+      .send({
+        tasks: [
+          { name: "first task im adding", priority: 3, stage: TaskStage[1] },
+          { name: taskname, priority: 3, stage: TaskStage[2], baloney: "blah" },
+        ],
+      })
+      .set("Cookie", cookie)
+      .expect(201);
+    const response = await getInfo();
+    const tasks = response.body.tasklists[0].tasks;
+    expect(tasks[tasks.length - 1].name).toEqual(taskname);
+    expect(tasks[tasks.length - 1].baloney).not.toBeDefined();
+  });
+
+  it("can set tasks to a new array", async () => {
+    const tasks = currentUser.tasklists[0].tasks;
+    tasks[0].name = "paul blart";
+    tasks[1].priority = 28;
+    tasks[3].stage = TaskStage[3];
+    tasks[2].description = "so fing lame";
+    await request(server)
+      .post(api.taskSet.route + currentUser.tasklists[0]._id)
+      .send({ tasks: tasks })
+      .set("Cookie", cookie)
+      .expect(204);
+    const response = await getInfo();
+    expect(response.body.tasklists[0].tasks).toEqual(tasks);
+  });
+
+  it("can update a single task", async () => {
+    const task = currentUser.tasklists[0].tasks[0];
+    await request(server)
+      .post(api.taskSet.route + currentUser.tasklists[0]._id)
+      .send({ tasks: tasks })
+      .set("Cookie", cookie)
+      .expect(204);
+    const response = await getInfo();
+    expect(response.body.tasklists[0].tasks).toEqual(tasks);
+  });
 });

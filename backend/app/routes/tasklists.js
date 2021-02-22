@@ -52,6 +52,7 @@ router.post("/add", async (req, res) => {
     { _id: req.session.user._id },
     { $push: { tasklists: tasklist } },
     { lean: true }
+  // eslint-disable-next-line no-unused-vars
   ).exec((err, _doc) => {
     if (err) return res.status(400).json({ error: err, reason: "add failed" });
     return res.status(201).json({ add: true });
@@ -77,6 +78,7 @@ router.post("/update/:id", async (req, res) => {
       },
     },
     { lean: true }
+      // eslint-disable-next-line no-unused-vars
   ).exec((err, _doc) => {
     if (err)
       return res.status(400).json({ error: err, reason: "update failed" });
@@ -91,6 +93,7 @@ router.delete("/delete/:id", async (req, res) => {
       $pull: { tasklists: { _id: req.params.id } },
     },
     { lean: true }
+      // eslint-disable-next-line no-unused-vars
   ).exec((err, _doc) => {
     if (err)
       return res.status(400).json({ error: err, reason: "delete failed" });

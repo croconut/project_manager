@@ -22,6 +22,7 @@ module.exports = {
   taskReadOne: { route: "/api/task/read/", methods: ["GET"] },
   taskAdd: { route: "/api/task/add/", methods: ["POST"] },
   taskUpdate: { route: "/api/task/update/", methods: ["POST"] },
+  taskSet: { route: "/api/task/set/", methods: ["POST"] },
   taskDelete: { route: "/api/task/delete/", methods: ["DELETE"] },
   // no methods for the base yet
   usersRouter: { route: "/api/users", methods: [] },
