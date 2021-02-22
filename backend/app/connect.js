@@ -10,6 +10,7 @@ require("dotenv").config();
 
 const tasklistRouter = require("./routes/tasklists");
 const usersRouter = require("./routes/users");
+const tasksRouter = require("./routes/tasks");
 const loginRouter = require("./routes/login");
 const registerRouter = require("./routes/register");
 const logoutRouter = require("./routes/logout");
@@ -66,12 +67,18 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
   });
 
   app.use(Routes.tasklistRouter.route, nonHomeRedirect, tasklistRouter);
+  app.use(Routes.taskRouter.route, nonHomeRedirect, tasksRouter);
   app.use(Routes.usersRouter.route, nonHomeRedirect, usersRouter);
   app.use(Routes.registerRouter.route, registerRouter);
   app.use(Routes.loginRouter.route, alreadyLoggedIn, loginRouter);
   app.use(Routes.usersPasswordReset.route, passwordResetRouter);
   // gotta be logged in to bother logging out
   app.use(Routes.logoutRouter.route, loginRedirect, logoutRouter);
+
+  // must have all api routes registered before this route
+  app.get("/api/*", (_req, res) => {
+    return res.status(404).json({ reason: "unsupported api call" });
+  });
 
   app.use(express.static(path.join(__dirname, "../build")));
 
