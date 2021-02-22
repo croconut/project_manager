@@ -17,6 +17,28 @@ describe("user model can perform CRUD ops", () => {
     expect(user).not.toHaveProperty("passwordResetTime");
   };
 
+  const getInfo = async () => {
+    return await request(server)
+      .get(loginCheckRoute)
+      .set("Cookie", cookie)
+      .expect(200);
+  };
+
+  const checkUnchanged = async (currentUser) => {
+    const response = await getInfo();
+    let userCheck = response.body;
+    delete userCheck.updatedAt;
+    expect(userCheck).toEqual(currentUser);
+  };
+
+  const updateUser = (jsonObj, expect) => {
+    return request(server)
+      .post(updateRoute)
+      .set("Cookie", cookie)
+      .send(jsonObj)
+      .expect(expect);
+  };
+
   const passwordResetTokenCreateMock = async (
     passwordReset,
     createTime,
@@ -115,49 +137,29 @@ describe("user model can perform CRUD ops", () => {
     done();
   });
 
-  it("cannot update user with empty obj (nothing changes)", async (done) => {
-    await request(server)
-      .post(updateRoute)
-      .set("Cookie", cookie)
-      .send({ user: {} })
-      .expect(204);
-    const response = await request(server)
-      .get(loginCheckRoute)
-      .set("Cookie", cookie)
-      .expect(200);
-    let userCheck = response.body;
-    delete userCheck.updatedAt;
-    expect(userCheck).toEqual(currentUser);
+  it("cannot update user with crap arguments", async (done) => {
+    const promises = [];
+
+    promises.push(updateUser({ user: {} }, 400));
+    promises.push(updateUser({}, 400));
+    promises.push(updateUser({ user: "hey this is cool right?" }, 400));
+    promises.push(updateUser({ user: null }, 400));
+    await Promise.all(promises);
+    await checkUnchanged(currentUser);
     done();
   });
 
   it("cannot update user with obj with incorrect properties", async (done) => {
-    await request(server)
-      .post(updateRoute)
-      .set("Cookie", cookie)
-      .send({ user: { blargh: "help" } })
-      .expect(204);
-    const response = await request(server)
-      .get(loginCheckRoute)
-      .set("Cookie", cookie)
-      .expect(200);
-    let userCheck = response.body;
-    delete userCheck.updatedAt;
-    expect(userCheck).toEqual(currentUser);
+    // returns a valid update, but it didnt change since blargh isn't in the model
+    await updateUser({ user: { blargh: "help" } }, 204);
+    await checkUnchanged(currentUser);
     done();
   });
 
   it("can update user with obj with mix of valid / invalid properties", async (done) => {
     let newName = "pelican";
-    await request(server)
-      .post(updateRoute)
-      .set("Cookie", cookie)
-      .send({ user: { blargh: "help", username: newName } })
-      .expect(204);
-    const response = await request(server)
-      .get(loginCheckRoute)
-      .set("Cookie", cookie)
-      .expect(200);
+    await updateUser({ user: { blargh: "help", username: newName } }, 204);
+    const response = await getInfo();
     let userCheck = response.body;
     delete userCheck.updatedAt;
     expect(userCheck.username).toEqual(newName);
@@ -169,88 +171,48 @@ describe("user model can perform CRUD ops", () => {
   });
 
   it("cannot update with a taken username and / or email", async (done) => {
-    const promises = new Array(6);
+    const promises = [];
     // returns forbidden cuz its trying to set password too
-    promises[0] = request(server)
-      .post(updateRoute)
-      .set("Cookie", cookie)
-      .send({ user: user2 })
-      .expect(403);
-    promises[1] = request(server)
-      .post(updateRoute)
-      .set("Cookie", cookie)
-      .send({ user: { username: user2.username, email: user2.email } })
-      .expect(400);
-    promises[2] = request(server)
-      .post(updateRoute)
-      .set("Cookie", cookie)
-      .send({ user: { username: user2.username } })
-      .expect(400);
-    promises[3] = request(server)
-      .post(updateRoute)
-      .set("Cookie", cookie)
-      .send({ user: { email: user2.email } })
-      .expect(400);
-    // mix of valid and invalid posts do nothing when there's a db match
-    // on the unique props email or username
-    promises[4] = request(server)
-      .post(updateRoute)
-      .set("Cookie", cookie)
-      .send({ user: { email: user2.email, icon: "fas fa-air-freshener" } })
-      .expect(400);
-    promises[5] = request(server)
-      .post(updateRoute)
-      .set("Cookie", cookie)
-      .send({
-        user: { username: user2.username, icon: "fas fa-air-freshener" },
-      })
-      .expect(400);
+    promises.push(updateUser({ user: user2 }, 403));
+    promises.push(
+      updateUser(
+        { user: { username: user2.username, email: user2.email } },
+        400
+      )
+    );
+    promises.push(updateUser({ user: { username: user2.username } }, 400));
+    promises.push(updateUser({ user: { email: user2.email } }, 400));
+    promises.push(
+      updateUser(
+        { user: { email: user2.email, icon: "fas fa-air-freshener" } },
+        400
+      )
+    );
+    promises.push(
+      updateUser(
+        {
+          user: { username: user2.username, icon: "fas fa-air-freshener" },
+        },
+        400
+      )
+    );
     await Promise.all(promises);
-    const response = await request(server)
-      .get(loginCheckRoute)
-      .set("Cookie", cookie)
-      .expect(200);
-    let userCheck = response.body;
-    delete userCheck.updatedAt;
-    expect(userCheck).toEqual(currentUser);
+    await checkUnchanged(currentUser);
     done();
   });
 
   it("cannot update username or email to invalid values", async (done) => {
     const promises = new Array();
-    promises.push(
-      request(server)
-        .post(updateRoute)
-        .set("Cookie", cookie)
-        .send({ user: { username: "bad$symbol" } })
-        .expect(400)
-    );
-    promises.push(
-      request(server)
-        .post(updateRoute)
-        .set("Cookie", cookie)
-        .send({ user: { email: "badmail" } })
-        .expect(400)
-    );
+    promises.push(updateUser({ user: { username: "bad$symbol" } }, 400));
+    promises.push(updateUser({ user: { email: "badmail" } }, 400));
     await Promise.all(promises);
-    const response = await request(server)
-      .get(loginCheckRoute)
-      .set("Cookie", cookie)
-      .expect(200);
-    // ensuring nothing changed, semi unnecessary with current implementation
-    // but ya never know...
-    expect(response.body.username).toEqual(currentUser.username);
-    expect(response.body.email).toEqual(currentUser.email);
+    await checkUnchanged(currentUser);
     done();
   });
 
   it("cannot update the password without an email-generated token", async (done) => {
     const newPassword = "apgoisPSGIanepi2in233709a8adagPOGIN";
-    await request(server)
-      .post(updateRoute)
-      .set("Cookie", cookie)
-      .send({ user: { password: newPassword } })
-      .expect(403);
+    await updateUser({ user: { password: newPassword } }, 403);
     // there shouuuuld have been no changes and should return 200, login okay
     await request(server).post(loginRoute).send(user1).expect(200);
     done();
@@ -308,6 +270,14 @@ describe("user model can perform CRUD ops", () => {
     const newPassword = "apgoisPSGIanepi2in233709a8adagPOGIN";
     const passwordReset = "someKINDATOKENorsomethingitDONTMATTER";
     const createTime = Date.now();
+
+    const resetRequest = (jsonObj, expect) => {
+      return request(server)
+        .post(passwordResetRoute)
+        .send(jsonObj)
+        .expect(expect);
+    };
+
     // essentially a mock of the password reset system
     passwordResetTokenCreateMock(
       passwordReset,
@@ -315,97 +285,89 @@ describe("user model can perform CRUD ops", () => {
       async (err, doc) => {
         expect(!err).toEqual(true);
         expect(doc).toBeDefined();
-        const promises = new Array(13);
-        promises[0] = request(server)
-          .post(passwordResetRoute)
-          .send({
-            username: user1.username,
-            token: "totallyFAKE",
-            password: newPassword,
-          })
-          .expect(403);
-        promises[1] = request(server)
-          .post(passwordResetRoute)
-          .send({
-            username: "totallyFAKE",
-            token: "totallyFAKE",
-            password: newPassword,
-          })
-          .expect(400);
-        promises[2] = request(server)
-          .post(passwordResetRoute)
-          .send({
-            username: user1.username,
-            password: newPassword,
-          })
-          .expect(400);
-        promises[3] = request(server)
-          .post(passwordResetRoute)
-          .send({
-            token: passwordReset,
-            password: newPassword,
-          })
-          .expect(400);
-        promises[4] = request(server)
-          .post(passwordResetRoute)
-          .send({
-            username: user1.username,
-            token: passwordReset,
-          })
-          .expect(400);
-        promises[5] = request(server)
-          .post(passwordResetRoute)
-          .send({
-            username: user1.username,
-            token: passwordReset,
-          })
-          .expect(400);
-        promises[6] = request(server)
-          .post(passwordResetRoute)
-          .send({
-            username: user1.username,
-            token: passwordReset,
-            password: "notGOODenoughtopassvalidation",
-          })
-          .expect(400);
-        promises[7] = request(server)
-          .post(passwordResetRoute)
-          .send({
-            username: user1.username,
-            token: passwordReset,
-            password: "notGOODen6632",
-          })
-          .expect(400);
-        promises[8] = request(server)
-          .post(passwordResetRoute)
-          .send({
-            username: "totallyFAKE",
-            token: passwordReset,
-            password: newPassword,
-          })
-          .expect(400);
-        promises[9] = request(server)
-          .post(passwordResetRoute)
-          .send({
-            password: newPassword,
-          })
-          .expect(400);
-        promises[10] = request(server)
-          .post(passwordResetRoute)
-          .send({
-            token: passwordReset,
-          })
-          .expect(400);
-        promises[11] = request(server)
-          .post(passwordResetRoute)
-          .send({
-            username: user1.username,
-          })
-          .expect(400);
-        promises[12] = request(server)
-          .post(passwordResetRoute)
-          .send({})
-          .expect(400);
+        const promises = [];
+        promises.push(
+          resetRequest(
+            {
+              username: user1.username,
+              token: "totallyFAKE",
+              password: newPassword,
+            },
+            403
+          )
+        );
+        promises.push(
+          resetRequest(
+            {
+              username: "totallyFAKE",
+              token: "totallyFAKE",
+              password: newPassword,
+            },
+            400
+          )
+        );
+        promises.push(
+          resetRequest(
+            {
+              username: user1.username,
+              password: newPassword,
+            },
+            400
+          )
+        );
+        promises.push(
+          resetRequest(
+            {
+              token: passwordReset,
+              password: newPassword,
+            },
+            400
+          )
+        );
+        promises.push(
+          resetRequest(
+            {
+              username: user1.username,
+              token: passwordReset,
+            },
+            400
+          )
+        );
+        promises.push(
+          resetRequest(
+            {
+              username: user1.username,
+              token: passwordReset,
+              password: "notGOODenoughtopassvalidation",
+            },
+            400
+          )
+        );
+        promises.push(
+          resetRequest(
+            {
+              username: user1.username,
+              token: passwordReset,
+              password: "notGOODen6632",
+            },
+            400
+          )
+        );
+        promises.push(
+          resetRequest(
+            {
+              username: "totallyFAKE",
+              token: passwordReset,
+              password: newPassword,
+            },
+            400
+          )
+        );
+        promises.push(resetRequest({ password: newPassword }, 400));
+        promises.push(resetRequest({ token: passwordReset }, 400));
+        promises.push(resetRequest({ username: user1.username }, 400));
+        promises.push(resetRequest({ token: passwordReset }, 400));
+
         await Promise.all(promises);
         done();
       }
