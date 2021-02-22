@@ -92,7 +92,7 @@ describe("can perform task CRUD operations", () => {
 
   it("can add a valid task to a tasklist", async () => {
     const taskname = "task name is the only required argument";
-    await request(server)
+    const response = await request(server)
       .post(api.taskAdd.route + currentUser.tasklists[0]._id)
       .send({
         tasks: [
@@ -101,9 +101,8 @@ describe("can perform task CRUD operations", () => {
         ],
       })
       .set("Cookie", cookie)
-      .expect(201);
-    const response = await getInfo();
-    const tasks = response.body.tasklists[0].tasks;
+      .expect(200);
+    const tasks = response.body.tasklist.tasks;
     expect(tasks[tasks.length - 1].name).toEqual(taskname);
     expect(tasks[tasks.length - 1].baloney).not.toBeDefined();
   });
@@ -114,30 +113,28 @@ describe("can perform task CRUD operations", () => {
     tasks[1].priority = 28;
     tasks[3].stage = TaskStage[3];
     tasks[2].description = "so fing lame";
-    await request(server)
+    const response = await request(server)
       .post(api.taskSet.route + currentUser.tasklists[0]._id)
       .send({ tasks: tasks })
       .set("Cookie", cookie)
-      .expect(204);
-    const response = await getInfo();
-    expect(response.body.tasklists[0].tasks).toEqual(tasks);
+      .expect(200);
+    expect(response.body.tasklist.tasks).toEqual(tasks);
   });
 
   it("can update a single task", async () => {
     const task = currentUser.tasklists[0].tasks[0];
     task.name = "random assed name yo";
     task.description = "something new";
-    await request(server)
+    const response = await request(server)
       .post(
         api.taskUpdate.route +
           currentUser.tasklists[0]._id +
           "/" +
           currentUser.tasklists[0].tasks[0]._id
       )
-      .send({ task: task })
+      .send({ task: task }) 
       .set("Cookie", cookie)
-      .expect(204);
-    const response = await getInfo();
-    expect(response.body.tasklists[0].tasks[0]).toEqual(task);
+      .expect(200);
+    expect(response.body.tasklist.tasks[0]).toEqual(task);
   });
 });

@@ -73,15 +73,22 @@ router.post("/add/:id", async (req, res) => {
       return new Task(element);
     })
     .filter((element) => element !== undefined);
-  User.updateOne(
+  User.findOneAndUpdate(
     { _id: req.session.user._id, "tasklists._id": req.params.id },
-    { $addToSet: { "tasklists.$.tasks": { $each: realTasks } } }
+    { $addToSet: { "tasklists.$.tasks": { $each: realTasks } } },
+    {
+      lean: true,
+      new: true,
+      projection: {
+        tasklists: { $elemMatch: { _id: req.params.id } },
+      },
+    }
   )
-    .lean()
-    // eslint-disable-next-line no-unused-vars
-    .exec((err, doc) => {
+  .exec((err, doc) => {
       if (err) return res.status(400).json({ error: err });
-      return res.status(201).json({ add: true });
+      var json = { update: true };
+      if (doc.tasklists.length > 0) json["tasklist"] = doc.tasklists[0];
+      return res.status(200).json(json);
     });
 });
 
@@ -109,17 +116,24 @@ router.post("/set/:id", async (req, res) => {
       return new Task(element);
     })
     .filter((element) => element !== undefined);
-  User.updateOne(
+  User.findOneAndUpdate(
     { _id: req.session.user._id, "tasklists._id": req.params.id },
     {
       $set: { "tasklists.$.tasks": realTasks },
+    },
+    {
+      lean: true,
+      new: true,
+      projection: {
+        tasklists: { $elemMatch: { _id: req.params.id } },
+      },
     }
-  )
-    .lean()
-    .exec((err, doc) => {
-      if (err) return res.status(400).json({ error: err });
-      return res.status(204).json({ set: true });
-    });
+  ).exec((err, doc) => {
+    if (err) return res.status(400).json({ error: err });
+    var json = { set: true };
+    if (doc.tasklists.length > 0) json["tasklist"] = doc.tasklists[0];
+    return res.status(200).json(json);
+  });
 });
 
 router.post("/update/:listid/:taskid", async (req, res) => {
@@ -130,7 +144,7 @@ router.post("/update/:listid/:taskid", async (req, res) => {
     });
   }
   const realTask = new Task(task);
-  User.updateOne(
+  User.findOneAndUpdate(
     {
       _id: req.session.user._id,
     },
@@ -138,17 +152,22 @@ router.post("/update/:listid/:taskid", async (req, res) => {
       $set: { "tasklists.$[outer].tasks.$[inner]": realTask },
     },
     {
+      projection: {
+        tasklists: { $elemMatch: { _id: req.params.listid } },
+      },
+      lean: true,
+      new: true,
       arrayFilters: [
         { "outer._id": req.params.listid },
         { "inner._id": req.params.taskid },
       ],
     }
-  )
-    .lean()
-    .exec((err, doc) => {
-      if (err) return res.status(400).json({ error: err });
-      return res.status(204).json({ set: true });
-    });
+  ).exec((err, doc) => {
+    if (err) return res.status(400).json({ error: err });
+    var json = { update: true };
+    if (doc.tasklists.length > 0) json["tasklist"] = doc.tasklists[0];
+    return res.status(200).json(json);
+  });
 });
 
 module.exports = router;
