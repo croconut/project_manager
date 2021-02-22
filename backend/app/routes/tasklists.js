@@ -10,14 +10,12 @@ router.get("/", (req, res) => {
       if (!doc || doc.tasklists === undefined)
         return res
           .status(404)
-          .json({ reason: "tasklists empty or user does not exist anymore" });
+          .json({ reason: "user does not exist anymore or tasklist field was deleted somehow?" });
       return res.json(doc);
     });
 });
 
 router.get("/read/:id", (req, res) => {
-  if (typeof req.params.id !== "string")
-    return res.status(400).json({ missingParams: "id required" });
   User.findOne(
     { _id: req.session.user._id, "tasklists._id": req.params.id },
     "-_id tasklists.$"
@@ -31,7 +29,7 @@ router.get("/read/:id", (req, res) => {
     });
 });
 
-const ModifyDoc = async (res, id, tasklistID, method, updates, func) => {
+const ModifyDoc = async (res, id, tasklistID, method, successStatus, updates, func) => {
   User.findOne({
     _id: id,
   })
@@ -45,7 +43,7 @@ const ModifyDoc = async (res, id, tasklistID, method, updates, func) => {
       doc
         .save()
         .then(() => {
-          return res.status(204).json({ [method]: true });
+          return res.status(successStatus).json({ [method]: true });
         })
         .catch((error) => {
           return res
@@ -70,7 +68,6 @@ const UpdateSpecific = (doc, id, updates) => {
   doc.tasklists.id(id).set({
     ...(updates.name && { name: updates.name }),
     ...(updates.description && { description: updates.description }),
-    ...(updates.tasks && { tasks: updates.tasks }),
   });
   return doc;
 };
@@ -84,10 +81,8 @@ router.post("/add", async (req, res) => {
   // need user cookie information to add or whatever
   // so i need a router.use for all these that prechecks for correct
   // login credentials
-  var { name, description, tasks } = req.body;
-  if (!tasks || !Array.isArray(tasks)) {
-    tasks = [{ name: "First task!" }];
-  }
+  var { name, description } = req.body;
+  var tasks = [{ name: "First task!" }];
   if (!name || name === "" || typeof name !== "string") {
     return res.status(400).json({ reason: "must include a name" });
   }
@@ -104,41 +99,39 @@ router.post("/add", async (req, res) => {
     req.session.user._id,
     "",
     "add",
+    201,
     tasklist,
     AddSpecific
   );
 });
 
 router.post("/update/:id", async (req, res) => {
-  var { name, description, tasks } = req.body;
-  if (!Array.isArray(tasks)) tasks = undefined;
-  if (name === "") name = undefined;
-
-  if (!name && !description && !tasks) {
+  var { name, description } = req.body;
+  if (typeof name !== "string" || name === "") name = undefined;
+  if (typeof description !== "string" || description === "") description = undefined;
+  if (!name && !description) {
     return res
       .status(400)
       .json({ missing: "Missing requested changes for update" });
   }
-  if (typeof req.params.id !== "string")
-    return res.status(400).json({ missingParams: "id required" });
   return await ModifyDoc(
     res,
     req.session.user._id,
     req.params.id,
     "update",
-    { name, description, tasks },
+    204,
+    { name, description },
     UpdateSpecific
   );
 });
 
 router.delete("/delete/:id", async (req, res) => {
-  if (typeof req.params.id !== "string")
-    return res.status(400).json({ missingParams: "id required" });
   return await ModifyDoc(
     res,
     req.session.user._id,
     req.params.id,
     "delete",
+    204,
     {},
     DeleteSpecific
   );
