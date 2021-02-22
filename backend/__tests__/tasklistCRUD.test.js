@@ -32,8 +32,7 @@ describe("can perform tasklist CRUD operations", () => {
       .expect(201);
     cookie = response.headers["set-cookie"][1];
     expect(cookie).toBeDefined();
-    const response2 = await getInfo();
-    currentUser = response2.body;
+    currentUser = response.body.user;
     delete currentUser.updatedAt;
     done();
   });

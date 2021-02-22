@@ -57,16 +57,12 @@ describe("user model can perform CRUD ops", () => {
       .expect(201);
     cookie = response.headers["set-cookie"][1];
     expect(cookie).toBeDefined();
+    currentUser = response.body.user;
+    delete currentUser.updatedAt;
     done();
   });
 
   it("can read user information", async (done) => {
-    const response = await request(server)
-      .get(loginCheckRoute)
-      .set("Cookie", cookie)
-      .expect(200);
-    currentUser = response.body;
-    delete currentUser.updatedAt;
     expect(currentUser).toHaveProperty("email", user1.email);
     expect(currentUser).toHaveProperty("username", user1.username);
     expect(currentUser).toHaveProperty("tasklists");

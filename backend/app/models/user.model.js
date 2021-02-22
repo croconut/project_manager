@@ -66,6 +66,8 @@ const EMAIL_REGEX = new RegExp(`^.+[@]+(?=.*[.]).+$`);
 
 userSchema.statics.privateFields = () =>
   "-password -_id -passwordReset -passwordResetTime";
+userSchema.statics.loginFields = () => 
+  "-passwordReset -passwordResetTime";
 userSchema.statics.publicFields = () =>
   userSchema.statics.privateFields() + " -email -tasklists";
 

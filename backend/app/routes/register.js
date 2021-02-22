@@ -2,6 +2,8 @@ const router = require("express").Router();
 const User = require("../models/user.model");
 const { TaskStage } = require("../staticData/ModelConstants");
 
+const userPrivate = User.loginFields();
+
 const missingParameters = (res) => {
   return res.status(400).json({
     failed:
@@ -26,7 +28,7 @@ router.post("/", (req, res) => {
       {
         name: "soon these will all only be visible to me while developing",
         stage: TaskStage[1],
-        priority: 1
+        priority: 1,
       },
       {
         name: "until then, i shall be able to see this fake assed list",
@@ -56,8 +58,7 @@ router.post("/", (req, res) => {
 
 function ExistenceCheck(err, docs, req, res, username, email, newUser) {
   let failureObj = {};
-  if (err || docs.length < 1)
-    return ContinueRegistration(req, res, newUser);
+  if (err || docs.length < 1) return ContinueRegistration(req, res, newUser);
   if (docs.length > 1)
     return res.status(409).json({ email: "match", username: "match" });
   if (docs[0].username === username) failureObj.username = "match";
@@ -74,15 +75,17 @@ function ContinueRegistration(req, res, newUser) {
     .then(() => {
       User.findOne(
         { username: newUser.username },
-        "_id",
+        userPrivate,
         {
           lean: true,
         },
         (err, doc) => {
           if (err) return res.status(400).json("Error " + err);
           else {
-            req.session.user = doc;
-            return res.status(201).json("User added!");
+            req.session.user = { _id: doc._id };
+            delete doc._id;
+            delete doc.password;
+            return res.status(201).json({ success: true, user: doc });
           }
         }
       );
