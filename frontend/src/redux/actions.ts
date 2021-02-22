@@ -167,12 +167,24 @@ interface ErrorResponse {
   response: AxiosResponse;
 }
 
+const extractPrivateInfo = (info: any) => {
+  const user = types.extractUserInfo(info);
+  if (user === null) {
+    return Promise.reject(RequestFails[1]);
+  }
+  const tasklists = types.extractTasklists(info);
+  if (tasklists === null) {
+    return Promise.reject(RequestFails[2]);
+  }
+  return { userInfo: user, tasklists: tasklists };
+};
+
 const loginRequest = (
   credentials: types.TUserCredentials
 ): Promise<types.LoginReturn> => {
   return axios
     .post(loginRouter.route, credentials)
-    .then(() => infoRequest())
+    .then((response) => extractPrivateInfo(response.data.user))
     .catch(({ response }: ErrorResponse) => Promise.reject(RequestFails[0]));
 };
 
@@ -185,7 +197,7 @@ const signupRequest = (
 ): Promise<types.LoginReturn> => {
   return axios
     .post(registerRouter.route, credentials)
-    .then(() => infoRequest())
+    .then((response) => extractPrivateInfo(response.data.user))
     .catch(({ response }: ErrorResponse) => {
       if (response === undefined) {
         return Promise.reject(RequestFails[7]);
@@ -211,17 +223,7 @@ const infoRequest = (cookieLogin = false): Promise<types.LoginReturn> => {
     .get(usersPrivateInfo.route, {
       withCredentials: true,
     })
-    .then((response: AxiosResponse) => {
-      const user = types.extractUserInfo(response.data);
-      if (user === null) {
-        return Promise.reject(RequestFails[1]);
-      }
-      const tasklists = types.extractTasklists(response.data);
-      if (tasklists === null) {
-        return Promise.reject(RequestFails[2]);
-      }
-      return { userInfo: user, tasklists: tasklists };
-    })
+    .then((response) => extractPrivateInfo(response.data))
     .catch(({ response }: ErrorResponse) => {
       if (cookieLogin) return Promise.reject(RequestFails[9]);
       else return Promise.reject(RequestFails[6]);
