@@ -5,12 +5,27 @@ const User = require("../models/user.model");
 const Task = require("../models/task.schema").model;
 const { TaskStage } = require("../staticData/ModelConstants");
 
+const defaultProjection = (id) => ({
+  lean: true,
+  new: true,
+  projection: {
+    tasklists: { $elemMatch: { _id: id } },
+  },
+});
+
+const filteredProjection = (listid, taskid) => {
+  var projection = defaultProjection(listid);
+  projection.arrayFilters = [{ "outer._id": listid }, { "inner._id": taskid }];
+  return projection;
+};
+
 // priority, stage, and name are required
 const isTask = (task) => {
   return (
     typeof task === "object" &&
     task !== null &&
     typeof task.name === "string" &&
+    task.name !== "" &&
     (task.stage === TaskStage[0] ||
       task.stage === TaskStage[1] ||
       task.stage === TaskStage[2] ||
@@ -31,19 +46,23 @@ const isCompleteTask = (task) => {
 
 router.get("/read/:listid/:taskid", async (req, res) => {
   const userid = req.session.user._id;
-  const tasklistid = req.params.listid;
-  const taskid = req.params.taskid;
+  const { listid, taskid } = req.params;
   User.findOne(
-    { _id: userid, "tasklists._id": tasklistid },
+    { _id: userid, "tasklists._id": listid },
     "_id tasklists.$"
   ).exec(async (err, doc) => {
     if (err) return res.status(400).json({ error: err });
-    if (!doc || doc.tasklists === undefined || doc.tasklists.length < 1)
+    if (
+      !doc ||
+      !Array.isArray(doc.tasklists) ||
+      doc.tasklists.length < 1 ||
+      !Array.isArray(doc.tasklists[0].tasks)
+    )
       return res.status(404).json({
         reason:
           "user does not exist anymore or tasklist field was deleted somehow?",
       });
-    var task = doc.tasklists.id(tasklistid).tasks.id(taskid);
+    var task = doc.tasklists.id(listid).tasks.id(taskid);
     if (task) return res.json(task);
     else
       return res
@@ -56,7 +75,12 @@ router.get("/read/:listid/:taskid", async (req, res) => {
 // onus of maintaining priority is on the client side
 // idc if some idiot posts to the backend and messes this up for some reason tbh
 router.post("/add/:id", async (req, res) => {
-  var { tasks } = req.body;
+  const { tasks } = req.body;
+  const { id } = req.params;
+  const userid = req.session.user._id;
+  if (!ObjectID.isValid(id)) {
+    return res.status(400).json({ reason: "invalid id param" });
+  }
   if (!Array.isArray(tasks) || tasks.length < 1) {
     return res
       .status(400)
@@ -74,22 +98,16 @@ router.post("/add/:id", async (req, res) => {
     })
     .filter((element) => element !== undefined);
   User.findOneAndUpdate(
-    { _id: req.session.user._id, "tasklists._id": req.params.id },
+    { _id: userid, "tasklists._id": id },
     { $addToSet: { "tasklists.$.tasks": { $each: realTasks } } },
-    {
-      lean: true,
-      new: true,
-      projection: {
-        tasklists: { $elemMatch: { _id: req.params.id } },
-      },
-    }
-  )
-  .exec((err, doc) => {
-      if (err) return res.status(400).json({ error: err });
-      var json = { update: true };
-      if (doc.tasklists.length > 0) json["tasklist"] = doc.tasklists[0];
-      return res.status(200).json(json);
-    });
+    defaultProjection(id)
+  ).exec((err, doc) => {
+    if (err) return res.status(400).json({ error: err });
+    var json = { update: true };
+    if (doc && doc.tasklists && doc.tasklists.length > 0)
+      json["tasklist"] = doc.tasklists[0];
+    return res.status(200).json(json);
+  });
 });
 
 // set a list of tasks to a new, full replacement
@@ -98,11 +116,16 @@ router.post("/add/:id", async (req, res) => {
 // UNLESS i create a new tasklist field which contains priority values
 // and is same size as tasks ???
 router.post("/set/:id", async (req, res) => {
-  var { tasks } = req.body;
-  if (!Array.isArray(tasks) || tasks.length < 1) {
+  const { tasks, empty } = req.body;
+  const { id } = req.params;
+  const userid = req.session.user._id;
+  if (!ObjectID.isValid(id)) {
+    return res.status(400).json({ reason: "invalid id param" });
+  }
+  if (!Array.isArray(tasks) || (tasks.length < 1 && !empty)) {
     return res
       .status(400)
-      .json({ reason: "must add an array of tasks with at least one task" });
+      .json({ reason: "must set tasks to an array" });
   }
   for (let i = 0; i < tasks.length; i++) {
     if (!isCompleteTask(tasks[i]))
@@ -117,27 +140,32 @@ router.post("/set/:id", async (req, res) => {
     })
     .filter((element) => element !== undefined);
   User.findOneAndUpdate(
-    { _id: req.session.user._id, "tasklists._id": req.params.id },
+    { _id: userid, "tasklists._id": id },
     {
       $set: { "tasklists.$.tasks": realTasks },
     },
-    {
-      lean: true,
-      new: true,
-      projection: {
-        tasklists: { $elemMatch: { _id: req.params.id } },
-      },
-    }
+    defaultProjection(id)
   ).exec((err, doc) => {
     if (err) return res.status(400).json({ error: err });
     var json = { set: true };
-    if (doc.tasklists.length > 0) json["tasklist"] = doc.tasklists[0];
+    if (doc && doc.tasklists && doc.tasklists.length > 0)
+      json["tasklist"] = doc.tasklists[0];
     return res.status(200).json(json);
   });
 });
 
 router.post("/update/:listid/:taskid", async (req, res) => {
-  var { task } = req.body;
+  const { task } = req.body;
+  const { listid, taskid } = req.params;
+  const userid = req.session.user._id;
+  if (!ObjectID.isValid(listid) || !ObjectID.isValid(taskid)) {
+    return res.status(400).json({ reason: "invalid id params" });
+  }
+  if (taskid !== task._id) {
+    return res
+      .status(403)
+      .json({ reason: "cannot change object id through update" });
+  }
   if (!isCompleteTask(task)) {
     return res.status(400).json({
       reason: "task must be a perfect match to schema requirements",
@@ -146,26 +174,41 @@ router.post("/update/:listid/:taskid", async (req, res) => {
   const realTask = new Task(task);
   User.findOneAndUpdate(
     {
-      _id: req.session.user._id,
+      _id: userid,
     },
     {
       $set: { "tasklists.$[outer].tasks.$[inner]": realTask },
     },
-    {
-      projection: {
-        tasklists: { $elemMatch: { _id: req.params.listid } },
-      },
-      lean: true,
-      new: true,
-      arrayFilters: [
-        { "outer._id": req.params.listid },
-        { "inner._id": req.params.taskid },
-      ],
-    }
+    filteredProjection(listid, taskid)
   ).exec((err, doc) => {
     if (err) return res.status(400).json({ error: err });
     var json = { update: true };
-    if (doc.tasklists.length > 0) json["tasklist"] = doc.tasklists[0];
+    if (doc && doc.tasklists && doc.tasklists.length > 0)
+      json["tasklist"] = doc.tasklists[0];
+    return res.status(200).json(json);
+  });
+});
+
+router.delete("/delete/:listid/:taskid", async (req, res) => {
+  const userid = req.session.user._id;
+  const { listid, taskid } = req.params;
+  if (!ObjectID.isValid(listid) || !ObjectID.isValid(taskid)) {
+    return res.status(400).json({ reason: "invalid id params" });
+  }
+  User.findOneAndUpdate(
+    {
+      _id: userid,
+      "tasklists._id": listid,
+    },
+    {
+      $pull: { "tasklists.$.tasks": { _id: taskid } },
+    },
+    defaultProjection(listid)
+  ).exec((err, doc) => {
+    if (err) return res.status(400).json({ error: err });
+    var json = { delete: true };
+    if (doc && doc.tasklists && doc.tasklists.length > 0)
+      json["tasklist"] = doc.tasklists[0];
     return res.status(200).json(json);
   });
 });
