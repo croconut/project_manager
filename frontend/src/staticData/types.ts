@@ -1,4 +1,10 @@
-import { Stage, TaskStage, TRequestFail, TStatus, TUpdateFail } from "./Constants";
+import {
+  Stage,
+  TaskStage,
+  TRequestFail,
+  TStatus,
+  TUpdateFail,
+} from "./Constants";
 
 export const ADD_TASK = "ADD_TASK" as const;
 type add_task = typeof ADD_TASK;
@@ -32,6 +38,8 @@ export const UPDATE_FAILURE = "UPDATE_FAILURE" as const;
 type update_failure = typeof UPDATE_FAILURE;
 export const UPDATING_SERVER = "UPDATING_SERVER" as const;
 type updating = typeof UPDATING_SERVER;
+export const TASKLIST_UPDATED = "TASKLIST_UPDATED" as const;
+type tasklist_updated = typeof TASKLIST_UPDATED;
 
 export interface IUserInfo {
   icon: string;
@@ -43,16 +51,44 @@ export interface IUserInfo {
   __v: number;
 }
 
-export interface StoreStatus {
+export interface ServerStatus {
   status: TStatus;
   lastFetchFailure: TRequestFail;
   lastUpdateFailure: TUpdateFail;
   loggedIn: boolean;
 }
 
+export enum UpdateType {
+  // just the tasklist info that doesn't touch child models
+  // like the tasks array
+  TASKLIST_INFO,
+  // the tasklist info and also the task array
+  TASKLIST,
+  // a single task in a tasklist
+  TASK,
+  // many tasks in a single tasklist
+  TASK_MANY,
+  // the top level user information that doesn't touch 
+  // child models like the tasklists array
+  USER_INFO,
+}
+
+export interface IDChain {
+  type: UpdateType;
+  id: string;
+  parentid?: string;
+  // this one should always be "" rn
+  gparentid?: string;
+}
+
+export interface StoreStatus {
+  dirty: Array<IDChain>;
+  updating: Array<IDChain>;
+}
+
 export type TUserCredentials = {
   password: string;
-} & ({ username: string; } | { email: string; })
+} & ({ username: string } | { email: string });
 
 export interface IUserRegister {
   username: string;
@@ -117,6 +153,13 @@ export const extractTasklists = (info: any): TTasklists | null => {
     return null;
   }
   return info.tasklists;
+};
+
+export const extractTasklist = (info: any): ITasklist | null => {
+  if (!isTasklist(info.tasklist)) {
+    return null;
+  }
+  return info.tasklist;
 };
 
 export const isUserInfo = (info: any): info is IUserInfo => {
@@ -231,7 +274,12 @@ export type LoginCompleteAction = {
 
 export type LogoutCompleteAction = {
   type: logout_complete;
-}
+};
+
+export type TasklistUpdatedAction = {
+  type: tasklist_updated;
+  payload: { tasklist: ITasklist };
+};
 
 export type FetchAction = {
   type: fetching;
@@ -246,6 +294,10 @@ export interface LoginReturn {
   tasklists: TTasklists;
 }
 
+export interface TasklistReturn {
+  tasklist: ITasklist;
+}
+
 export type AnyCustomAction =
   | UserAction
   | TasklistAction
@@ -258,4 +310,5 @@ export type AnyCustomAction =
   | FetchAction
   | FetchFailedAction
   | LoginCompleteAction
-  | LogoutCompleteAction;
+  | LogoutCompleteAction
+  | TasklistUpdatedAction;

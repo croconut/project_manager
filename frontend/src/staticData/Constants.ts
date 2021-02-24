@@ -27,6 +27,8 @@ export type TRequestFail = typeof RequestFails[number];
 
 export const UpdateFails = [
   "logout",
+  "returned_tasklist",
+  "tasks",
   "unknown",
   "none_yet",
 ] as const;

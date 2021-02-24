@@ -48,15 +48,18 @@ export const usersUpdate: BackendRoute = {
   route: "/api/users/update",
   methods: ["POST"],
 };
+
 // can only delete yourself while logged in
 export const usersDelete: BackendRoute = {
   route: "/api/users/delete",
   methods: ["DELETE"],
 };
+
 export const usersSearch: BackendRoute = {
   route: "/api/users/search",
   methods: ["GET"],
 };
+
 // want email to send user to frontend, then frontend to use this api
 export const usersPasswordReset: BackendRoute = {
   route: "/api/userPasswordReset",
@@ -67,7 +70,13 @@ export const registerCapable: BackendRoute = {
   route: "/api/register/existence",
   methods: ["GET"],
 };
+
 export const usersPrivateInfo: BackendRoute = {
   route: "/api/users/myinfo",
   methods: ["GET"],
+};
+
+export const setTasks: BackendRoute = {
+  route: "/api/tasks/set/",
+  methods: ["POST"],
 };

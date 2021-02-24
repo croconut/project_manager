@@ -11,6 +11,7 @@ import {
   loginRouter,
   logoutRouter,
   registerRouter,
+  setTasks,
   usersPrivateInfo,
 } from "src/staticData/Routes";
 import * as types from "../staticData/types";
@@ -163,6 +164,15 @@ export const logoutSuccess = (): types.LogoutCompleteAction => ({
   type: types.LOGOUT_COMPLETE,
 });
 
+export const tasklistUpdateSuccess = (
+  obj: types.TasklistReturn
+): types.TasklistUpdatedAction => ({
+  type: types.TASKLIST_UPDATED,
+  payload: {
+    tasklist: obj.tasklist,
+  },
+});
+
 interface ErrorResponse {
   response: AxiosResponse;
 }
@@ -177,6 +187,21 @@ const extractPrivateInfo = (info: any) => {
     return Promise.reject(RequestFails[2]);
   }
   return { userInfo: user, tasklists: tasklists };
+};
+
+const extractTasklist = (info: any): Promise<types.TasklistReturn> => {
+  const tasklist = types.extractTasklist(info);
+  if (tasklist === null) {
+    return Promise.reject(UpdateFails[1]);
+  }
+  return Promise.resolve({ tasklist: tasklist });
+}
+
+const setTasksRequest = (tasks: types.TTasks): Promise<types.TasklistReturn> => {
+  return axios
+    .post(setTasks.route, { tasks: tasks }, { withCredentials: true })
+    .then((response) => extractTasklist(response.data))
+    .catch(({ response }: ErrorResponse) => Promise.reject(UpdateFails[2]));
 };
 
 const loginRequest = (
@@ -291,5 +316,23 @@ export const logoutAttempt = (): ThunkAction<
     return logoutRequest()
       .then(() => dispatch(logoutSuccess()))
       .catch(() => dispatch(updateFail(UpdateFails[0])));
+  };
+};
+
+export const setTasksAttempt = (
+  tasks: types.TTasks
+): ThunkAction<
+  Promise<types.UpdateFailedAction | types.TasklistUpdatedAction>,
+  {},
+  {},
+  types.AnyCustomAction
+> => {
+  return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
+    dispatch(updating());
+    return setTasksRequest(tasks)
+      .then((tasklistObj: types.TasklistReturn) =>
+        dispatch(tasklistUpdateSuccess(tasklistObj))
+      )
+      .catch((reason: TUpdateFail) => dispatch(updateFail(reason)));
   };
 };

@@ -1,4 +1,4 @@
-import { AnyCustomAction, ITasklistsHolder, StoreStatus } from "src/staticData/types";
+import { AnyCustomAction, ITasklistsHolder, ServerStatus } from "src/staticData/types";
 import { RootReducer, RootState } from "./reducers";
 
 export const FreezeState = (state: RootState): RootState => {
@@ -23,7 +23,7 @@ const TasklistsHelper = (
   return holder;
 };
 
-const ServerStateHelper = (serverState: StoreStatus) => {
+const ServerStateHelper = (serverState: ServerStatus) => {
   if (serverState === undefined) return serverState;
   Object.freeze(serverState);
   return serverState;

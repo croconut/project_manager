@@ -1,3 +1,22 @@
+///
+/// summary
+///
+
+// this file needs to do all of one thing: 
+// maintain an array of objects that need to be updated: 
+// when an item gets popped from the dirty stack it gets placed in the
+// updating stack then either gets put back in dirty stack OR gets
+// removed entirely
+// when a change is made to a part of the store that must be 
+// kept up to date on the server (most things) then its id 
+// chain (id of user => tasklist => task if its a task 
+// or just user => tasklist if its a tasklist or many tasks in 
+// a tasklist) 
+// and highest level type (user for all the current stuff) must be put in the array
+
+// when the updater function checks for more updates to do, it will 
+// pop the next action to take and perform that update
+
 import * as types from "src/staticData/types";
 // this reducer will read in all posts and gets to server
 // and will also look at any add or modify request to store
@@ -13,31 +32,27 @@ import * as types from "src/staticData/types";
 // during some update request to store ? UPDATING
 // an action has changed store values and server hasn't been updated ? NOT_SYNCED
 
-const defaultStatus: types.ServerStatus = {
-  status: "INITIAL",
-  lastFetchFailure: "none_yet",
-  lastUpdateFailure: "none_yet",
-  loggedIn: false,
+
+// need to parse the array on many types of updates => 
+// anytime we're updating something that can have children, we'll need to go through
+// all the parents and grandparents of stuff and 
+const defaultStatus: types.StoreStatus = {
+  dirty: [],
+  updating: [],
 };
 
-export const serverState = (
+export const storeState = (
   // ensures that undefined case still has defined initial state
-  state: types.ServerStatus = defaultStatus,
+  state: types.StoreStatus = defaultStatus,
   action: types.AnyCustomAction
-): types.ServerStatus => {
+): types.StoreStatus => {
   switch (action.type) {
     case types.FETCHING_DATA:
-      return { ...state, status: "FETCHING" };
     case types.UPDATING_SERVER:
-      return { ...state, status: "UPDATING" };
     case types.LOGIN_COMPLETE:
-      return { ...state, loggedIn: true, status: "SYNCED" };
     case types.LOGOUT_COMPLETE:
-      return { ...state, loggedIn: false, status: "INITIAL" };
     case types.FETCH_FAILURE:
-      return { ...state, status: "FETCH_NEEDED", lastFetchFailure: action.payload.reason };
     case types.UPDATE_FAILURE:
-      return { ...state, status: "UPDATE_NEEDED", lastUpdateFailure: action.payload.reason };
     case types.ADD_TASK:
     case types.ADD_TASKLIST:
     case types.MODIFY_TASK:
@@ -48,10 +63,9 @@ export const serverState = (
     case types.REPLACE_ALL_TASKLISTS:
     case types.RESTAGE_TASK:
     case types.UPDATE_USER:
-      return { ...state, status: "UPDATE_NEEDED" };
     default:
       return state;
   }
 };
 
-export default serverState;
+export default storeState;
