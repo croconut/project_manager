@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       index: true,
       minlength: 3,
+      maxlength: 64,
     },
     email: {
       type: String,
@@ -23,6 +24,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       index: true,
       minlength: 3,
+      maxlength: 256,
     },
     // front end hashes it too, so creation constraints
     // will not be here
@@ -30,6 +32,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 14,
+      maxlength: 128,
     },
     passwordReset: {
       type: String,
@@ -44,10 +47,12 @@ const userSchema = new mongoose.Schema(
     icon: {
       type: String,
       default: "",
+      maxlength: 100,
     },
     color: {
       type: String,
       default: "#fff",
+      maxlength: 7,
     },
     tasklists: [tasklist.schema],
   },

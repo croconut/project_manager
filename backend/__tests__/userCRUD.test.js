@@ -3,6 +3,7 @@ const User = require("../app/models/user.model");
 const api = require("../app/staticData/Routes");
 
 describe("user model can perform CRUD ops", () => {
+
   const registerRoute = api.registerRouter.route;
   const loginRoute = api.loginRouter.route;
   // this route gets redirected when not logged in
@@ -18,7 +19,7 @@ describe("user model can perform CRUD ops", () => {
   };
 
   const getInfo = async () => {
-    return await request(server)
+    return await tester
       .get(loginCheckRoute)
       .set("Cookie", cookie)
       .expect(200);
@@ -32,7 +33,7 @@ describe("user model can perform CRUD ops", () => {
   };
 
   const updateUser = (jsonObj, expect) => {
-    return request(server)
+    return tester
       .post(updateRoute)
       .set("Cookie", cookie)
       .send(jsonObj)
@@ -57,6 +58,23 @@ describe("user model can perform CRUD ops", () => {
     email: "blah@mail.co",
     username: "some-username",
     password: "noonecaresabout432PASSword",
+    tasklists: [
+      {
+        name: "first tasklist!",
+        description: "fake af",
+        tasks: [
+          { name: "first task too!" },
+          { name: "another one" },
+          { name: "this one is way cooler" },
+          {
+            name: "this one got assigned to someone who doesn't exist lol",
+            assignedUsername: "joe-bobby",
+          },
+          { name: "this one is way less cooler" },
+          { name: "this one is just lame" },
+        ],
+      },
+    ],
   };
   // some other user we wont be modifying
   const user2 = {
@@ -69,11 +87,13 @@ describe("user model can perform CRUD ops", () => {
   // use that cookie for every other operation
   let cookie;
   let currentUser;
+  let tester;
 
   // can create user is essentially checked here
   beforeAll(async (done) => {
-    await request(server).post(registerRoute).send(user2).expect(201);
-    const response = await request(server)
+    tester = request(server);
+    await tester.post(registerRoute).send(user2).expect(201);
+    const response = await tester
       .post(registerRoute)
       .send(user1)
       .expect(201);
@@ -99,8 +119,8 @@ describe("user model can perform CRUD ops", () => {
     const task = tasklists[0].tasks[0];
     expect(task).toHaveProperty("name");
     expect(task).toHaveProperty("description");
-    expect(task).toHaveProperty("stage");
     expect(task).toHaveProperty("assignedUsername");
+    expect(task).toHaveProperty("assignedUserIcon");
     // ensure other user default properties exist
     expect(currentUser).toHaveProperty("icon");
     expect(currentUser).toHaveProperty("color");
@@ -111,7 +131,7 @@ describe("user model can perform CRUD ops", () => {
   });
 
   it("cannot view password related info for logged-in user", async (done) => {
-    const response = await request(server)
+    const response = await tester
       .get(loginCheckRoute)
       .set("Cookie", cookie)
       .expect(200);
@@ -122,7 +142,7 @@ describe("user model can perform CRUD ops", () => {
   });
 
   it("cannot view email, tasklists or password info of other users", async (done) => {
-    const response = await request(server)
+    const response = await tester
       .get(searchRoute + "/" + user2.username)
       .set("Cookie", cookie)
       .expect(200);
@@ -214,7 +234,7 @@ describe("user model can perform CRUD ops", () => {
     const newPassword = "apgoisPSGIanepi2in233709a8adagPOGIN";
     await updateUser({ user: { password: newPassword } }, 403);
     // there shouuuuld have been no changes and should return 200, login okay
-    await request(server).post(loginRoute).send(user1).expect(200);
+    await tester.post(loginRoute).send(user1).expect(200);
     done();
   });
 
@@ -229,7 +249,7 @@ describe("user model can perform CRUD ops", () => {
       async (err, doc) => {
         expect(!err).toEqual(true);
         expect(doc).toBeDefined();
-        await request(server)
+        await tester
           .post(passwordResetRoute)
           .send({
             username: user1.username,
@@ -239,21 +259,21 @@ describe("user model can perform CRUD ops", () => {
           .expect(204);
         // should be incapable of logging in with old password
         const promises = new Array(2);
-        promises[0] = request(server).post(loginRoute).send(user1).expect(403);
+        promises[0] = tester.post(loginRoute).send(user1).expect(403);
         // should be incapable of viewing information with an old session
         // and redirects to login
-        promises[1] = request(server)
+        promises[1] = tester
           .get(loginCheckRoute)
           .set("Cookie", cookie)
           .expect(302);
         await Promise.all(promises);
         user1.password = newPassword;
-        const response = await request(server)
+        const response = await tester
           .post(loginRoute)
           .send(user1)
           .expect(200);
         cookie = response.headers["set-cookie"][1];
-        const response2 = await request(server)
+        const response2 = await tester
           .get(loginCheckRoute)
           .set("Cookie", cookie)
           .expect(200);
@@ -272,12 +292,11 @@ describe("user model can perform CRUD ops", () => {
     const createTime = Date.now();
 
     const resetRequest = (jsonObj, expect) => {
-      return request(server)
+      return tester
         .post(passwordResetRoute)
         .send(jsonObj)
         .expect(expect);
     };
-
     // essentially a mock of the password reset system
     passwordResetTokenCreateMock(
       passwordReset,

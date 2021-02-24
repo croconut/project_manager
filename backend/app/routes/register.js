@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const User = require("../models/user.model");
-const { TaskStage } = require("../staticData/ModelConstants");
+const Tasklist = require("../models/tasklist.schema").model;
 
 const userPrivate = User.loginFields();
 
@@ -14,36 +14,35 @@ const missingParameters = (res) => {
 
 router.post("/", (req, res) => {
   const { username, email, password } = req.body;
-  if (!username || !email || !password) return missingParameters(res);
+  var tasklists = req.body.tasklists;
+  if (!Array.isArray(tasklists)) tasklists = [];
+  else {
+    tasklists = tasklists.map((element) => {
+      var list = Tasklist(element);
+      list.postCreate();
+      return list;
+    });
+  }
+
+  if (
+    !username ||
+    !email ||
+    !password ||
+    username === "" ||
+    email === "" ||
+    password === ""
+  )
+    return missingParameters(res);
   if (!User.passwordAcceptable(password))
     return res.status(400).json({
       weakPassword:
         "password must be 32 characters or 14 with capitals, lowercase and numbers",
     });
-  const tasklist = {
-    name: "[FAKE-LIST]",
-    tasks: [
-      { name: "My first task!", priority: 1 },
-      { name: "Pre-completed task", stage: TaskStage[2], priority: 0 },
-      {
-        name: "soon these will all only be visible to me while developing",
-        stage: TaskStage[1],
-        priority: 1,
-      },
-      {
-        name: "until then, i shall be able to see this fake assed list",
-        stage: TaskStage[1],
-        priority: 0,
-      },
-      { name: "another one", priority: 0 },
-      { name: "once more, with vigor", priority: 2 },
-    ],
-  };
   const newUser = new User({
     username,
     email,
     password,
-    tasklists: [tasklist],
+    tasklists,
   });
 
   User.find(

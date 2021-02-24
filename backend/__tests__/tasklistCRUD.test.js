@@ -11,6 +11,23 @@ describe("can perform tasklist CRUD operations", () => {
     email: "blah@mail.co",
     username: "some-username",
     password: "noonecaresabout432PASSword",
+    tasklists: [
+      {
+        name: "first tasklist!",
+        description: "fake af",
+        tasks: [
+          { name: "first task too!" },
+          { name: "another one" },
+          { name: "this one is way cooler" },
+          {
+            name: "this one got assigned to someone who doesn't exist lol",
+            assignedUsername: "joe-bobby",
+          },
+          { name: "this one is way less cooler" },
+          { name: "this one is just lame" },
+        ],
+      },
+    ],
   };
 
   const checkUnchanged = async () => {
@@ -19,17 +36,17 @@ describe("can perform tasklist CRUD operations", () => {
   };
 
   const getInfo = async () => {
-    return await request(server)
+    return await tester
       .get(api.usersPrivateInfo.route)
       .set("Cookie", cookie)
       .expect(200);
   };
 
+  let tester;
+
   beforeAll(async (done) => {
-    const response = await request(server)
-      .post(api.registerRouter.route)
-      .send(user1)
-      .expect(201);
+    tester = request(server);
+    const response = await tester.post(api.registerRouter.route).send(user1);
     cookie = response.headers["set-cookie"][1];
     expect(cookie).toBeDefined();
     currentUser = response.body.user;
@@ -42,7 +59,7 @@ describe("can perform tasklist CRUD operations", () => {
       name: "some kinda tasklist",
       description: "yeah it's a nice tasklist am i right?",
     };
-    await request(server)
+    await tester
       .post(api.tasklistAdd.route)
       .send(tasklist)
       .set("Cookie", cookie)
@@ -56,7 +73,7 @@ describe("can perform tasklist CRUD operations", () => {
   });
 
   it("can read a single tasklist", async () => {
-    const response = await request(server)
+    const response = await tester
       .get(api.tasklistReadOne.route + currentUser.tasklists[1]._id)
       .set("Cookie", cookie)
       .expect(200);
@@ -64,7 +81,7 @@ describe("can perform tasklist CRUD operations", () => {
   });
 
   it("can read all tasklists", async () => {
-    const response = await request(server)
+    const response = await tester
       .get(api.tasklistReadAll.route)
       .set("Cookie", cookie)
       .expect(200);
@@ -75,7 +92,7 @@ describe("can perform tasklist CRUD operations", () => {
     const tasklist = {
       name: "this is my new name lol",
     };
-    await request(server)
+    await tester
       .post(api.tasklistUpdate.route + currentUser.tasklists[1]._id)
       .send(tasklist)
       .set("Cookie", cookie)
@@ -93,7 +110,7 @@ describe("can perform tasklist CRUD operations", () => {
   });
 
   it("can delete tasklists", async () => {
-    await request(server)
+    await tester
       .delete(api.tasklistDelete.route + currentUser.tasklists[1]._id)
       .set("Cookie", cookie)
       .expect(204);
@@ -107,26 +124,26 @@ describe("can perform tasklist CRUD operations", () => {
 
   it("no tasklist operations without session cookie", async () => {
     const promises = [];
-    promises.push(request(server).get(api.tasklistReadAll.route).expect(302));
+    promises.push(tester.get(api.tasklistReadAll.route).expect(302));
     promises.push(
-      request(server)
+      tester
         .get(api.tasklistReadOne.route + currentUser.tasklists[0]._id)
         .expect(302)
     );
     promises.push(
-      request(server)
+      tester
         .post(api.tasklistUpdate.route + currentUser.tasklists[0]._id)
         .send({ name: "lol" })
         .expect(302)
     );
     promises.push(
-      request(server)
+      tester
         .post(api.tasklistAdd.route)
         .send({ name: "lmao" })
         .expect(302)
     );
     promises.push(
-      request(server)
+      tester
         .delete(api.tasklistDelete.route + currentUser.tasklists[0]._id)
         .expect(302)
     );
@@ -137,42 +154,42 @@ describe("can perform tasklist CRUD operations", () => {
   it("refuses to add tasklists missing required arguments", async () => {
     const promises = [];
     promises.push(
-      request(server)
+      tester
         .post(api.tasklistAdd.route)
         .send({})
         .set("Cookie", cookie)
         .expect(400)
     );
     promises.push(
-      request(server)
+      tester
         .post(api.tasklistAdd.route)
         .send({ nae: "lmao" })
         .set("Cookie", cookie)
         .expect(400)
     );
     promises.push(
-      request(server)
+      tester
         .post(api.tasklistAdd.route)
         .send({ name: "" })
         .set("Cookie", cookie)
         .expect(400)
     );
     promises.push(
-      request(server)
+      tester
         .post(api.tasklistAdd.route)
         .send({ name: {} })
         .set("Cookie", cookie)
         .expect(400)
     );
     promises.push(
-      request(server)
+      tester
         .post(api.tasklistAdd.route)
         .send({ description: "lmao" })
         .set("Cookie", cookie)
         .expect(400)
     );
     promises.push(
-      request(server)
+      tester
         .post(api.tasklistAdd.route)
         .send({ description: "lmao", tasks: [] })
         .set("Cookie", cookie)
@@ -185,14 +202,14 @@ describe("can perform tasklist CRUD operations", () => {
   it("refuses to update tasklists missing required arguments", async () => {
     const promises = [];
     promises.push(
-      request(server)
+      tester
         .post(api.tasklistUpdate.route + currentUser.tasklists[0]._id)
         .send({})
         .set("Cookie", cookie)
         .expect(400)
     );
     promises.push(
-      request(server)
+      tester
         .post(api.tasklistUpdate.route + currentUser.tasklists[0]._id)
         .send({ random: "something not on tasklist queue" })
         .set("Cookie", cookie)
@@ -200,28 +217,28 @@ describe("can perform tasklist CRUD operations", () => {
     );
     // name or description exist but badly typed
     promises.push(
-      request(server)
+      tester
         .post(api.tasklistUpdate.route + currentUser.tasklists[0]._id)
         .send({ name: {} })
         .set("Cookie", cookie)
         .expect(400)
     );
     promises.push(
-      request(server)
+      tester
         .post(api.tasklistUpdate.route + currentUser.tasklists[0]._id)
         .send({ description: {} })
         .set("Cookie", cookie)
         .expect(400)
     );
     promises.push(
-      request(server)
+      tester
         .post(api.tasklistUpdate.route + currentUser.tasklists[0]._id)
         .send("just like a string here")
         .set("Cookie", cookie)
         .expect(400)
     );
     promises.push(
-      request(server)
+      tester
         .post(api.tasklistUpdate.route)
         .send({ name: "something that would be okay" })
         .set("Cookie", cookie)
@@ -234,13 +251,13 @@ describe("can perform tasklist CRUD operations", () => {
   it("refuses to delete tasklists that dont exist", async () => {
     const promises = [];
     promises.push(
-      request(server)
+      tester
         .delete(api.tasklistDelete.route + "asgoina3333333333")
         .set("Cookie", cookie)
         .expect(400)
     );
     promises.push(
-      request(server)
+      tester
         .delete(api.tasklistDelete.route)
         .set("Cookie", cookie)
         .expect(404)
@@ -249,29 +266,30 @@ describe("can perform tasklist CRUD operations", () => {
     await checkUnchanged();
   });
 
-  it("cannot change tasks through tasklist add / update", async () => {
+  it("cannot initialize/change tasks if invalidly sent for tasklist add / update", async () => {
     const taskname = "some kinda fake task";
-    await request(server)
+    await tester
       .post(api.tasklistAdd.route)
       // show that description can be mistyped and still work
       // description will just be it's default
       .send({
         name: "a new tasklist name",
         description: { text: "not real" },
-        tasks: [{ name: taskname }, { name: "some other task" }],
+        // need name, priority, and stage to create a task
+        // nae is mistyped and the task array will be initialized to [] instead
+        tasks: [{ name: taskname }, { nae: "some other task" }],
       })
       .set("Cookie", cookie)
       .expect(201);
     const response = await getInfo();
     const newTasklist =
       response.body.tasklists[response.body.tasklists.length - 1];
-    expect(newTasklist.tasks.length).not.toEqual(2);
-    expect(newTasklist.tasks[0].name).not.toEqual(taskname);
+    expect(newTasklist.tasks.length).toEqual(0);
     expect(newTasklist.description).toEqual("");
     const newName = "some other name";
     const newDescription = `{ text: "not real" }`;
     const faketasks = [{ name: taskname }, { name: "some other task" }];
-    await request(server)
+    await tester
       .post(api.tasklistUpdate.route + newTasklist._id)
       .send({
         name: newName,
@@ -279,14 +297,13 @@ describe("can perform tasklist CRUD operations", () => {
         tasks: faketasks,
       })
       .set("Cookie", cookie)
-      .expect(204);
+      .expect(400);
     const response2 = await getInfo();
     const newTasklist2 =
       response2.body.tasklists[response2.body.tasklists.length - 1];
     // name and description were changed but task changes were ignored
-    expect(newTasklist2.name).toEqual(newName);
-    expect(newTasklist2.description).toEqual(newDescription);
-    expect(newTasklist2.tasks[0].name).not.toEqual(faketasks[0].name);
+    expect(newTasklist2.name).not.toEqual(newName);
+    expect(newTasklist2.description).not.toEqual(newDescription);
     // update current user
     currentUser = response2.body;
     delete currentUser.updatedAt;
@@ -295,20 +312,20 @@ describe("can perform tasklist CRUD operations", () => {
   it("query params for update / delete / read get 404'd", async () => {
     const promises = [];
     promises.push(
-      request(server)
+      tester
         .delete(api.tasklistDelete.route + "?id=" + currentUser.tasklists[0]._id)
         .set("Cookie", cookie)
         .expect(404)
     );
     promises.push(
-      request(server)
+      tester
         .post(api.tasklistUpdate.route + "?id=" + currentUser.tasklists[0]._id)
         .send({ name: "decently creatable tasklist" })
         .set("Cookie", cookie)
         .expect(404)
     );
     promises.push(
-      request(server)
+      tester
         .get(api.tasklistReadOne.route + "?id=" + currentUser.tasklists[0]._id)
         .set("Cookie", cookie)
         .expect(404)
@@ -319,9 +336,10 @@ describe("can perform tasklist CRUD operations", () => {
 
   it("even after deleting all tasklists, get empty tasklist when trying to readall instead of 404", async () => {
     const promises = [];
-    currentUser.tasklists.forEach((element) => {
+    const getuser = await getInfo();
+    getuser.body.tasklists.forEach((element) => {
       promises.push(
-        request(server)
+        tester
           .delete(api.tasklistDelete.route + element._id)
           .set("Cookie", cookie)
           .expect(204)
@@ -332,12 +350,10 @@ describe("can perform tasklist CRUD operations", () => {
     expect(response.body.tasklists.length).toEqual(0);
     currentUser = response.body;
     delete currentUser.updatedAt;
-    const response2 = await request(server)
+    const response2 = await tester
       .get(api.tasklistReadAll.route)
       .set("Cookie", cookie)
       .expect(200);
     expect(response2.body.tasklists).toEqual([]);
   });
-
-  
 });

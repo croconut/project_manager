@@ -10,7 +10,6 @@ require("dotenv").config();
 
 const tasklistRouter = require("./routes/tasklists");
 const usersRouter = require("./routes/users");
-const tasksRouter = require("./routes/tasks");
 const loginRouter = require("./routes/login");
 const registerRouter = require("./routes/register");
 const logoutRouter = require("./routes/logout");
@@ -67,7 +66,6 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
   });
 
   app.use(Routes.tasklistRouter.route, nonHomeRedirect, tasklistRouter);
-  app.use(Routes.taskRouter.route, nonHomeRedirect, tasksRouter);
   app.use(Routes.usersRouter.route, nonHomeRedirect, usersRouter);
   app.use(Routes.registerRouter.route, registerRouter);
   app.use(Routes.loginRouter.route, alreadyLoggedIn, loginRouter);
