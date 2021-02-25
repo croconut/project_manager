@@ -122,9 +122,6 @@ function HashPassword(nextfn) {
 // basically do all password changes through save
 userSchema.pre("save", HashPassword);
 
-// TODO check whether this index should be $.name or just .name :o
-userSchema.index({ _id: 1, "tasklists.$.name": 1 });
-
 // all userschema changes must be before this line
 const User = mongoose.model("User", userSchema);
 

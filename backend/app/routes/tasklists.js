@@ -33,19 +33,25 @@ router.get("/read/:id", (req, res) => {
 });
 
 router.post("/add", async (req, res) => {
-  // need user cookie information to add or whatever
-  // so i need a router.use for all these that prechecks for correct
-  // login credentials
-  var { name, description, tasks } = req.body;
+  // name is string, description is string, tasks is array of tasks (only name is required)
+  // stages is obj with keys stage1, stage2, stage3, stage4 all number arrays and contains
+  // collectively all the indices of the tasks
+  var { name, description, tasks, stages } = req.body;
   if (!Array.isArray(tasks) || tasks.length < 1) {
     tasks = [];
   }
-  if (!Task.isMinimumTaskArray(tasks)) tasks = [];
-  const realTasks = tasks
-    .map((element) => {
-      return new Task(element);
-    })
-    .filter((element) => element !== undefined);
+  if (!Task.isMinimumTaskArray(tasks)) {
+    tasks = [];
+  } else {
+    tasks = tasks
+      .map((element) => {
+        return new Task(element);
+      })
+      .filter((element) => element !== undefined);
+  }
+  if (!Array.isArray(tasks) || !Tasklist.isStages(stages, tasks.length)) {
+    stages = { stage1: [], stage2: [], stage3: [], stage4: [] };
+  }
   if (!name || name === "" || typeof name !== "string") {
     return res.status(400).json({ reason: "must include a name" });
   }
@@ -55,12 +61,20 @@ router.post("/add", async (req, res) => {
   const tasklist = new Tasklist({
     name: name,
     description: description,
-    tasks: realTasks,
+    tasks: tasks,
+    stage1: stages.stage1,
+    stage2: stages.stage2,
+    stage3: stages.stage3,
+    stage4: stages.stage4,
   });
+  // must run in case tasks passed its check and stages didnt to ensure
+  // the tasks are at least initialized to all be in stage1 by index order
+  tasklist.postCreate();
   // this should be find and update one to return the newly created tasklist
   User.findOneAndUpdate(
     { _id: req.session.user._id },
     { $push: { tasklists: tasklist } },
+    // -1 slice to return the newly pushed tasklist
     { lean: true, new: true, projection: { tasklists: { $slice: -1 } } }
   ).exec((err, doc) => {
     if (err) return res.status(400).json({ error: err, reason: "add failed" });
@@ -73,7 +87,13 @@ router.post("/add", async (req, res) => {
 
 // shouldnt need to pass back new version as its setting all the important stuff in the update normally
 router.post("/update/:id", async (req, res) => {
-  var { name, description, tasks, empty } = req.body;
+  // if changes were made to any stage array, ALL ARRAYS MUST BE SENT
+  // as validity is checked by checking all stages
+  // can optionally send stages and taskslength if we're only making changes to the priority and stages
+  // of the tasks
+  var { name, description, tasks, stages, empty, taskslength } = req.body;
+  var tlength =
+    typeof taskslength === "number" ? taskslength : Array.isArray(tasks) ? tasks.length : -1;
   // can only pass an empty task array if empty is passed as true, aka this was on purpose
   if (tasks) {
     if (!Task.isCompleteTaskArray(tasks) || (tasks.length < 1 && !empty))
@@ -86,29 +106,76 @@ router.post("/update/:id", async (req, res) => {
       })
       .filter((element) => element !== undefined);
   }
-
+  if (stages && !Tasklist.isStages(stages, tlength)) {
+    return res.status(400).json({
+      reason:
+        "if stages are sent, ALL stage arrays must be sent and completely filled in",
+    });
+  }
   if (typeof name !== "string" || name === "") name = undefined;
   if (typeof description !== "string" || description === "")
     description = undefined;
-  if (!name && !description) {
+  if (!name && !description && !stages && !tasks) {
     return res
       .status(400)
       .json({ missing: "Missing requested changes for update" });
   }
-  User.updateOne(
-    { _id: req.session.user._id, "tasklists._id": req.params.id },
+  var matchfield;
+  // so if we're only passing the taskslength and not the tasks, since we're not replacing the tasks array
+  // we need to check that we have the correctly sized stages arrays since their sizes must equate and directly
+  // correlate to the tasks array indices
+  if (typeof taskslength === "number" && !tasks) {
+    matchfield = {
+      _id: req.session.user._id,
+      tasklists: {
+        $elemMatch: {
+          _id: req.params.id,
+          [`tasks.${taskslength - 1}`]: { $exists: true },
+          [`tasks.${taskslength}`]: {
+            $exists: false,
+          },
+        },
+      },
+    };
+  } else {
+    matchfield = {
+      _id: req.session.user._id,
+      tasklists: { $elemMatch: { _id: req.params.id } },
+    };
+  }
+  User.findOneAndUpdate(
+    matchfield,
     {
       $set: {
         ...(name && { "tasklists.$.name": name }),
         ...(description && { "tasklists.$.description": description }),
         ...(tasks && { "tasklists.$.tasks": tasks }),
+        ...(stages && { "tasklists.$.stage1": stages.stage1 }),
+        ...(stages && { "tasklists.$.stage2": stages.stage2 }),
+        ...(stages && { "tasklists.$.stage3": stages.stage3 }),
+        ...(stages && { "tasklists.$.stage4": stages.stage4 }),
       },
     },
-    { lean: true }
-  ).exec((err) => {
+    {
+      lean: true,
+      new: true,
+      projection: { tasklists: { $elemMatch: { _id: req.params.id } } },
+    }
+  ).exec((err, doc) => {
     if (err)
-      return res.status(400).json({ error: err, reason: "update failed" });
-    return res.status(204).json({ update: true });
+      return res.status(400).json({
+        error: err,
+        reason: "update failed",
+      });
+    var jsonObj = { update: true };
+    if (doc && doc.tasklists && doc.tasklists.length > 0)
+      jsonObj.tasklist = doc.tasklists[0];
+    if (!doc)
+      return res.status(400).json({
+        update: false,
+        reason: "failed, if taskslength, probably inaccurate",
+      });
+    return res.status(200).json(jsonObj);
   });
 });
 
