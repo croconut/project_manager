@@ -1,6 +1,5 @@
 import * as types from "../../staticData/types";
 import { TaskStage } from "src/staticData/Constants";
-import { getStageCount } from "../selectors";
 
 // ids gives the array index for the associated tasklist
 // this should have all the copy information required
@@ -18,95 +17,98 @@ export const defaultTasklists: types.ITasklistsHolder = {
           description: "",
           _id: "",
           assignedUsername: "",
-          stage: TaskStage[0],
           assignedUserIcon: "",
-          priority: 0,
         },
       ],
+      stage1: [0],
+      stage2: [],
+      stage3: [],
+      stage4: [],
     },
   ],
   ids: { RANDOM_garbageLOL1235: 0 },
 };
 
+// handles restaging or reordering now
 const restageHelper = (
   tasklist: types.ITasklist,
   action: types.TaskStageAction
-) => {
-  return tasklist.tasks.map((task) => {
-    if (task._id !== action.payload.taskID) {
-      if (
-        task.stage === action.payload.stage &&
-        task.priority >= action.payload.priority
-      )
-        return { ...task, priority: task.priority + 1 };
-      else if (
-        task.stage === action.payload.oldStage &&
-        task.priority >= action.payload.oldPriority
-      ) {
-        return { ...task, priority: task.priority - 1 };
-      } else return task;
-    }
-    return {
-      ...task,
-      stage: action.payload.stage,
-      priority: action.payload.priority,
-    };
-  });
-};
-
-const reorderHelper = (
-  tasklist: types.ITasklist,
-  action: types.TaskOrderAction
-) => {
-  return tasklist.tasks.map((task) => {
-    if (task._id !== action.payload.taskID) {
-      if (task.stage !== action.payload.stage) return task;
-      if (action.payload.priority > action.payload.oldPriority) {
-        if (
-          task.priority >= action.payload.oldPriority &&
-          task.priority <= action.payload.priority
-        ) {
-          return { ...task, priority: task.priority - 1 };
-        }
-        return task;
-      } else {
-        if (
-          task.priority >= action.payload.priority &&
-          task.priority <= action.payload.oldPriority
-        ) {
-          return { ...task, priority: task.priority + 1 };
-        }
-        return task;
-      }
-    }
-    return {
-      ...task,
-      priority: action.payload.priority,
-    };
-  });
+): types.ITasklistStages => {
+  // extract the task's index from the tasks array
+  const index = tasklist.tasks.reduce(
+    (accumulator, element, index) =>
+      element._id === action.payload.taskID ? index : accumulator,
+    -1
+  );
+  // remove the item from the old array
+  const toReturn: types.ITasklistStages = {};
+  switch (action.payload.oldStage) {
+    case TaskStage[0]:
+      toReturn.stage1 = tasklist.stage1.filter((e) => e !== index);
+      break;
+    case TaskStage[1]:
+      toReturn.stage2 = tasklist.stage2.filter((e) => e !== index);
+      break;
+    case TaskStage[2]:
+      toReturn.stage3 = tasklist.stage3.filter((e) => e !== index);
+      break;
+    case TaskStage[3]:
+      toReturn.stage4 = tasklist.stage4.filter((e) => e !== index);
+      break;
+    default:
+      break;
+  }
+  // insert the item to the new array
+  switch (action.payload.stage) {
+    case TaskStage[0]:
+      toReturn.stage1 = tasklist.stage1.splice(
+        action.payload.priority,
+        0,
+        index
+      );
+      break;
+    case TaskStage[1]:
+      toReturn.stage2 = tasklist.stage2.splice(
+        action.payload.priority,
+        0,
+        index
+      );
+      break;
+    case TaskStage[2]:
+      toReturn.stage3 = tasklist.stage3.splice(
+        action.payload.priority,
+        0,
+        index
+      );
+      break;
+    case TaskStage[3]:
+      toReturn.stage4 = tasklist.stage4.splice(
+        action.payload.priority,
+        0,
+        index
+      );
+      break;
+    default:
+      break;
+  }
+  return toReturn;
 };
 
 const removeTaskHelper = (
   tasklist: types.ITasklist,
   action: types.TaskAction
-) => {
-  return (
-    tasklist.tasks
-      // remove the offending task
-      .filter((task) => task._id !== action.payload.task._id)
-      // then walk through and decrement priorities above filtered task
-      .map((task) => {
-        if (
-          task.stage === action.payload.task.stage &&
-          task.priority >= action.payload.task.priority
-        )
-          return {
-            ...task,
-            priority: task.priority - 1,
-          };
-        return task;
-      })
+): types.ITasklistStages => {
+  const index = tasklist.tasks.reduce(
+    (accumulator, element, index) =>
+      element._id === action.payload.task._id ? index : accumulator,
+    -1
   );
+  return {
+    stage1: tasklist.stage1.filter(e => e !== index),
+    stage2: tasklist.stage1.filter(e => e !== index),
+    stage3: tasklist.stage1.filter(e => e !== index),
+    stage4: tasklist.stage1.filter(e => e !== index),
+  }
 };
 
 // action payload has at least 2 required keys: .tasklist and .tasklist._id
@@ -173,14 +175,10 @@ export const tasklistHolder = (
       return {
         tasklists: state.tasklists.map((tasklist) => {
           if (tasklist._id !== action.payload.tasklistID) return tasklist;
-          // add task
-          let count = getStageCount(tasklist, TaskStage[0]);
           return {
             ...tasklist,
-            tasks: [
-              ...tasklist.tasks,
-              { ...action.payload.task, stage: TaskStage[0], priority: count },
-            ],
+            stage1: [...tasklist.stage1, tasklist.tasks.length],
+            tasks: [...tasklist.tasks, action.payload.task],
           };
         }),
         ids: state.ids,
@@ -194,12 +192,7 @@ export const tasklistHolder = (
             ...tasklist,
             tasks: tasklist.tasks.map((task) => {
               if (task._id !== action.payload.task._id) return task;
-              return {
-                ...action.payload.task,
-                // priority and stage are kept as original values
-                priority: task.priority,
-                stage: task.stage,
-              };
+              return action.payload.task;
             }),
           };
         }),
@@ -211,7 +204,10 @@ export const tasklistHolder = (
           if (tasklist._id !== action.payload.tasklistID) return tasklist;
           return {
             ...tasklist,
-            tasks: removeTaskHelper(tasklist, action),
+            tasks: tasklist.tasks.filter(
+              (element) => element._id !== action.payload.task._id
+            ),
+            ...removeTaskHelper(tasklist, action)
           };
         }),
         ids: state.ids,
@@ -222,18 +218,7 @@ export const tasklistHolder = (
           if (tasklist._id !== action.payload.tasklistID) return tasklist;
           return {
             ...tasklist,
-            tasks: restageHelper(tasklist, action),
-          };
-        }),
-        ids: state.ids,
-      };
-    case types.REORDER_TASK:
-      return {
-        tasklists: state.tasklists.map((tasklist) => {
-          if (tasklist._id !== action.payload.tasklistID) return tasklist;
-          return {
-            ...tasklist,
-            tasks: reorderHelper(tasklist, action),
+            ...restageHelper(tasklist, action),
           };
         }),
         ids: state.ids,

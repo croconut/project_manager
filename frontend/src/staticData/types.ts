@@ -1,6 +1,5 @@
 import {
   Stage,
-  TaskStage,
   TRequestFail,
   TStatus,
   TUpdateFail,
@@ -68,7 +67,7 @@ export enum UpdateType {
   TASK,
   // many tasks in a single tasklist
   TASK_MANY,
-  // the top level user information that doesn't touch 
+  // the top level user information that doesn't touch
   // child models like the tasklists array
   USER_INFO,
 }
@@ -116,8 +115,19 @@ export interface ITasklist {
   _id: string;
   name: string;
   tasks: TTasks;
+  stage1: Array<number>;
+  stage2: Array<number>;
+  stage3: Array<number>;
+  stage4: Array<number>;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface ITasklistStages {
+  stage1?: Array<number>;
+  stage2?: Array<number>;
+  stage3?: Array<number>;
+  stage4?: Array<number>;
 }
 
 export type TTasks = Array<ITask>;
@@ -126,11 +136,9 @@ export interface ITask {
   assignedUsername?: string;
   assignedUserIcon?: string;
   description: string;
-  stage: Stage;
   _id: string;
   name: string;
   due?: Date;
-  priority: number;
 }
 
 export const extractUserInfo = (info: any): IUserInfo | null => {
@@ -178,7 +186,7 @@ export const isUserInfo = (info: any): info is IUserInfo => {
 
 // these typeguards should only be necessary for server updates
 export const isTasklists = (lists: any): lists is TTasklists => {
-  return Array.isArray(lists) && lists.length > 0 && isTasklist(lists[0]);
+  return Array.isArray(lists) && lists.every((e) => isTasklist(e));
 };
 
 export const isTasklist = (list: any): list is ITasklist => {
@@ -190,12 +198,20 @@ export const isTasklist = (list: any): list is ITasklist => {
     tasklist.description !== undefined &&
     tasklist.name !== undefined &&
     tasklist.updatedAt !== undefined &&
+    isStage(tasklist.stage1) &&
+    isStage(tasklist.stage2) &&
+    isStage(tasklist.stage3) &&
+    isStage(tasklist.stage4) &&
     isTasks(tasklist.tasks)
   );
 };
 
+export const isStage = (stage: any): stage is Array<number> => {
+  return Array.isArray(stage) && stage.every((e) => typeof e === "number");
+};
+
 export const isTasks = (tasks: any): tasks is TTasks => {
-  return Array.isArray(tasks) && tasks.length > 0 && isTask(tasks[0]);
+  return Array.isArray(tasks) && tasks.every((e) => isTask(e));
 };
 
 export const isTask = (obj: any): obj is ITask => {
@@ -205,9 +221,7 @@ export const isTask = (obj: any): obj is ITask => {
   return (
     task._id !== undefined &&
     task.description !== undefined &&
-    task.name !== undefined &&
-    task.priority !== undefined &&
-    TaskStage.includes(task.stage)
+    task.name !== undefined
   );
 };
 
