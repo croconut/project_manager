@@ -171,7 +171,6 @@ const Task: FC<TaskProps> = ({ task, index, columnId, onDelete, onUpdate }) => {
                 {/* <DeleteOutlineRounded /> */}
               </IconButton>
             </Grid>
-            <Typography className={classes.text}>{task.priority}</Typography>
           </Grid>
           <PopupMenu
             menuID={"task-menu-" + task._id}

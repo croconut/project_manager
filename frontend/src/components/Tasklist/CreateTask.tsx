@@ -62,9 +62,6 @@ const CreateTask: FC<CreateTaskProps & DialogProps> = ({
       assignedUserIcon: "",
       assignedUsername: "",
       _id: genid(),
-      // will be set to a real default by the addATask fn
-      priority: 0,
-      stage: TaskStage[0],
     };
     addATask(tasklistID, task);
     onComplete();

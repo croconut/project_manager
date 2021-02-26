@@ -1,9 +1,4 @@
-import {
-  Stage,
-  TRequestFail,
-  TStatus,
-  TUpdateFail,
-} from "./Constants";
+import { Stage, TRequestFail, TStatus, TUpdateFail } from "./Constants";
 
 export const ADD_TASK = "ADD_TASK" as const;
 type add_task = typeof ADD_TASK;
@@ -40,15 +35,28 @@ type updating = typeof UPDATING_SERVER;
 export const TASKLIST_UPDATED = "TASKLIST_UPDATED" as const;
 type tasklist_updated = typeof TASKLIST_UPDATED;
 
-export interface IUserInfo {
+export interface ITimestamp {
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export interface IObjectID {
+  _id: string;
+}
+
+export interface IVersion {
+  __v: number;
+}
+
+// btw, icon should be a number which is used to select an icon, in range of my icon set's size
+export interface IUserModdableInfo {
   icon: string;
   color: string;
   username: string;
   email: string;
-  createdAt: Date;
-  updatedAt: Date;
-  __v: number;
 }
+
+export interface IUserInfo extends IUserModdableInfo, ITimestamp, IVersion {}
 
 export interface ServerStatus {
   status: TStatus;
@@ -58,31 +66,34 @@ export interface ServerStatus {
 }
 
 export enum UpdateType {
-  // just the tasklist info that doesn't touch child models
-  // like the tasks array
   TASKLIST_INFO,
-  // the tasklist info and also the task array
-  TASKLIST,
-  // a single task in a tasklist
-  TASK,
-  // many tasks in a single tasklist
-  TASK_MANY,
-  // the top level user information that doesn't touch
-  // child models like the tasklists array
+  TASKS,
+  STAGES,
   USER_INFO,
 }
 
+// for tasklist, it says what parts need to be updated basically
+// each entry will add another thing, if user_info is also stated
+// means nothing
+// user_info is only for user profile updates (color / icon / whatever's changeable on userinfo)
 export interface IDChain {
-  type: UpdateType;
-  id: string;
-  parentid?: string;
-  // this one should always be "" rn
-  gparentid?: string;
+  type: Array<UpdateType>;
+  // set this when the request starts getting pushed
+  // create and add idchain when request becomes needed
+  // if
+  updating: boolean;
 }
 
+// key is the url extension required to reach this update
+// aka will be one objectid for everything currently (the tasklist)
+// or the userid (user based updates will ignore this url ofc)
+
+// when requesting to add a tasklist, fake uuid will be replaced with
+// real one on update complete and the tasklist will be removed from store status
+// iteratively checking "ntl1", then "ntl2" etc to see which is in process of updating
+// and removing first found that is updating still
 export interface StoreStatus {
-  dirty: Array<IDChain>;
-  updating: Array<IDChain>;
+  [key: string]: IDChain;
 }
 
 export type TUserCredentials = {
@@ -110,35 +121,53 @@ export interface IIDs {
 
 export type TTasklists = Array<ITasklist>;
 
-export interface ITasklist {
-  description: string;
-  _id: string;
-  name: string;
-  tasks: TTasks;
+export interface ITasklistStages {
   stage1: Array<number>;
   stage2: Array<number>;
   stage3: Array<number>;
   stage4: Array<number>;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
-export interface ITasklistStages {
+export interface ITasklist extends ITasklistStages, ITimestamp, IObjectID {
+  description: string;
+  name: string;
+  tasks: TTasks;
+}
+
+export interface ITasklistPartialStages {
   stage1?: Array<number>;
   stage2?: Array<number>;
   stage3?: Array<number>;
   stage4?: Array<number>;
 }
 
+export interface ITasklistUpdate extends IObjectID {
+  description?: string;
+  name?: string;
+  tasks?: TTasks;
+  stages?: ITasklistStages;
+  // for when the stages changed but the tasks didnt
+  taskslength?: number;
+}
+
+// looks similar to ITasklistUpdate, but they are very definitely not
+// interchangeable
+export interface ITasklistCreate {
+  description: string;
+  name: string;
+  // tasks, stages and description can be empty, name cannot
+  tasks: TTasks;
+  stages: ITasklistStages;
+}
+
 export type TTasks = Array<ITask>;
 
-export interface ITask {
-  assignedUsername?: string;
-  assignedUserIcon?: string;
+export interface ITask extends IObjectID {
+  assignedUsername: string;
+  assignedUserIcon: string;
   description: string;
-  _id: string;
   name: string;
-  due?: Date;
+  due?: Date | string;
 }
 
 export const extractUserInfo = (info: any): IUserInfo | null => {
@@ -198,6 +227,7 @@ export const isTasklist = (list: any): list is ITasklist => {
     tasklist.description !== undefined &&
     tasklist.name !== undefined &&
     tasklist.updatedAt !== undefined &&
+    typeof tasklist.createdAt === "string" &&
     isStage(tasklist.stage1) &&
     isStage(tasklist.stage2) &&
     isStage(tasklist.stage3) &&
@@ -219,9 +249,11 @@ export const isTask = (obj: any): obj is ITask => {
   if (obj === null || typeof obj !== "object") return false;
   const task = obj as ITask;
   return (
-    task._id !== undefined &&
-    task.description !== undefined &&
-    task.name !== undefined
+    typeof task._id === "string" &&
+    typeof task.description === "string" &&
+    typeof task.name === "string" &&
+    typeof task.assignedUserIcon === "string" &&
+    typeof task.assignedUsername === "string"
   );
 };
 

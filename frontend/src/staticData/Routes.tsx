@@ -38,10 +38,6 @@ export const registerRouter: BackendRoute = {
   route: "/api/register",
   methods: ["POST"],
 };
-export const tasklistRouter: BackendRoute = {
-  route: "/api/tasklist",
-  methods: ["POST"],
-};
 // no methods for the base yet
 export const usersRouter: BackendRoute = { route: "/api/users", methods: [] };
 export const usersUpdate: BackendRoute = {
@@ -76,7 +72,18 @@ export const usersPrivateInfo: BackendRoute = {
   methods: ["GET"],
 };
 
-export const setTasks: BackendRoute = {
-  route: "/api/tasks/set/",
+// whatever changes are made to the tasklist should be bundled into this
+export const updateTasklist: BackendRoute = {
+  route: "/api/tasklist/update/",
+  methods: ["POST"],
+};
+
+export const addTasklist: BackendRoute = {
+  route: "/api/tasklist/add/",
+  methods: ["POST"],
+};
+
+export const deleteTasklist: BackendRoute = {
+  route: "/api/tasklist/delete/",
   methods: ["POST"],
 };

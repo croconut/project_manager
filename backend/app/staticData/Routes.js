@@ -18,12 +18,6 @@ module.exports = {
   tasklistReadAll: { route: "/api/tasklist/", methods: ["GET"] },
   tasklistUpdate: { route: "/api/tasklist/update/", methods: ["POST"] },
   tasklistDelete: { route: "/api/tasklist/delete/", methods: ["DELETE"] },
-  taskRouter: { route: "/api/task", methods: ["GET"] },
-  taskReadOne: { route: "/api/task/read/", methods: ["GET"] },
-  taskAdd: { route: "/api/task/add/", methods: ["POST"] },
-  taskUpdate: { route: "/api/task/update/", methods: ["POST"] },
-  taskSet: { route: "/api/task/set/", methods: ["POST"] },
-  taskDelete: { route: "/api/task/delete/", methods: ["DELETE"] },
   // no methods for the base yet
   usersRouter: { route: "/api/users", methods: [] },
   usersUpdate: { route: "/api/users/update", methods: ["POST"] },

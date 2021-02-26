@@ -33,7 +33,7 @@ export const defaultTasklists: types.ITasklistsHolder = {
 const restageHelper = (
   tasklist: types.ITasklist,
   action: types.TaskStageAction
-): types.ITasklistStages => {
+): types.ITasklistPartialStages => {
   // extract the task's index from the tasks array
   const index = tasklist.tasks.reduce(
     (accumulator, element, index) =>
@@ -41,7 +41,7 @@ const restageHelper = (
     -1
   );
   // remove the item from the old array
-  const toReturn: types.ITasklistStages = {};
+  const toReturn: types.ITasklistPartialStages = {};
   switch (action.payload.oldStage) {
     case TaskStage[0]:
       toReturn.stage1 = tasklist.stage1.filter((e) => e !== index);
@@ -97,7 +97,7 @@ const restageHelper = (
 const removeTaskHelper = (
   tasklist: types.ITasklist,
   action: types.TaskAction
-): types.ITasklistStages => {
+): types.ITasklistPartialStages => {
   const index = tasklist.tasks.reduce(
     (accumulator, element, index) =>
       element._id === action.payload.task._id ? index : accumulator,

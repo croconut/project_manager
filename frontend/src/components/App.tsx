@@ -24,7 +24,7 @@ import Tasklists from "./Tasklists";
 import Profile from "./Profile";
 import Organizations from "./Organizations";
 import Tasklist from "./Tasklist/Tasklist";
-import Organization from "./Organization";
+import CreateTasklist from "./Tasklist/CreateTasklist";
 
 type Props = {
   cookieLogin: () => Promise<FetchFailedAction | LoginCompleteAction>;
@@ -53,7 +53,7 @@ const App: FC<Props> = ({ cookieLogin }): React.ReactElement => {
           <Route path={loggedInRoutes[2].route} component={Profile} />
           <Route path={loggedInRoutes[3].route} component={Logout} />
           <Route path={nonNavbarRoutes[0].route} component={Tasklist} />
-          <Route path={nonNavbarRoutes[1].route} component={Organization} />
+          <Route path={nonNavbarRoutes[1].route} component={CreateTasklist} />
           <Route path={"/*"} component={Homepage} />
           {/* just redirect to home when the thing fails */}
         </Switch>

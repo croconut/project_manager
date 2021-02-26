@@ -11,7 +11,7 @@ import {
   loginRouter,
   logoutRouter,
   registerRouter,
-  setTasks,
+  updateTasklist,
   usersPrivateInfo,
 } from "src/staticData/Routes";
 import * as types from "../staticData/types";
@@ -197,9 +197,9 @@ const extractTasklist = (info: any): Promise<types.TasklistReturn> => {
   return Promise.resolve({ tasklist: tasklist });
 }
 
-const setTasksRequest = (tasks: types.TTasks): Promise<types.TasklistReturn> => {
+const setTasksRequest = (tasks?: types.TTasks): Promise<types.TasklistReturn> => {
   return axios
-    .post(setTasks.route, { tasks: tasks }, { withCredentials: true })
+    .post(updateTasklist.route, { tasks: tasks }, { withCredentials: true })
     .then((response) => extractTasklist(response.data))
     .catch(({ response }: ErrorResponse) => Promise.reject(UpdateFails[2]));
 };
