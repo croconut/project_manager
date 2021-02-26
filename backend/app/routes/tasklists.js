@@ -93,7 +93,11 @@ router.post("/update/:id", async (req, res) => {
   // of the tasks
   var { name, description, tasks, stages, empty, taskslength } = req.body;
   var tlength =
-    typeof taskslength === "number" ? taskslength : Array.isArray(tasks) ? tasks.length : -1;
+    typeof taskslength === "number"
+      ? taskslength
+      : Array.isArray(tasks)
+      ? tasks.length
+      : -1;
   // can only pass an empty task array if empty is passed as true, aka this was on purpose
   if (tasks) {
     if (!Task.isCompleteTaskArray(tasks) || (tasks.length < 1 && !empty))
@@ -113,8 +117,7 @@ router.post("/update/:id", async (req, res) => {
     });
   }
   if (typeof name !== "string" || name === "") name = undefined;
-  if (typeof description !== "string" || description === "")
-    description = undefined;
+  if (typeof description !== "string") description = undefined;
   if (!name && !description && !stages && !tasks) {
     return res
       .status(400)
@@ -124,16 +127,13 @@ router.post("/update/:id", async (req, res) => {
   // so if we're only passing the taskslength and not the tasks, since we're not replacing the tasks array
   // we need to check that we have the correctly sized stages arrays since their sizes must equate and directly
   // correlate to the tasks array indices
-  if (typeof taskslength === "number" && !tasks) {
+  if (typeof taskslength === "number" && stages && !tasks) {
     matchfield = {
       _id: req.session.user._id,
       tasklists: {
         $elemMatch: {
           _id: req.params.id,
-          [`tasks.${taskslength - 1}`]: { $exists: true },
-          [`tasks.${taskslength}`]: {
-            $exists: false,
-          },
+          tasks: { $size: taskslength },
         },
       },
     };
