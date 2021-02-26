@@ -7,7 +7,6 @@ describe("can perform tasklist CRUD operations", () => {
   let cookie;
   let currentUser;
 
-  
   let user1 = {
     email: "blah@mail.co",
     username: "some-username",
@@ -105,8 +104,14 @@ describe("can perform tasklist CRUD operations", () => {
   });
 
   it("can update a single tasklist", async () => {
+    const tasks = currentUser.tasklists[1].tasks.map((element) => ({
+      ...element,
+    }));
+    tasks[0].name = "bruhski";
+
     const tasklist = {
       name: "this is my new name lol",
+      tasks: tasks,
     };
     const response = await tester
       .post(api.tasklistUpdate.route + currentUser.tasklists[1]._id)
@@ -320,7 +325,12 @@ describe("can perform tasklist CRUD operations", () => {
     );
     promises.push(
       updater({
-        stages: { stage1: [0, 1, 2, 3, 4], stage2: [], stage3: [], stage4: "okay" },
+        stages: {
+          stage1: [0, 1, 2, 3, 4],
+          stage2: [],
+          stage3: [],
+          stage4: "okay",
+        },
         taskslength: 5,
       })
     );
@@ -351,32 +361,51 @@ describe("can perform tasklist CRUD operations", () => {
     // too many tasks bruh
     promises.push(
       updater({
-        stages: { stage1: [0, 1, 2, 3, 4], stage2: [], stage3: [], stage4: [5] },
+        stages: {
+          stage1: [0, 1, 2, 3, 4],
+          stage2: [],
+          stage3: [],
+          stage4: [5],
+        },
         taskslength: 5,
       })
     );
     // not enough tasks
     promises.push(
       updater({
-        stages: { stage1: [0, 1, 3, 4,], stage2: [], stage3: [], stage4: [] },
+        stages: { stage1: [0, 1, 3, 4], stage2: [], stage3: [], stage4: [] },
         taskslength: 5,
       })
     );
     // correct stages for the given taskslength but taskslength is not accurate size of tasks in database
     promises.push(
       updater({
-        stages: { stage1: [0, 1, 3, 4, 2], stage2: [5], stage3: [], stage4: [] },
+        stages: {
+          stage1: [0, 1, 3, 4, 2],
+          stage2: [5],
+          stage3: [],
+          stage4: [],
+        },
         taskslength: 6,
       })
     );
     await Promise.all(promises);
     await checkUnchanged();
     //confirming that we really could change task stages
-    const goodstages = { stage1: [0, 1, 3, 4], stage2: [2], stage3: [], stage4: [] }
-    const response = await updater({
-      stages: goodstages,
-      taskslength: 5,
-    }, undefined, 200);
+    const goodstages = {
+      stage1: [0, 1, 3, 4],
+      stage2: [2],
+      stage3: [],
+      stage4: [],
+    };
+    const response = await updater(
+      {
+        stages: goodstages,
+        taskslength: 5,
+      },
+      undefined,
+      200
+    );
     expect(response.body.tasklist.stage1).toEqual(goodstages.stage1);
     expect(response.body.tasklist.stage2).toEqual(goodstages.stage2);
     expect(response.body.tasklist.stage3).toEqual(goodstages.stage3);

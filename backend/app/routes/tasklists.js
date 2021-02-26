@@ -123,26 +123,17 @@ router.post("/update/:id", async (req, res) => {
       .status(400)
       .json({ missing: "Missing requested changes for update" });
   }
-  var matchfield;
-  // so if we're only passing the taskslength and not the tasks, since we're not replacing the tasks array
-  // we need to check that we have the correctly sized stages arrays since their sizes must equate and directly
-  // correlate to the tasks array indices
-  if (typeof taskslength === "number" && stages && !tasks) {
-    matchfield = {
-      _id: req.session.user._id,
-      tasklists: {
-        $elemMatch: {
-          _id: req.params.id,
-          tasks: { $size: taskslength },
-        },
+  var matchfield = {
+    _id: req.session.user._id,
+    tasklists: {
+      $elemMatch: {
+        _id: req.params.id,
+        ...(typeof taskslength === "number" &&
+          stages &&
+          !tasks && { tasks: { $size: taskslength } }),
       },
-    };
-  } else {
-    matchfield = {
-      _id: req.session.user._id,
-      tasklists: { $elemMatch: { _id: req.params.id } },
-    };
-  }
+    },
+  };
   User.findOneAndUpdate(
     matchfield,
     {
@@ -159,7 +150,7 @@ router.post("/update/:id", async (req, res) => {
     {
       lean: true,
       new: true,
-      projection: { tasklists: { $elemMatch: { _id: req.params.id } } },
+      projection: { tasklists: matchfield.tasklists },
     }
   ).exec((err, doc) => {
     if (err)
