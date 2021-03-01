@@ -11,15 +11,11 @@ import {
 } from "@material-ui/core";
 
 import { AddCircle, Edit, OpenInNew } from "@material-ui/icons";
-import React, { FC, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { RootState } from "src/redux/reducers";
-import {
-  getLoggedIn,
-  getTasklists,
-  getTaskStageCounts,
-} from "src/redux/selectors";
+import { getLoggedIn, getTasklists } from "src/redux/selectors";
 import { nonNavbarRoutes } from "src/staticData/Routes";
 import { ITasklist, TTasklists } from "src/staticData/types";
 import { v4 as genid } from "uuid";
@@ -30,7 +26,7 @@ interface StoreProps {
   loggedIn: boolean;
 }
 
-const style = makeStyles(theme => ({
+const style = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
     paddingLeft: "25px",
@@ -107,10 +103,23 @@ const TasklistStub: FC<TasklistStubProps> = ({
   callback,
 }) => {
   const [hover, setHover] = useState(false);
-  const taskStages = getTaskStageCounts(tasklist.tasks);
-  const date = new Date(tasklist.createdAt);
-  const dateString =
-    date.getMonth() + "/" + date.getDay() + "/" + date.getFullYear();
+  const [date, setDate] = useState("");
+  const [taskStages, setTaskStages] = useState<Array<number>>([]);
+  useEffect(() => {
+    setDate(new Date(tasklist.createdAt).toLocaleDateString());
+    setTaskStages([
+      tasklist.stage1.length,
+      tasklist.stage2.length,
+      tasklist.stage3.length,
+      tasklist.stage4.length,
+    ]);
+  }, [
+    tasklist.createdAt,
+    tasklist.stage1.length,
+    tasklist.stage2.length,
+    tasklist.stage3.length,
+    tasklist.stage4.length,
+  ]);
   return (
     <Expand in={hover} timeout={150} start={0.9} end={1.05}>
       <Grid item className={classes.card}>
@@ -121,7 +130,7 @@ const TasklistStub: FC<TasklistStubProps> = ({
         >
           <CardHeader
             title={tasklist.name}
-            subheader={`created: ${dateString}`}
+            subheader={`created: ${date}`}
           ></CardHeader>
           <CardContent>
             <Typography noWrap color="textSecondary" variant="subtitle1">
@@ -191,10 +200,7 @@ const Homepage: FC<StoreProps> = ({ tasklists, loggedIn }) => {
   const openTasklist = (id: string, edit: boolean) => {
     if (leaving) return;
     setLeaving(true);
-    setTimeout(
-      () => history.push(nonNavbarRoutes[0].route, { id, edit }),
-      200
-    );
+    setTimeout(() => history.push(nonNavbarRoutes[0].route, { id, edit }), 200);
   };
 
   const displayable = displayTasklists(tasklists, classes, openTasklist);

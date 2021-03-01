@@ -10,6 +10,7 @@ import {
 import {
   loginRouter,
   logoutRouter,
+  addTasklist as addTasklistRouter,
   registerRouter,
   updateTasklist,
   usersPrivateInfo,
@@ -173,6 +174,15 @@ export const tasklistUpdateSuccess = (
   },
 });
 
+export const tasklistCreateSuccess = (
+  obj: types.TasklistReturn
+): types.TasklistCreatedAction => ({
+  type: types.TASKLIST_CREATED,
+  payload: {
+    tasklist: obj.tasklist,
+  },
+});
+
 interface ErrorResponse {
   response: AxiosResponse;
 }
@@ -195,11 +205,31 @@ const extractTasklist = (info: any): Promise<types.TasklistReturn> => {
     return Promise.reject(UpdateFails[1]);
   }
   return Promise.resolve({ tasklist: tasklist });
-}
+};
 
-const setTasksRequest = (tasks?: types.TTasks): Promise<types.TasklistReturn> => {
+const setTasksRequest = (
+  tasks: types.TTasks
+): Promise<types.TasklistReturn> => {
   return axios
     .post(updateTasklist.route, { tasks: tasks }, { withCredentials: true })
+    .then((response) => extractTasklist(response.data))
+    .catch(({ response }: ErrorResponse) => Promise.reject(UpdateFails[2]));
+};
+
+const addTasklistRequest = (
+  tasklist: types.ITasklistCreate
+): Promise<types.TasklistReturn> => {
+  return axios
+    .post(
+      addTasklistRouter.route,
+      {
+        name: tasklist.name,
+        description: tasklist.description,
+        stages: tasklist.stages,
+        tasks: tasklist.tasks,
+      },
+      { withCredentials: true }
+    )
     .then((response) => extractTasklist(response.data))
     .catch(({ response }: ErrorResponse) => Promise.reject(UpdateFails[2]));
 };
@@ -316,6 +346,24 @@ export const logoutAttempt = (): ThunkAction<
     return logoutRequest()
       .then(() => dispatch(logoutSuccess()))
       .catch(() => dispatch(updateFail(UpdateFails[0])));
+  };
+};
+
+export const addTasklistAttempt = (
+  tasklist: types.ITasklistCreate
+): ThunkAction<
+  Promise<types.UpdateFailedAction | types.TasklistCreatedAction>,
+  {},
+  {},
+  types.AnyCustomAction
+> => {
+  return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
+    dispatch(updating());
+    return addTasklistRequest(tasklist)
+      .then((tasklistObj: types.TasklistReturn) =>
+        dispatch(tasklistCreateSuccess(tasklistObj))
+      )
+      .catch((reason: TUpdateFail) => dispatch(updateFail(reason)));
   };
 };
 

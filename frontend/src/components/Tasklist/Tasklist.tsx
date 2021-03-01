@@ -12,11 +12,7 @@ import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router-dom";
 import { useMediaQuery } from "react-responsive";
 import { RootState } from "src/redux/reducers";
-import {
-  getTasklistById,
-  separateTasksByType,
-  sortAlreadySeparatedTasks,
-} from "src/redux/selectors";
+import { getTasklistById, separateTasksByType } from "src/redux/selectors";
 import { Stage, TaskStage } from "src/staticData/Constants";
 import {
   ITask,
@@ -79,7 +75,7 @@ const TaskViews = (tasklistID: string, separatedTasks: ITask[][]) => {
   // not showing a cancelled tasklist, can hit a trash icon to ditch a task
   // will just mark the task as cancelled
   for (let i = 0; i < separatedTasks.length - 2; i++) {
-    const tasks = sortAlreadySeparatedTasks(separatedTasks[i]);
+    const tasks = separatedTasks[i];
     arr2d[i] = (
       <TaskColumn
         key={i}
@@ -103,7 +99,7 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
   const isMedium = useMediaQuery({ minWidth: 700 });
 
   if (tasklist === null) return <div>No tasklist selected!</div>;
-  const separatedTasks = separateTasksByType(tasklist.tasks);
+  const separatedTasks = separateTasksByType(tasklist);
   const taskCards = TaskViews(tasklist._id, separatedTasks);
   const onDragEnd = (result: DropResult) => {
     const { draggableId, source, destination } = result;
@@ -113,24 +109,14 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
       destination.index === source.index
     )
       return;
-    if (destination.droppableId === source.droppableId) {
-      reorderTasks(
-        tasklist._id,
-        draggableId,
-        TaskStage[parseInt(destination.droppableId)],
-        destination.index,
-        source.index
-      );
-    } else {
-      restageTasks(
-        tasklist._id,
-        draggableId,
-        TaskStage[parseInt(destination.droppableId)],
-        TaskStage[parseInt(source.droppableId)],
-        destination.index,
-        source.index
-      );
-    }
+    restageTasks(
+      tasklist._id,
+      draggableId,
+      TaskStage[parseInt(destination.droppableId)],
+      TaskStage[parseInt(source.droppableId)],
+      destination.index,
+      source.index
+    );
     // update task completion ===> change task (draggableId)'s taskstage to
     // destination.droppableId through store action
     // should make specific action that does reordering and re-staging

@@ -34,6 +34,8 @@ export const UPDATING_SERVER = "UPDATING_SERVER" as const;
 type updating = typeof UPDATING_SERVER;
 export const TASKLIST_UPDATED = "TASKLIST_UPDATED" as const;
 type tasklist_updated = typeof TASKLIST_UPDATED;
+export const TASKLIST_CREATED = "TASKLIST_CREATED" as const;
+type tasklist_created = typeof TASKLIST_CREATED;
 
 export interface ITimestamp {
   createdAt: Date | string;
@@ -327,6 +329,13 @@ export type TasklistUpdatedAction = {
   payload: { tasklist: ITasklist };
 };
 
+// just gonna push this into the store. this doesn't go into the tasklistholder until
+// the tasklist created action is okay
+export type TasklistCreatedAction = {
+  type: tasklist_created;
+  payload: { tasklist: ITasklist };
+}
+
 export type FetchAction = {
   type: fetching;
 };
@@ -357,4 +366,5 @@ export type AnyCustomAction =
   | FetchFailedAction
   | LoginCompleteAction
   | LogoutCompleteAction
-  | TasklistUpdatedAction;
+  | TasklistUpdatedAction
+  | TasklistCreatedAction;

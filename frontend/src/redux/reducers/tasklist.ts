@@ -33,7 +33,7 @@ export const defaultTasklists: types.ITasklistsHolder = {
 const restageHelper = (
   tasklist: types.ITasklist,
   action: types.TaskStageAction
-): types.ITasklistPartialStages => {
+): types.ITasklistStages => {
   // extract the task's index from the tasks array
   const index = tasklist.tasks.reduce(
     (accumulator, element, index) =>
@@ -41,19 +41,24 @@ const restageHelper = (
     -1
   );
   // remove the item from the old array
-  const toReturn: types.ITasklistPartialStages = {};
+  const toReturn: types.ITasklistStages = {
+    stage1: [...tasklist.stage1],
+    stage2: [...tasklist.stage2],
+    stage3: [...tasklist.stage3],
+    stage4: [...tasklist.stage4],
+  };
   switch (action.payload.oldStage) {
     case TaskStage[0]:
-      toReturn.stage1 = tasklist.stage1.filter((e) => e !== index);
+      toReturn.stage1 = toReturn.stage1.filter((e) => e !== index);
       break;
     case TaskStage[1]:
-      toReturn.stage2 = tasklist.stage2.filter((e) => e !== index);
+      toReturn.stage2 = toReturn.stage2.filter((e) => e !== index);
       break;
     case TaskStage[2]:
-      toReturn.stage3 = tasklist.stage3.filter((e) => e !== index);
+      toReturn.stage3 = toReturn.stage3.filter((e) => e !== index);
       break;
     case TaskStage[3]:
-      toReturn.stage4 = tasklist.stage4.filter((e) => e !== index);
+      toReturn.stage4 = toReturn.stage4.filter((e) => e !== index);
       break;
     default:
       break;
@@ -61,32 +66,16 @@ const restageHelper = (
   // insert the item to the new array
   switch (action.payload.stage) {
     case TaskStage[0]:
-      toReturn.stage1 = tasklist.stage1.splice(
-        action.payload.priority,
-        0,
-        index
-      );
+      toReturn.stage1.splice(action.payload.priority, 0, index);
       break;
     case TaskStage[1]:
-      toReturn.stage2 = tasklist.stage2.splice(
-        action.payload.priority,
-        0,
-        index
-      );
+      toReturn.stage2.splice(action.payload.priority, 0, index);
       break;
     case TaskStage[2]:
-      toReturn.stage3 = tasklist.stage3.splice(
-        action.payload.priority,
-        0,
-        index
-      );
+      toReturn.stage3.splice(action.payload.priority, 0, index);
       break;
     case TaskStage[3]:
-      toReturn.stage4 = tasklist.stage4.splice(
-        action.payload.priority,
-        0,
-        index
-      );
+      toReturn.stage4.splice(action.payload.priority, 0, index);
       break;
     default:
       break;
@@ -104,11 +93,11 @@ const removeTaskHelper = (
     -1
   );
   return {
-    stage1: tasklist.stage1.filter(e => e !== index),
-    stage2: tasklist.stage1.filter(e => e !== index),
-    stage3: tasklist.stage1.filter(e => e !== index),
-    stage4: tasklist.stage1.filter(e => e !== index),
-  }
+    stage1: tasklist.stage1.filter((e) => e !== index),
+    stage2: tasklist.stage1.filter((e) => e !== index),
+    stage3: tasklist.stage1.filter((e) => e !== index),
+    stage4: tasklist.stage1.filter((e) => e !== index),
+  };
 };
 
 // action payload has at least 2 required keys: .tasklist and .tasklist._id
@@ -138,6 +127,7 @@ export const tasklistHolder = (
         ids: ids,
       };
     case types.ADD_TASKLIST:
+    case types.TASKLIST_CREATED:
       return {
         tasklists: [...state.tasklists, action.payload.tasklist],
         ids: {
@@ -207,7 +197,7 @@ export const tasklistHolder = (
             tasks: tasklist.tasks.filter(
               (element) => element._id !== action.payload.task._id
             ),
-            ...removeTaskHelper(tasklist, action)
+            ...removeTaskHelper(tasklist, action),
           };
         }),
         ids: state.ids,

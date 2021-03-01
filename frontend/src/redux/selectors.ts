@@ -70,89 +70,19 @@ export const extractTasksByType = (tasks: TTasks, type: number) => {
 export const getTasksSplitByStageID = (state: RootState, props: IDProps) => {
   const tasklist = getTasklistById(state, props);
   if (tasklist === null) return null;
-  return separateTasksByType(tasklist.tasks);
+  return separateTasksByType(tasklist);
 };
 
-export const getTasksSplitByStageIndex = (
-  state: RootState,
-  props: IndexProps
-) => {
-  const tasklist = getTasklistByIndex(state, props);
-  if (tasklist === null) return null;
-  return separateTasksByType(tasklist.tasks);
-};
-
-export const getTaskStageCountsByID = (state: RootState, props: IDProps) => {
-  const tasklist = getTasklistById(state, props);
-  if (tasklist === null) return null;
-  return getTaskStageCounts(tasklist.tasks);
-};
-
-export const getTaskStageCountsByIndex = (
-  state: RootState,
-  props: IndexProps
-) => {
-  const tasklist = getTasklistByIndex(state, props);
-  if (tasklist === null) return null;
-  return getTaskStageCounts(tasklist.tasks);
-};
-
-export const getStageCount = (tasklist: ITasklist, stage: Stage) => {
-  return tasklist.tasks.reduce(
-    (sum, task) => (task.stage === stage ? sum + 1 : sum),
-    0
-  );
-};
-
-// also requires knowledge of length of TaskStage
-export const getTaskStageCounts = (tasks: TTasks) => {
-  const counts = new Array<number>(TaskStage.length + 1);
-  for (let i = 0; i < TaskStage.length; i++) {
-    counts[i] = 0;
-  }
-  for (let i = 0; i < tasks.length; i++) {
-    let inserted = false;
-    let stage = tasks[i].stage;
-    for (let j = 0; j < TaskStage.length; j++) {
-      if (stage === TaskStage[j]) {
-        counts[j]++;
-        // basically a break
-        j = TaskStage.length;
-        inserted = true;
-      }
-    }
-    if (!inserted) {
-      counts[TaskStage.length]++;
-    }
-  }
-  return counts;
-};
-
-export const separateTasksByType = (tasks: TTasks) => {
+export const separateTasksByType = (tasklist: ITasklist) => {
   const twoDArr = new Array<Array<ITask>>(TaskStage.length + 1);
   for (let i = 0; i < twoDArr.length; i++) {
     twoDArr[i] = [];
   }
-  for (let i = 0; i < tasks.length; i++) {
-    let inserted = false;
-    let task = tasks[i];
-    let stage = tasks[i].stage;
-    for (let j = 0; j < TaskStage.length; j++) {
-      if (stage === TaskStage[j]) {
-        twoDArr[j].push(task);
-        j = TaskStage.length;
-        inserted = true;
-      }
-    }
-    if (!inserted) {
-      twoDArr[TaskStage.length].push(task);
-    }
-  }
+  tasklist.stage1.forEach((element) => twoDArr[0].push(tasklist.tasks[element]));
+  tasklist.stage2.forEach((element) => twoDArr[1].push(tasklist.tasks[element]));
+  tasklist.stage3.forEach((element) => twoDArr[2].push(tasklist.tasks[element]));
+  tasklist.stage4.forEach((element) => twoDArr[3].push(tasklist.tasks[element]));
   return twoDArr;
-};
-
-export const sortAlreadySeparatedTasks = (tasks: TTasks) => {
-  return tasks.sort((a, b) => a.priority - b.priority);
 };
 
 // todo after userinfo reducer created

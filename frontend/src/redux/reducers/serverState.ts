@@ -38,6 +38,9 @@ export const serverState = (
       return { ...state, status: "FETCH_NEEDED", lastFetchFailure: action.payload.reason };
     case types.UPDATE_FAILURE:
       return { ...state, status: "UPDATE_NEEDED", lastUpdateFailure: action.payload.reason };
+    case types.TASKLIST_UPDATED:
+    case types.TASKLIST_CREATED:
+      return { ...state, status: "SYNCED" };
     case types.ADD_TASK:
     case types.ADD_TASKLIST:
     case types.MODIFY_TASK:
