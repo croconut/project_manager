@@ -17,28 +17,10 @@ import {
 } from "src/staticData/Routes";
 import * as types from "../staticData/types";
 
-export const updateTasklistsFromServer = (
-  tasklists: types.TTasklists
-): types.TasklistsAction => ({
-  type: types.REPLACE_ALL_TASKLISTS,
-  payload: {
-    tasklists: tasklists,
-  },
-});
-
 export const modifyTasklist = (
   tasklist: types.ITasklist
 ): types.TasklistAction => ({
   type: types.MODIFY_TASKLIST,
-  payload: {
-    tasklist: tasklist,
-  },
-});
-
-export const addTasklist = (
-  tasklist: types.ITasklist
-): types.TasklistAction => ({
-  type: types.ADD_TASKLIST,
   payload: {
     tasklist: tasklist,
   },
@@ -122,12 +104,14 @@ export const reorderTask = (
   },
 });
 
-export const fetching = (): types.FetchAction => ({
+export const fetching = (_id: string): types.FetchAction => ({
   type: types.FETCHING_DATA,
+  payload: { _id },
 });
 
-export const updating = (): types.UpdateAction => ({
+export const updating = (_id: string): types.UpdateAction => ({
   type: types.UPDATING_SERVER,
+  payload: { _id },
 });
 
 export const updateUser = (info: types.IUserInfo): types.UserAction => ({
@@ -152,7 +136,7 @@ export const updateFail = (reason: TUpdateFail): types.UpdateFailedAction => ({
 });
 
 export const loginSuccess = (
-  login: types.LoginReturn
+  login: types.ILoginReturn
 ): types.LoginCompleteAction => ({
   type: types.LOGIN_COMPLETE,
   payload: {
@@ -166,7 +150,7 @@ export const logoutSuccess = (): types.LogoutCompleteAction => ({
 });
 
 export const tasklistUpdateSuccess = (
-  obj: types.TasklistReturn
+  obj: types.ITasklistReturn
 ): types.TasklistUpdatedAction => ({
   type: types.TASKLIST_UPDATED,
   payload: {
@@ -175,7 +159,7 @@ export const tasklistUpdateSuccess = (
 });
 
 export const tasklistCreateSuccess = (
-  obj: types.TasklistReturn
+  obj: types.ITasklistReturn
 ): types.TasklistCreatedAction => ({
   type: types.TASKLIST_CREATED,
   payload: {
@@ -199,7 +183,7 @@ const extractPrivateInfo = (info: any) => {
   return { userInfo: user, tasklists: tasklists };
 };
 
-const extractTasklist = (info: any): Promise<types.TasklistReturn> => {
+const extractTasklist = (info: any): Promise<types.ITasklistReturn> => {
   const tasklist = types.extractTasklist(info);
   if (tasklist === null) {
     return Promise.reject(UpdateFails[1]);
@@ -207,18 +191,24 @@ const extractTasklist = (info: any): Promise<types.TasklistReturn> => {
   return Promise.resolve({ tasklist: tasklist });
 };
 
-const setTasksRequest = (
-  tasks: types.TTasks
-): Promise<types.TasklistReturn> => {
+const updateTasklistRequest = (
+  tasklist: types.ITasklistUpdate
+): Promise<types.ITasklistReturn> => {
   return axios
-    .post(updateTasklist.route, { tasks: tasks }, { withCredentials: true })
+    .post(
+      updateTasklist.route + tasklist._id,
+      // server doesn't care about extra stuff like having the _id here :p
+      // it extracts the info it wants
+      tasklist,
+      { withCredentials: true }
+    )
     .then((response) => extractTasklist(response.data))
     .catch(({ response }: ErrorResponse) => Promise.reject(UpdateFails[2]));
 };
 
 const addTasklistRequest = (
   tasklist: types.ITasklistCreate
-): Promise<types.TasklistReturn> => {
+): Promise<types.ITasklistReturn> => {
   return axios
     .post(
       addTasklistRouter.route,
@@ -236,7 +226,7 @@ const addTasklistRequest = (
 
 const loginRequest = (
   credentials: types.TUserCredentials
-): Promise<types.LoginReturn> => {
+): Promise<types.ILoginReturn> => {
   return axios
     .post(loginRouter.route, credentials)
     .then((response) => extractPrivateInfo(response.data.user))
@@ -249,7 +239,7 @@ const logoutRequest = (): Promise<AxiosStatic> => {
 
 const signupRequest = (
   credentials: types.IUserRegister
-): Promise<types.LoginReturn> => {
+): Promise<types.ILoginReturn> => {
   return axios
     .post(registerRouter.route, credentials)
     .then((response) => extractPrivateInfo(response.data.user))
@@ -273,7 +263,7 @@ const signupRequest = (
     });
 };
 
-const infoRequest = (cookieLogin = false): Promise<types.LoginReturn> => {
+const infoRequest = (cookieLogin = false): Promise<types.ILoginReturn> => {
   return axios
     .get(usersPrivateInfo.route, {
       withCredentials: true,
@@ -297,9 +287,9 @@ export const loginAttempt = (
   types.AnyCustomAction
 > => {
   return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
-    dispatch(fetching());
+    dispatch(fetching(types.FAKE_IDS[0]));
     return loginRequest(credentials)
-      .then((login: types.LoginReturn) => dispatch(loginSuccess(login)))
+      .then((login: types.ILoginReturn) => dispatch(loginSuccess(login)))
       .catch((reason: TRequestFail) => dispatch(loginFail(reason)));
   };
 };
@@ -312,9 +302,9 @@ export const loginAttemptFromCookie = (): ThunkAction<
   types.AnyCustomAction
 > => {
   return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
-    dispatch(fetching());
+    dispatch(fetching(types.FAKE_IDS[0]));
     return infoRequest(true)
-      .then((login: types.LoginReturn) => dispatch(loginSuccess(login)))
+      .then((login: types.ILoginReturn) => dispatch(loginSuccess(login)))
       .catch((reason: TRequestFail) => dispatch(loginFail(reason)));
   };
 };
@@ -328,9 +318,9 @@ export const signUpAttempt = (
   types.AnyCustomAction
 > => {
   return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
-    dispatch(fetching());
+    dispatch(fetching(types.FAKE_IDS[0]));
     return signupRequest(credentials)
-      .then((login: types.LoginReturn) => dispatch(loginSuccess(login)))
+      .then((login: types.ILoginReturn) => dispatch(loginSuccess(login)))
       .catch((reason: TRequestFail) => dispatch(loginFail(reason)));
   };
 };
@@ -342,7 +332,7 @@ export const logoutAttempt = (): ThunkAction<
   types.AnyCustomAction
 > => {
   return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
-    dispatch(fetching());
+    dispatch(fetching(types.FAKE_IDS[0]));
     return logoutRequest()
       .then(() => dispatch(logoutSuccess()))
       .catch(() => dispatch(updateFail(UpdateFails[0])));
@@ -358,27 +348,27 @@ export const addTasklistAttempt = (
   types.AnyCustomAction
 > => {
   return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
-    dispatch(updating());
+    dispatch(updating(types.FAKE_IDS[1]));
     return addTasklistRequest(tasklist)
-      .then((tasklistObj: types.TasklistReturn) =>
+      .then((tasklistObj: types.ITasklistReturn) =>
         dispatch(tasklistCreateSuccess(tasklistObj))
       )
       .catch((reason: TUpdateFail) => dispatch(updateFail(reason)));
   };
 };
 
-export const setTasksAttempt = (
-  tasks: types.TTasks
+export const updateTasklistAttempt = (
+  tasklist: types.ITasklistUpdate
 ): ThunkAction<
-  Promise<types.UpdateFailedAction | types.TasklistUpdatedAction>,
-  {},
-  {},
-  types.AnyCustomAction
+Promise<types.UpdateFailedAction | types.TasklistUpdatedAction>,
+{},
+{},
+types.AnyCustomAction
 > => {
   return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
-    dispatch(updating());
-    return setTasksRequest(tasks)
-      .then((tasklistObj: types.TasklistReturn) =>
+    dispatch(updating(tasklist._id));
+    return updateTasklistRequest(tasklist)
+      .then((tasklistObj: types.ITasklistReturn) =>
         dispatch(tasklistUpdateSuccess(tasklistObj))
       )
       .catch((reason: TUpdateFail) => dispatch(updateFail(reason)));

@@ -63,7 +63,7 @@ const restageHelper = (
     default:
       break;
   }
-  // insert the item to the new array
+  // insert the item to the new array, this splice directly changes the given array
   switch (action.payload.stage) {
     case TaskStage[0]:
       toReturn.stage1.splice(action.payload.priority, 0, index);
@@ -115,7 +115,6 @@ export const tasklistHolder = (
   switch (action.type) {
     case types.LOGOUT_COMPLETE:
       return defaultTasklists;
-    case types.REPLACE_ALL_TASKLISTS:
     case types.LOGIN_COMPLETE:
       const lists: types.TTasklists = action.payload.tasklists;
       const ids: types.IIDs = {};
@@ -126,7 +125,6 @@ export const tasklistHolder = (
         tasklists: lists,
         ids: ids,
       };
-    case types.ADD_TASKLIST:
     case types.TASKLIST_CREATED:
       return {
         tasklists: [...state.tasklists, action.payload.tasklist],

@@ -42,13 +42,11 @@ export const serverState = (
     case types.TASKLIST_CREATED:
       return { ...state, status: "SYNCED" };
     case types.ADD_TASK:
-    case types.ADD_TASKLIST:
     case types.MODIFY_TASK:
     case types.MODIFY_TASKLIST:
     case types.REMOVE_TASK:
     case types.REMOVE_TASKLIST:
     case types.REORDER_TASK:
-    case types.REPLACE_ALL_TASKLISTS:
     case types.RESTAGE_TASK:
     case types.UPDATE_USER:
       return { ...state, status: "UPDATE_NEEDED" };

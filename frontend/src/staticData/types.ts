@@ -6,14 +6,10 @@ export const REMOVE_TASK = "REMOVE_TASK" as const;
 type remove_task = typeof REMOVE_TASK;
 export const MODIFY_TASK = "MODIFY_TASK" as const;
 type modify_task = typeof MODIFY_TASK;
-export const ADD_TASKLIST = "ADD_TASKLIST" as const;
-type add_tasklist = typeof ADD_TASKLIST;
 export const REMOVE_TASKLIST = "REMOVE_TASKLIST" as const;
 type remove_tasklist = typeof REMOVE_TASKLIST;
 export const MODIFY_TASKLIST = "MODIFY_TASKLIST" as const;
 type modify_tasklist = typeof MODIFY_TASKLIST;
-export const REPLACE_ALL_TASKLISTS = "REPLACE_ALL_TASKLISTS" as const;
-type replace_tasklists = typeof REPLACE_ALL_TASKLISTS;
 export const UPDATE_USER = "UPDATE_USER" as const;
 type update_user = typeof UPDATE_USER;
 export const RESTAGE_TASK = "RESTAGE_TASK" as const;
@@ -36,6 +32,15 @@ export const TASKLIST_UPDATED = "TASKLIST_UPDATED" as const;
 type tasklist_updated = typeof TASKLIST_UPDATED;
 export const TASKLIST_CREATED = "TASKLIST_CREATED" as const;
 type tasklist_created = typeof TASKLIST_CREATED;
+
+// these ids are used when the actual id isn't known
+// tells the store state reducer to ignore these
+
+export const FAKE_IDS = ["user", "tasklist"];
+
+export const isFakeID = (str: string): boolean => {
+  return FAKE_IDS.indexOf(str) > -1;
+};
 
 export interface ITimestamp {
   createdAt: Date | string;
@@ -68,21 +73,31 @@ export interface ServerStatus {
 }
 
 export enum UpdateType {
+  // if removing a task, will want to set
+  // TASKS and STAGES, and pass correct information
+  // other removes are just passing the ids associated
+  REMOVE_TASKLIST,
+  REMOVE_USER,
   TASKLIST_INFO,
-  TASKS,
-  STAGES,
+  ADD_TASK,
+  SET_TASKS,
+  SET_STAGES,
   USER_INFO,
 }
 
+export type TUpdateTypes = {
+  [key in UpdateType]?: number;
+};
 // for tasklist, it says what parts need to be updated basically
 // each entry will add another thing, if user_info is also stated
 // means nothing
 // user_info is only for user profile updates (color / icon / whatever's changeable on userinfo)
-export interface IDChain {
-  type: Array<UpdateType>;
+export interface IIDChain {
+  types: { [key in UpdateType]?: number };
+  // if parent is needed? i dont see this getting used amytime soon
+  parentIDs?: Array<string>;
   // set this when the request starts getting pushed
   // create and add idchain when request becomes needed
-  // if
   updating: boolean;
 }
 
@@ -90,12 +105,10 @@ export interface IDChain {
 // aka will be one objectid for everything currently (the tasklist)
 // or the userid (user based updates will ignore this url ofc)
 
-// when requesting to add a tasklist, fake uuid will be replaced with
-// real one on update complete and the tasklist will be removed from store status
-// iteratively checking "ntl1", then "ntl2" etc to see which is in process of updating
-// and removing first found that is updating still
-export interface StoreStatus {
-  [key: string]: IDChain;
+// adds are done immediately, as compared to updates which run on a subscribed
+// function
+export interface IUpdateStates {
+  [key: string]: IIDChain;
 }
 
 export type TUserCredentials = {
@@ -259,12 +272,8 @@ export const isTask = (obj: any): obj is ITask => {
   );
 };
 
-export type TasklistsAction = {
-  type: replace_tasklists;
-  payload: { tasklists: TTasklists };
-};
 export type TasklistAction = {
-  type: add_tasklist | modify_tasklist | remove_tasklist;
+  type: modify_tasklist | remove_tasklist;
   payload: { tasklist: ITasklist };
 };
 
@@ -334,29 +343,30 @@ export type TasklistUpdatedAction = {
 export type TasklistCreatedAction = {
   type: tasklist_created;
   payload: { tasklist: ITasklist };
-}
+};
 
 export type FetchAction = {
   type: fetching;
+  payload: IObjectID;
 };
 
 export type UpdateAction = {
   type: updating;
+  payload: IObjectID;
 };
 
-export interface LoginReturn {
+export interface ILoginReturn {
   userInfo: IUserInfo;
   tasklists: TTasklists;
 }
 
-export interface TasklistReturn {
+export interface ITasklistReturn {
   tasklist: ITasklist;
 }
 
 export type AnyCustomAction =
   | UserAction
   | TasklistAction
-  | TasklistsAction
   | TaskAction
   | TaskStageAction
   | TaskOrderAction
