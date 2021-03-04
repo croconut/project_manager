@@ -34,6 +34,46 @@ import * as types from "src/staticData/types";
 
 // is an object, just grab the first key
 const defaultStatus: types.IUpdateStates = {};
+// ids are always 24 characters long, so just adding a digit is completely safe
+// but we want something that also cant exist in a mongodb objectid
+// this should be a single char btw
+export const ID_ADDITION = "Z";
+
+const addUpdate = (
+  id: string,
+  typesObject: types.TUpdateTypes,
+  state: types.IUpdateStates
+) => {
+  if (id === "") return state;
+  const existing = state[id];
+  // must only allow one concurrent add_task at a time
+  // so server should grey out the add button until the previous task
+  // has been fully added in
+  if (
+    existing &&
+    (existing.updating ||
+      existing.types[types.UpdateType.ADD_TASK] !== undefined)
+  ) {
+    // o h    n o , this is the rough situation, gonna have to expect some
+    // annoying stuff ---> basically we gonna add a 1 to the id and expand that one instead
+    id += ID_ADDITION;
+    // on store update, will check if there was a one attached to the end of the thing
+    // if there was, we immediately push the next update and only update the stuff we would really have to
+    // like object ids for newly created objects
+    // mostly works cuz we only allow one thing to update at a time since we're rate limiting on server (#soon)
+  }
+
+  return {
+    ...state,
+    [id]: {
+      updating: false,
+      types: {
+        ...state[id]?.types,
+        ...typesObject,
+      },
+    },
+  };
+};
 
 export const storeState = (
   // ensures that undefined case still has defined initial state
@@ -82,38 +122,24 @@ export const storeState = (
     case types.UPDATING_SERVER:
     case types.UPDATE_FAILURE:
       return state;
+    case types.TASKLIST_UPDATED:
+      // swap the ID_ADDITION version in if it exists for this id
+      // or just delete the old one
+      const stateCopy = { ...state };
+      const id2 = action.payload.tasklist._id;
+      if (stateCopy[id2 + ID_ADDITION] !== undefined) {
+        stateCopy[id2] = { ...stateCopy[id2 + ID_ADDITION] };
+        delete stateCopy[id2 + ID_ADDITION];
+      } else {
+        delete stateCopy[id2];
+      }
+      return stateCopy;
+    // also need a user_updated one that is nearly the same as the tasklist updated one
     default:
       return state;
   }
-  if (id === "") return state;
-  const existing = state[id];
-  // must only allow one concurrent add_task at a time
-  // so server should grey out the add button until the previous task 
-  // has been fully added in
-  if (
-    existing &&
-    (existing.updating ||
-      existing.types[types.UpdateType.ADD_TASK] !== undefined)
-  ) {
-    // o h    n o , this is the rough situation, gonna have to expect some
-    // annoying stuff ---> basically we gonna add a 1 to the id and expand that one instead
-    id += "1";
-    // on store update, will check if there was a one attached to the end of the thing
-    // if there was, we immediately push the next update and only update the stuff we would really have to
-    // like object ids for newly created objects
-    // mostly works cuz we only allow one thing to update at a time since we're rate limiting on server (#soon)
-  }
-
-  return {
-    ...state,
-    [id]: {
-      updating: false,
-      types: {
-        ...state[id]?.types,
-        ...typesObject,
-      },
-    },
-  };
+  // most cases are very similar, so grouped together at end
+ return addUpdate(id, typesObject, state);
 };
 
 export default storeState;
