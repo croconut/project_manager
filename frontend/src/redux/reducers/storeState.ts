@@ -46,21 +46,9 @@ const addUpdate = (
 ) => {
   if (id === "") return state;
   const existing = state[id];
-  // must only allow one concurrent add_task at a time
-  // so server should grey out the add button until the previous task
-  // has been fully added in
-  if (
-    existing &&
-    (existing.updating ||
-      existing.types[types.UpdateType.ADD_TASK] !== undefined)
-  ) {
-    // o h    n o , this is the rough situation, gonna have to expect some
-    // annoying stuff ---> basically we gonna add a 1 to the id and expand that one instead
+  // if theres already an update in progress, we wanna skip
+  if (existing && existing.updating) {
     id += ID_ADDITION;
-    // on store update, will check if there was a one attached to the end of the thing
-    // if there was, we immediately push the next update and only update the stuff we would really have to
-    // like object ids for newly created objects
-    // mostly works cuz we only allow one thing to update at a time since we're rate limiting on server (#soon)
   }
 
   return {
@@ -87,12 +75,6 @@ export const storeState = (
     case types.LOGIN_COMPLETE:
     case types.LOGOUT_COMPLETE:
       return defaultStatus;
-    // alright here's the important part of logic
-    // if we add an aspect to something that is already being updated, we need to kinda
-    // ignore the next server update from the tasklist change except in case where
-    // server had a more update to date __v than we did
-    // aka we should be sending the __v with every update request
-    // and should be receiving and setting a new __v with every CRUD request
     case types.ADD_TASK:
       typesObject[types.UpdateType.ADD_TASK] = 1;
       id = action.payload.tasklistID;

@@ -91,6 +91,7 @@ router.post("/update/:id", async (req, res) => {
   // as validity is checked by checking all stages
   // can optionally send stages and taskslength if we're only making changes to the priority and stages
   // of the tasks
+  // the taskAdds is an array where the first index is 
   var { name, description, tasks, stages, empty, taskslength } = req.body;
   var tlength =
     typeof taskslength === "number"
@@ -100,7 +101,7 @@ router.post("/update/:id", async (req, res) => {
       : -1;
   // can only pass an empty task array if empty is passed as true, aka this was on purpose
   if (tasks) {
-    if (!Task.isCompleteTaskArray(tasks) || (tasks.length < 1 && !empty))
+    if (!Task.isMinimumTaskArray(tasks) || (tasks.length < 1 && !empty))
       return res.status(400).json({
         reason: "if tasks is sent, must be valid and completely typed tasks",
       });

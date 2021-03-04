@@ -83,6 +83,11 @@ export const addTasklist: BackendRoute = {
   methods: ["POST"],
 };
 
+export const addTasks: BackendRoute = {
+  route: "/api/tasklist/addTasks/",
+  methods: ["POST"],
+};
+
 export const deleteTasklist: BackendRoute = {
   route: "/api/tasklist/delete/",
   methods: ["POST"],

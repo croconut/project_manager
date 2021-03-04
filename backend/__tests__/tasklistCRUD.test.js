@@ -452,7 +452,7 @@ describe("can perform tasklist CRUD operations", () => {
     expect(newTasklist.description).toEqual("");
     const newName = "some other name";
     const newDescription = `{ text: "not real" }`;
-    const faketasks = [{ name: taskname }, { name: "some other task" }];
+    const faketasks = [{ description: taskname }, { name: "some other task" }];
     await tester
       .post(api.tasklistUpdate.route + newTasklist._id)
       .send({

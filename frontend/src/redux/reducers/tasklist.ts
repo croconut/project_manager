@@ -100,6 +100,53 @@ const removeTaskHelper = (
   };
 };
 
+const createValidTasklist = (tasklist: types.ITasklist) => {
+  var stageCount = tasklist.tasks.length;
+  if (
+    stageCount !==
+    tasklist.stage1.length +
+      tasklist.stage2.length +
+      tasklist.stage3.length +
+      tasklist.stage4.length
+  ) {
+    const obj: { [key: number]: number } = {};
+    for (let i = 0; i < stageCount; i++) obj[i] = 0;
+    tasklist.stage1 = tasklist.stage1
+      .map((e: number) => {
+        obj[e] = 1;
+        return e < stageCount && e > -1 ? e : -1;
+      })
+      .filter((e) => e !== -1);
+    tasklist.stage2 = tasklist.stage2
+      .map((e: number) => {
+        obj[e] = 1;
+        return e < stageCount && e > -1 ? e : -1;
+      })
+      .filter((e) => e !== -1);
+    tasklist.stage3 = tasklist.stage3
+      .map((e: number) => {
+        obj[e] = 1;
+        return e < stageCount && e > -1 ? e : -1;
+      })
+      .filter((e) => e !== -1);
+    tasklist.stage4 = tasklist.stage4
+      .map((e: number) => {
+        obj[e] = 1;
+        return e < stageCount && e > -1 ? e : -1;
+      })
+      .filter((e) => e !== -1);
+    Object.keys(obj).forEach((key) => {
+      const realKey = parseInt(key);
+      if (obj[realKey] === 0) {
+        tasklist.stage1.push(realKey);
+      }
+    });
+    return tasklist;
+  } else {
+    return tasklist;
+  }
+};
+
 // action payload has at least 2 required keys: .tasklist and .tasklist._id
 // if doing single task actions it also requires .task and .task._id
 // OR just one ==> tasklists
@@ -116,8 +163,10 @@ export const tasklistHolder = (
     case types.LOGOUT_COMPLETE:
       return defaultTasklists;
     case types.LOGIN_COMPLETE:
-      const lists: types.TTasklists = action.payload.tasklists;
+      var lists: types.TTasklists = action.payload.tasklists;
       const ids: types.IIDs = {};
+      // must ensure valid stages on receipt of tasklist from server
+      lists = lists.map((tasklist) => createValidTasklist(tasklist));
       for (let i = 0; i < lists.length; i++) {
         ids[lists[i]._id] = i;
       }

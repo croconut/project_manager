@@ -192,7 +192,7 @@ const extractTasklist = (info: any): Promise<types.ITasklistReturn> => {
 };
 
 const updateTasklistRequest = (
-  tasklist: types.ITasklistUpdate
+  tasklist: types.IParsedUpdate
 ): Promise<types.ITasklistReturn> => {
   return axios
     .post(
@@ -203,25 +203,19 @@ const updateTasklistRequest = (
       { withCredentials: true }
     )
     .then((response) => extractTasklist(response.data))
-    .catch(({ response }: ErrorResponse) => Promise.reject(UpdateFails[2]));
+    .catch(({ response }: ErrorResponse) => {
+      console.warn(response.data);
+      return Promise.reject(UpdateFails[1]);
+    });
 };
 
 const addTasklistRequest = (
   tasklist: types.ITasklistCreate
 ): Promise<types.ITasklistReturn> => {
   return axios
-    .post(
-      addTasklistRouter.route,
-      {
-        name: tasklist.name,
-        description: tasklist.description,
-        stages: tasklist.stages,
-        tasks: tasklist.tasks,
-      },
-      { withCredentials: true }
-    )
+    .post(addTasklistRouter.route, tasklist, { withCredentials: true })
     .then((response) => extractTasklist(response.data))
-    .catch(({ response }: ErrorResponse) => Promise.reject(UpdateFails[2]));
+    .catch(({ response }: ErrorResponse) => Promise.reject(UpdateFails[1]));
 };
 
 const loginRequest = (
@@ -358,12 +352,12 @@ export const addTasklistAttempt = (
 };
 
 export const updateTasklistAttempt = (
-  tasklist: types.ITasklistUpdate
+  tasklist: types.IParsedUpdate
 ): ThunkAction<
-Promise<types.UpdateFailedAction | types.TasklistUpdatedAction>,
-{},
-{},
-types.AnyCustomAction
+  Promise<types.UpdateFailedAction | types.TasklistUpdatedAction>,
+  {},
+  {},
+  types.AnyCustomAction
 > => {
   return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
     dispatch(updating(tasklist._id));

@@ -156,7 +156,9 @@ export interface ITasklistPartialStages {
   stage4?: Array<number>;
 }
 
-export interface ITasklistUpdate extends IObjectID {
+export interface IParsedUpdate extends IObjectID {
+  remove?: boolean;
+  removeUser?: boolean;
   description?: string;
   name?: string;
   tasks?: TTasks;
@@ -173,6 +175,10 @@ export interface ITasklistCreate {
   // tasks, stages and description can be empty, name cannot
   tasks: TTasks;
   stages: ITasklistStages;
+}
+
+export interface IAddTasks extends IObjectID {
+  tasks: TTasks;
 }
 
 export type TTasks = Array<ITask>;
