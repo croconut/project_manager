@@ -22,18 +22,11 @@ import {
 } from "src/staticData/types";
 
 import TaskColumn from "./TaskColumn";
-import { reorderTask, restageTask } from "src/redux/actions";
+import { restageTask } from "src/redux/actions";
 import GridPlus from "../helpers/GridPlus";
 
 interface ReduxProps {
   tasklist: ITasklist | null;
-  reorderTasks: (
-    tasklistID: string,
-    taskID: string,
-    stage: Stage,
-    priority: number,
-    oldPriority: number
-  ) => TaskOrderAction;
   restageTasks: (
     tasklistID: string,
     taskID: string,
@@ -91,7 +84,6 @@ const TaskViews = (tasklistID: string, separatedTasks: ITask[][]) => {
 
 const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
   tasklist,
-  reorderTasks,
   restageTasks,
 }) => {
   const classes = styles();
@@ -182,7 +174,6 @@ const mapStateToProps = (state: RootState, otherProps: any) => {
 };
 
 const mapActionsToProps = {
-  reorderTasks: reorderTask,
   restageTasks: restageTask,
 };
 

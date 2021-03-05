@@ -93,10 +93,12 @@ const removeTaskHelper = (
     -1
   );
   return {
-    stage1: tasklist.stage1.filter((e) => e !== index),
-    stage2: tasklist.stage1.filter((e) => e !== index),
-    stage3: tasklist.stage1.filter((e) => e !== index),
-    stage4: tasklist.stage1.filter((e) => e !== index),
+    // remove the offender, wherever it may be
+    // increment the higher indices
+    stage1: tasklist.stage1.filter((e) => e !== index).map(e => e > index ? e - 1 : e),
+    stage2: tasklist.stage2.filter((e) => e !== index).map(e => e > index ? e - 1 : e),
+    stage3: tasklist.stage3.filter((e) => e !== index).map(e => e > index ? e - 1 : e),
+    stage4: tasklist.stage4.filter((e) => e !== index).map(e => e > index ? e - 1 : e),
   };
 };
 
@@ -239,12 +241,13 @@ export const tasklistHolder = (
       return {
         tasklists: state.tasklists.map((tasklist) => {
           if (tasklist._id !== action.payload.tasklistID) return tasklist;
+          const tasks = tasklist.tasks.filter(
+            (element) => element._id !== action.payload.task._id);
+          const stages = removeTaskHelper(tasklist, action);
           return {
             ...tasklist,
-            tasks: tasklist.tasks.filter(
-              (element) => element._id !== action.payload.task._id
-            ),
-            ...removeTaskHelper(tasklist, action),
+            ...stages,
+            tasks: tasks,
           };
         }),
         ids: state.ids,

@@ -154,12 +154,6 @@ const TasklistStub: FC<TasklistStubProps> = ({
               >
                 <OpenInNew fontSize="large" />
               </IconButton>
-              <IconButton
-                color="primary"
-                onClick={() => callback(tasklist._id, true)}
-              >
-                <Edit fontSize="large" />
-              </IconButton>
             </Toolbar>
           </CardContent>
         </Card>
