@@ -95,10 +95,33 @@ const removeTaskHelper = (
   return {
     // remove the offender, wherever it may be
     // increment the higher indices
-    stage1: tasklist.stage1.filter((e) => e !== index).map(e => e > index ? e - 1 : e),
-    stage2: tasklist.stage2.filter((e) => e !== index).map(e => e > index ? e - 1 : e),
-    stage3: tasklist.stage3.filter((e) => e !== index).map(e => e > index ? e - 1 : e),
-    stage4: tasklist.stage4.filter((e) => e !== index).map(e => e > index ? e - 1 : e),
+    stage1: tasklist.stage1
+      .filter((e) => e !== index)
+      .map((e) => (e > index ? e - 1 : e)),
+    stage2: tasklist.stage2
+      .filter((e) => e !== index)
+      .map((e) => (e > index ? e - 1 : e)),
+    stage3: tasklist.stage3
+      .filter((e) => e !== index)
+      .map((e) => (e > index ? e - 1 : e)),
+    stage4: tasklist.stage4
+      .filter((e) => e !== index)
+      .map((e) => (e > index ? e - 1 : e)),
+  };
+};
+
+const updateTasklistHelper = (
+  state: types.ITasklistsHolder,
+  action: types.TasklistUpdatedAction | types.TasklistAction
+) => {
+  const index: number | undefined = state.ids[action.payload.tasklist._id];
+  // want to allow modifications to the zero state
+  if (!index && index !== 0) return state;
+  let sliced = state.tasklists.slice();
+  sliced[index] = action.payload.tasklist;
+  return {
+    tasklists: sliced,
+    ids: state.ids,
   };
 };
 
@@ -184,16 +207,11 @@ export const tasklistHolder = (
           [action.payload.tasklist._id]: state.tasklists.length,
         },
       };
+    case types.TASKLIST_UPDATED:
+      if (action.payload.waitingNext) return state;
+      return updateTasklistHelper(state, action);
     case types.MODIFY_TASKLIST:
-      const index1: number | undefined = state.ids[action.payload.tasklist._id];
-      // want to allow modifications to the zero state
-      if (!index1 && index1 !== 0) return state;
-      let sliced = state.tasklists.slice();
-      sliced[index1] = action.payload.tasklist;
-      return {
-        tasklists: sliced,
-        ids: state.ids,
-      };
+      return updateTasklistHelper(state, action);
     case types.REMOVE_TASKLIST:
       const index2: number | undefined = state.ids[action.payload.tasklist._id];
       if (!index2 && index2 !== 0) return state;
@@ -242,7 +260,8 @@ export const tasklistHolder = (
         tasklists: state.tasklists.map((tasklist) => {
           if (tasklist._id !== action.payload.tasklistID) return tasklist;
           const tasks = tasklist.tasks.filter(
-            (element) => element._id !== action.payload.task._id);
+            (element) => element._id !== action.payload.task._id
+          );
           const stages = removeTaskHelper(tasklist, action);
           return {
             ...tasklist,

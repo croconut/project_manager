@@ -17,6 +17,7 @@
 // when the updater function checks for more updates to do, it will
 // pop the next action to take and perform that update
 
+import { ID_ADDITION } from "src/staticData/Constants";
 import * as types from "src/staticData/types";
 // this reducer will read in all posts and gets to server
 // and will also look at any add or modify request to store
@@ -37,7 +38,6 @@ const defaultStatus: types.IUpdateStates = {};
 // ids are always 24 characters long, so just adding a digit is completely safe
 // but we want something that also cant exist in a mongodb objectid
 // this should be a single char btw
-export const ID_ADDITION = "Z";
 
 const addUpdate = (
   id: string,
@@ -72,9 +72,7 @@ export const storeState = (
   var id = "";
   switch (action.type) {
     // resetting the dirty stuff when we've logged in or out
-    case types.LOGIN_COMPLETE:
-    case types.LOGOUT_COMPLETE:
-      return defaultStatus;
+
     case types.ADD_TASK:
       typesObject[types.UpdateType.ADD_TASK] = 1;
       id = action.payload.tasklistID;
@@ -101,8 +99,22 @@ export const storeState = (
       typesObject[types.UpdateType.REMOVE_TASKLIST] = 1;
       id = action.payload.tasklist._id;
       break;
+    // all the immediate return cases start here
+    case types.LOGIN_COMPLETE:
+    case types.LOGOUT_COMPLETE:
+      return defaultStatus;
     case types.UPDATING_SERVER:
+      var obj = state[action.payload._id];
+      if (obj !== undefined) {
+        return { ...state, [action.payload._id]: { ...obj, updating: true } };
+      }
+      return state;
+    // need to notify to retry update on failure
     case types.UPDATE_FAILURE:
+      obj = state[action.payload._id];
+      if (obj !== undefined) {
+        return { ...state, [action.payload._id]: { ...obj, updating: false } };
+      }
       return state;
     case types.TASKLIST_UPDATED:
       // swap the ID_ADDITION version in if it exists for this id
@@ -121,7 +133,7 @@ export const storeState = (
       return state;
   }
   // most cases are very similar, so grouped together at end
- return addUpdate(id, typesObject, state);
+  return addUpdate(id, typesObject, state);
 };
 
 export default storeState;

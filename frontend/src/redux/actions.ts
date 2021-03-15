@@ -1,6 +1,7 @@
 import axios, { AxiosResponse, AxiosStatic } from "axios";
 import { ThunkDispatch, ThunkAction } from "redux-thunk";
 import {
+  ID_ADDITION,
   RequestFails,
   Stage,
   TRequestFail,
@@ -16,6 +17,8 @@ import {
   usersPrivateInfo,
 } from "src/staticData/Routes";
 import * as types from "../staticData/types";
+import { RootStore } from "./configureStore";
+import { RootState } from "./reducers";
 
 export const modifyTasklist = (
   tasklist: types.ITasklist
@@ -128,10 +131,11 @@ export const loginFail = (reason: TRequestFail): types.FetchFailedAction => ({
   },
 });
 
-export const updateFail = (reason: TUpdateFail): types.UpdateFailedAction => ({
+export const updateFail = (reason: TUpdateFail, id = ""): types.UpdateFailedAction => ({
   type: types.UPDATE_FAILURE,
   payload: {
     reason,
+    _id: id
   },
 });
 
@@ -150,13 +154,18 @@ export const logoutSuccess = (): types.LogoutCompleteAction => ({
 });
 
 export const tasklistUpdateSuccess = (
-  obj: types.ITasklistReturn
-): types.TasklistUpdatedAction => ({
-  type: types.TASKLIST_UPDATED,
-  payload: {
-    tasklist: obj.tasklist,
-  },
-});
+  obj: types.ITasklistReturn,
+  state: RootState
+): types.TasklistUpdatedAction => {
+  return {
+    type: types.TASKLIST_UPDATED,
+    payload: {
+      tasklist: obj.tasklist,
+      waitingNext:
+        state.storeState[`${obj.tasklist._id}${ID_ADDITION}`] !== undefined,
+    },
+  };
+};
 
 export const tasklistCreateSuccess = (
   obj: types.ITasklistReturn
@@ -352,7 +361,8 @@ export const addTasklistAttempt = (
 };
 
 export const updateTasklistAttempt = (
-  tasklist: types.IParsedUpdate
+  tasklist: types.IParsedUpdate,
+  store: RootStore
 ): ThunkAction<
   Promise<types.UpdateFailedAction | types.TasklistUpdatedAction>,
   {},
@@ -360,11 +370,12 @@ export const updateTasklistAttempt = (
   types.AnyCustomAction
 > => {
   return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
-    dispatch(updating(tasklist._id));
+    const id = tasklist._id;
+    store.dispatch(updating(tasklist._id));
     return updateTasklistRequest(tasklist)
       .then((tasklistObj: types.ITasklistReturn) =>
-        dispatch(tasklistUpdateSuccess(tasklistObj))
+        store.dispatch(tasklistUpdateSuccess(tasklistObj, store.getState()))
       )
-      .catch((reason: TUpdateFail) => dispatch(updateFail(reason)));
+      .catch((reason: TUpdateFail) => store.dispatch(updateFail(reason, id)));
   };
 };

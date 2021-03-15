@@ -322,6 +322,7 @@ export type UpdateFailedAction = {
   type: update_failure;
   payload: {
     reason: TUpdateFail;
+    _id: string;
   };
 };
 
@@ -341,7 +342,7 @@ export type LogoutCompleteAction = {
 
 export type TasklistUpdatedAction = {
   type: tasklist_updated;
-  payload: { tasklist: ITasklist };
+  payload: { tasklist: ITasklist, waitingNext: boolean };
 };
 
 // just gonna push this into the store. this doesn't go into the tasklistholder until

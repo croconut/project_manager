@@ -8,6 +8,8 @@ export const TaskStage = [
 ] as const;
 export type Stage = typeof TaskStage[number];
 
+export const ID_ADDITION = "Z";
+
 // why whatever request might fail
 // should implement these as keys in backend so i can just check if the specific key exists on login
 // or register or whatever

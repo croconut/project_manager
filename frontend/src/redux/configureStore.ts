@@ -5,7 +5,7 @@ import { IParsedUpdate, UpdateType } from "src/staticData/types";
 import { updateTasklistAttempt } from "./actions";
 import Freezer from "./freezer";
 import rootReducer from "./reducers";
-import { ID_ADDITION } from "./reducers/storeState";
+import { ID_ADDITION } from "src/staticData/Constants";
 import { getTasklistById, getUpdateObject } from "./selectors";
 
 const configureStore = () => {
@@ -84,7 +84,7 @@ const configureStore = () => {
         }
       });
       // this library doesn't really like typescript here
-      store.dispatch(updateTasklistAttempt(endObject) as any);
+      store.dispatch(updateTasklistAttempt(endObject, store) as any);
     }, 1500)
   );
 
