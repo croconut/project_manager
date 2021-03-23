@@ -15,6 +15,7 @@ import {
   registerRouter,
   updateTasklist,
   usersPrivateInfo,
+  deleteTasklist,
 } from "src/staticData/Routes";
 import * as types from "../staticData/types";
 import { RootStore } from "./configureStore";
@@ -24,15 +25,6 @@ export const modifyTasklist = (
   tasklist: types.ITasklist
 ): types.TasklistAction => ({
   type: types.MODIFY_TASKLIST,
-  payload: {
-    tasklist: tasklist,
-  },
-});
-
-export const removeTasklist = (
-  tasklist: types.ITasklist
-): types.TasklistAction => ({
-  type: types.REMOVE_TASKLIST,
   payload: {
     tasklist: tasklist,
   },
@@ -131,11 +123,14 @@ export const loginFail = (reason: TRequestFail): types.FetchFailedAction => ({
   },
 });
 
-export const updateFail = (reason: TUpdateFail, id = ""): types.UpdateFailedAction => ({
+export const updateFail = (
+  reason: TUpdateFail,
+  id = ""
+): types.UpdateFailedAction => ({
   type: types.UPDATE_FAILURE,
   payload: {
     reason,
-    _id: id
+    _id: id,
   },
 });
 
@@ -163,6 +158,17 @@ export const tasklistUpdateSuccess = (
       tasklist: obj.tasklist,
       waitingNext:
         state.storeState[`${obj.tasklist._id}${ID_ADDITION}`] !== undefined,
+    },
+  };
+};
+
+export const tasklistDeleteSuccess = (
+  id: string
+): types.TasklistDeleteAction => {
+  return {
+    type: types.REMOVE_TASKLIST,
+    payload: {
+      tasklistID: id,
     },
   };
 };
@@ -225,6 +231,16 @@ const addTasklistRequest = (
     .post(addTasklistRouter.route, tasklist, { withCredentials: true })
     .then((response) => extractTasklist(response.data))
     .catch(({ response }: ErrorResponse) => Promise.reject(UpdateFails[1]));
+};
+
+const deleteTasklistRequest = (id: string): Promise<void> => {
+  return (
+    axios
+      .delete(deleteTasklist.route + id, { withCredentials: true })
+      .then(() => {})
+      // at some point need to parse this and get better rejection information
+      .catch(({ response }: ErrorResponse) => Promise.reject(UpdateFails[1]))
+  );
 };
 
 const loginRequest = (
@@ -377,5 +393,21 @@ export const updateTasklistAttempt = (
         store.dispatch(tasklistUpdateSuccess(tasklistObj, store.getState()))
       )
       .catch((reason: TUpdateFail) => store.dispatch(updateFail(reason, id)));
+  };
+};
+
+export const deleteTasklistAttempt = (
+  id: string
+): ThunkAction<
+  Promise<types.UpdateFailedAction | types.TasklistDeleteAction>,
+  {},
+  {},
+  types.AnyCustomAction
+> => {
+  return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
+    dispatch(updating(id));
+    return deleteTasklistRequest(id)
+      .then(() => dispatch(tasklistDeleteSuccess(id)))
+      .catch((reason: TUpdateFail) => dispatch(updateFail(reason, id)));
   };
 };

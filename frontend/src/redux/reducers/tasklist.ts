@@ -213,7 +213,7 @@ export const tasklistHolder = (
     case types.MODIFY_TASKLIST:
       return updateTasklistHelper(state, action);
     case types.REMOVE_TASKLIST:
-      const index2: number | undefined = state.ids[action.payload.tasklist._id];
+      const index2: number | undefined = state.ids[action.payload.tasklistID];
       if (!index2 && index2 !== 0) return state;
       const lists1 = [
         ...state.tasklists.slice(0, index2),

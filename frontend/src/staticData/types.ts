@@ -279,8 +279,13 @@ export const isTask = (obj: any): obj is ITask => {
 };
 
 export type TasklistAction = {
-  type: modify_tasklist | remove_tasklist;
+  type: modify_tasklist;
   payload: { tasklist: ITasklist };
+};
+
+export type TasklistDeleteAction = {
+  type: remove_tasklist;
+  payload: { tasklistID: string };
 };
 
 export type TaskAction = {
@@ -374,6 +379,7 @@ export interface ITasklistReturn {
 export type AnyCustomAction =
   | UserAction
   | TasklistAction
+  | TasklistDeleteAction
   | TaskAction
   | TaskStageAction
   | TaskOrderAction

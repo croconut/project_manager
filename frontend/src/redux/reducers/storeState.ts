@@ -95,10 +95,12 @@ export const storeState = (
       typesObject[types.UpdateType.TASKLIST_INFO] = 1;
       id = action.payload.tasklist._id;
       break;
+    // this is the case where the server has replied to a tasklist remove request
     case types.REMOVE_TASKLIST:
-      typesObject[types.UpdateType.REMOVE_TASKLIST] = 1;
-      id = action.payload.tasklist._id;
-      break;
+      const stateRemoved = {...state};
+      delete stateRemoved[action.payload.tasklistID];
+      delete stateRemoved[`${action.payload.tasklistID}${ID_ADDITION}`];
+      return stateRemoved;
     // all the immediate return cases start here
     case types.LOGIN_COMPLETE:
     case types.LOGOUT_COMPLETE:

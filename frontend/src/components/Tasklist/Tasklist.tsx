@@ -1,15 +1,19 @@
 import {
+  Button,
   Card,
   CardContent,
   CardHeader,
+  Dialog,
+  DialogActions,
+  DialogTitle,
   makeStyles,
   Typography,
 } from "@material-ui/core";
 
 import { DragDropContext, DropResult } from "react-beautiful-dnd";
-import React, { FC } from "react";
+import React, { FC, useState } from "react";
 import { connect } from "react-redux";
-import { RouteComponentProps } from "react-router-dom";
+import { RouteComponentProps, useHistory } from "react-router-dom";
 import { useMediaQuery } from "react-responsive";
 import { RootState } from "src/redux/reducers";
 import { getTasklistById, separateTasksByType } from "src/redux/selectors";
@@ -17,13 +21,15 @@ import { Stage, TaskStage } from "src/staticData/Constants";
 import {
   ITask,
   ITasklist,
-  TaskOrderAction,
+  TasklistDeleteAction,
   TaskStageAction,
+  UpdateFailedAction,
 } from "src/staticData/types";
 
 import TaskColumn from "./TaskColumn";
-import { restageTask } from "src/redux/actions";
+import { restageTask, deleteTasklistAttempt } from "src/redux/actions";
 import GridPlus from "../helpers/GridPlus";
+import { DeleteForever } from "@material-ui/icons";
 
 interface ReduxProps {
   tasklist: ITasklist | null;
@@ -35,6 +41,7 @@ interface ReduxProps {
     priority: number,
     oldPriority: number
   ) => TaskStageAction;
+  deleteTasklist: (id: string) => Promise<TasklistDeleteAction | UpdateFailedAction>;
 }
 
 interface RouteParams {
@@ -61,6 +68,12 @@ const styles = makeStyles((theme) => ({
   gridParent: {
     width: "100%",
   },
+  cancelButton: {
+    marginRight: "20px",
+  },
+  deleteDialog: {
+    minWidth: "300px",
+  },
 }));
 
 const TaskViews = (tasklistID: string, separatedTasks: ITask[][]) => {
@@ -85,14 +98,38 @@ const TaskViews = (tasklistID: string, separatedTasks: ITask[][]) => {
 const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
   tasklist,
   restageTasks,
+  deleteTasklist
 }) => {
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [waitForDelete, setWaitForDelete] = useState(false);
   const classes = styles();
   const isDesktop = useMediaQuery({ minWidth: 992 });
   const isMedium = useMediaQuery({ minWidth: 700 });
+  const history = useHistory();
 
-  if (tasklist === null) return <div>No tasklist selected!</div>;
+  if (tasklist === null)
+    return (
+      <div>
+        <p />
+        Tasklist not found!
+      </div>
+    );
   const separatedTasks = separateTasksByType(tasklist);
   const taskCards = TaskViews(tasklist._id, separatedTasks);
+
+  const deleteOpenButton = () => {
+    setOpenDeleteDialog(true);
+  };
+
+  const attemptTasklistDelete = () => {
+    deleteTasklist(tasklist._id);
+    history.goBack();
+  };
+
+  const closeDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+  };
+
   const onDragEnd = (result: DropResult) => {
     const { draggableId, source, destination } = result;
     if (!destination) return;
@@ -157,8 +194,40 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
               {taskCards}
             </GridPlus>
           </DragDropContext>
+          <p />
+          <Button
+            startIcon={<DeleteForever />}
+            color="secondary"
+            variant="outlined"
+            onClick={deleteOpenButton}
+          >
+            Delete tasklist
+          </Button>
         </CardContent>
       </Card>
+      <Dialog open={openDeleteDialog} onClose={closeDeleteDialog}>
+        <DialogTitle className={classes.deleteDialog}>
+          Confirm tasklist deletion?
+        </DialogTitle>
+        <DialogActions>
+          <Button
+            onClick={closeDeleteDialog}
+            color="primary"
+            variant="outlined"
+            className={classes.cancelButton}
+            autoFocus
+          >
+            cancel
+          </Button>
+          <Button
+            onClick={attemptTasklistDelete}
+            color="secondary"
+            variant="outlined"
+          >
+            delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
@@ -175,6 +244,7 @@ const mapStateToProps = (state: RootState, otherProps: any) => {
 
 const mapActionsToProps = {
   restageTasks: restageTask,
+  deleteTasklist: deleteTasklistAttempt,
 };
 
 export default connect(mapStateToProps, mapActionsToProps)(Tasklist);

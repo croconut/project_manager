@@ -24,6 +24,7 @@ export const RequestFails = [
   "unknown",
   "none_yet",
   "no_cookie",
+  "old_version"
 ] as const;
 export type TRequestFail = typeof RequestFails[number];
 
@@ -33,6 +34,7 @@ export const UpdateFails = [
   "tasks",
   "unknown",
   "none_yet",
+  "old_version"
 ] as const;
 export type TUpdateFail = typeof UpdateFails[number];
 
