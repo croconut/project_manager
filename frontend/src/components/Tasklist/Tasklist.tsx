@@ -201,16 +201,7 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
           subheader={
             <div>
               Total tasks: {tasklist.tasks.length} <br />
-              {tasklist.tasks.length > 0 && (
-                <div>
-                  {(
-                    ((tasklist.stage3.length + tasklist.stage4.length) /
-                      tasklist.tasks.length) *
-                    100
-                  ).toFixed(0)}
-                  % Complete
-                </div>
-              )}
+              {completionPercent}
             </div>
           }
         />

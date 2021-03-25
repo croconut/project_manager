@@ -103,7 +103,7 @@ const Task: FC<TaskProps> = ({ task, index, columnId, onDelete, onUpdate }) => {
   const [menuItems, setMenuItems] = useState<Array<JSX.Element>>([]);
   const [fullTaskView, setFullTaskView] = useState(false);
   const [modifyMode, setModifyMode] = useState(false);
-  const node = useRef<HTMLElement | null>(null);
+  const node = useRef<HTMLDivElement | null>(null);
   const menuOpen = Boolean(anchorEl);
   const classes = taskStyles();
   const normalClass = getClass(columnId, classes);

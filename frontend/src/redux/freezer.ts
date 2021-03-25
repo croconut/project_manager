@@ -2,6 +2,7 @@ import {
   AnyCustomAction,
   ITasklistsHolder,
   IUpdateStates,
+  IUserInfo,
   ServerStatus,
 } from "src/staticData/types";
 import { RootReducer, RootState } from "./reducers";
@@ -10,6 +11,7 @@ export const FreezeState = (state: RootState): RootState => {
   TasklistsHelper(state.tasklistHolder);
   ServerStateHelper(state.serverState);
   StoreStateHelper(state.storeState);
+  UserStateHelper(state.userInfo);
   Object.freeze(state);
   return state;
 };
@@ -42,6 +44,12 @@ const ServerStateHelper = (serverState: ServerStatus) => {
   Object.freeze(serverState);
   return serverState;
 };
+
+const UserStateHelper = (userState: IUserInfo) => {
+  if (userState === undefined) return userState;
+  Object.freeze(userState);
+  return userState;
+}
 
 // middleware wont work for state freezing
 // so we can only wrap the reducer and before it gets returned it gets frozen

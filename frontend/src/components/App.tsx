@@ -20,9 +20,6 @@ import {
   LoginCompleteAction,
 } from "src/staticData/types";
 import Logout from "./Logout";
-import Tasklists from "./Tasklists";
-import Profile from "./Profile";
-import Organizations from "./Organizations";
 import Tasklist from "./Tasklist/Tasklist";
 import CreateTasklist from "./Tasklist/CreateTasklist";
 
@@ -33,7 +30,6 @@ type Props = {
 const App: FC<Props> = ({ cookieLogin }): React.ReactElement => {
   useEffect(() => {
     cookieLogin();
-    // initUser();
   }, [cookieLogin]);
   return (
     <Router>
@@ -48,9 +44,6 @@ const App: FC<Props> = ({ cookieLogin }): React.ReactElement => {
           <Route exact path={mainRoute.route} component={Homepage} />
           <Route path={loggedOutRoutes[0].route} component={Register} />
           <Route path={loggedOutRoutes[1].route} component={Login} />
-          <Route path={loggedInRoutes[0].route} component={Tasklists} />
-          <Route path={loggedInRoutes[1].route} component={Organizations} />
-          <Route path={loggedInRoutes[2].route} component={Profile} />
           <Route path={loggedInRoutes[3].route} component={Logout} />
           <Route path={nonNavbarRoutes[0].route} component={Tasklist} />
           <Route path={nonNavbarRoutes[1].route} component={CreateTasklist} />

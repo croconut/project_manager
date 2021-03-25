@@ -11,21 +11,23 @@ import {
   Grow,
 } from "@material-ui/core";
 
-import { AddCircle, Edit, OpenInNew } from "@material-ui/icons";
+import { AddCircle, OpenInNew } from "@material-ui/icons";
 import React, { FC, useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { RootState } from "src/redux/reducers";
-import { getLoggedIn, getTasklists } from "src/redux/selectors";
+import { getLoggedIn, getStoreStatus, getTasklists } from "src/redux/selectors";
 import { nonNavbarRoutes } from "src/staticData/Routes";
 import { ITasklist, TTasklists } from "src/staticData/types";
 import { v4 as genid } from "uuid";
 import Expand from "./animations/Expand";
+import WaitingOverlay from "./helpers/WaitingOverlay";
 import CreateTasklist from "./Tasklist/CreateTasklist";
 
 interface StoreProps {
   tasklists: TTasklists;
   loggedIn: boolean;
+  storeState: string;
 }
 
 const style = makeStyles((theme) => ({
@@ -196,7 +198,7 @@ const displayTasklists = (
   return tasklistArr;
 };
 
-const Homepage: FC<StoreProps> = ({ tasklists, loggedIn }) => {
+const Homepage: FC<StoreProps> = ({ tasklists, loggedIn, storeState }) => {
   const classes = style();
   const history = useHistory();
   const [create, setCreate] = useState(true);
@@ -225,9 +227,20 @@ const Homepage: FC<StoreProps> = ({ tasklists, loggedIn }) => {
     setCreateForm(false);
   };
 
+  useEffect(() => {
+    if (!loggedIn) {
+      if (storeState === "FETCH_NEEDED") {
+        history.push("/join");
+      } else if (storeState === "SYNCED") {
+        history.push("/login");
+      }
+    }
+  }, [history, storeState, loggedIn]);
+
   const displayable = displayTasklists(tasklists, classes, openTasklist);
   return (
     <div className={classes.outer}>
+      <WaitingOverlay wait={!loggedIn} />
       {loggedIn && (
         <React.Fragment>
           <Typography variant="h3">Recent Tasklists</Typography>
@@ -249,7 +262,6 @@ const Homepage: FC<StoreProps> = ({ tasklists, loggedIn }) => {
           </Grid>
         </React.Fragment>
       )}
-      {!loggedIn && <React.Fragment></React.Fragment>}
     </div>
   );
 };
@@ -258,7 +270,11 @@ const mapStateToProps = (state: RootState) => {
   // BAD
   // const tasklists = state.tasklistHolder.tasklists;
   // GOOD cuz using a selector
-  return { loggedIn: getLoggedIn(state), tasklists: getTasklists(state) };
+  return {
+    loggedIn: getLoggedIn(state),
+    tasklists: getTasklists(state),
+    storeState: getStoreStatus(state),
+  };
 };
 
 export default connect(mapStateToProps)(Homepage);

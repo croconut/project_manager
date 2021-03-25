@@ -1,5 +1,4 @@
 import {
-  DialogProps,
   TextField,
   Button,
   makeStyles,
