@@ -185,11 +185,14 @@ const displayTasklists = (
   callback: Function
 ): Array<JSX.Element> => {
   const tasklistArr = new Array<JSX.Element>(tasklists.length);
+  const tasklistsecondary = [...tasklists];
+  tasklistsecondary.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+
   for (let i = 0; i < tasklistArr.length; i++) {
     tasklistArr[i] = (
       <TasklistStub
-        key={tasklists[i]._id}
-        tasklist={tasklists[i]}
+        key={tasklistsecondary[i]._id}
+        tasklist={tasklistsecondary[i]}
         classes={classes}
         callback={callback}
       />
@@ -243,7 +246,7 @@ const Homepage: FC<StoreProps> = ({ tasklists, loggedIn, storeState }) => {
       <WaitingOverlay wait={!loggedIn} />
       {loggedIn && (
         <React.Fragment>
-          <Typography variant="h3">Recent Tasklists</Typography>
+          <Typography variant="h3">Tasklists</Typography>
           <hr />
           <Grid className={classes.root} container spacing={2}>
             <CreateTasklistCard

@@ -43,8 +43,8 @@ export const isFakeID = (str: string): boolean => {
 };
 
 export interface ITimestamp {
-  createdAt: Date | string;
-  updatedAt: Date | string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface IObjectID {
@@ -212,6 +212,11 @@ export const extractTasklists = (info: any): TTasklists | null => {
   if (!isTasklists(info?.tasklists)) {
     return null;
   }
+  for (let i = 0; i < info.tasklists.length; i++) {
+    let tasklist = info.tasklists[i];
+    tasklist.updatedAt = new Date(tasklist.updatedAt);
+    tasklist.createdAt = new Date(tasklist.createdAt);
+  }
   return info.tasklists;
 };
 
@@ -219,6 +224,8 @@ export const extractTasklist = (info: any): ITasklist | null => {
   if (!isTasklist(info.tasklist)) {
     return null;
   }
+  info.tasklist.updatedAt = new Date(info.tasklist.updatedAt);
+  info.tasklist.createdAt = new Date(info.tasklist.createdAt);
   return info.tasklist;
 };
 
@@ -349,7 +356,7 @@ export type LogoutCompleteAction = {
 
 export type TasklistUpdatedAction = {
   type: tasklist_updated;
-  payload: { tasklist: ITasklist, waitingNext: boolean };
+  payload: { tasklist: ITasklist; waitingNext: boolean };
 };
 
 // just gonna push this into the store. this doesn't go into the tasklistholder until
