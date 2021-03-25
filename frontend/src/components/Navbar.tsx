@@ -1,11 +1,10 @@
-import React, { FC } from "react";
+import React, { FC, useEffect, useState } from "react";
 import {
   AppBar,
   Button,
   Toolbar,
   Typography,
   makeStyles,
-  useScrollTrigger,
 } from "@material-ui/core";
 import { useHistory } from "react-router";
 import { connect } from "react-redux";
@@ -77,8 +76,9 @@ const Navbar: FC<Props & StoreProps> = ({
   // only need one menu anchor element since only one menu will be visible at a time
   const history = useHistory();
   const classes = styles();
-  const scrolling = useScrollTrigger({ threshold: 10 });
-
+  const [scrollUp, setScrollUp] = useState(false);
+  const [lastScrollTop, setLastScrollTop] = useState(0);
+  const [latestScrollTop, setLatestScrollTop] = useState(0);
   const createButtons = (routes: Array<FrontendRoute>) => {
     const arrItems: Array<JSX.Element> = new Array(routes.length);
     for (let i = 0; i < arrItems.length; i++) {
@@ -104,32 +104,58 @@ const Navbar: FC<Props & StoreProps> = ({
   const loggedOutItems = createButtons(loggedOutRoutes);
   const loggedInIcon = createLoggedInIcon(logoutButton, userInfo.username);
 
+  const scrollEvent = (e: Event) => {
+    setLatestScrollTop(window.pageYOffset);
+  };
+
+  useEffect(() => {
+    window.addEventListener("scroll", scrollEvent);
+    // return function to be called when unmounted
+    return () => {
+      window.removeEventListener("scroll", scrollEvent);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (latestScrollTop > lastScrollTop) {
+      setScrollUp(true);
+      setLastScrollTop(latestScrollTop);
+    } else if (latestScrollTop < lastScrollTop) {
+      setScrollUp(false);
+      setLastScrollTop(latestScrollTop);
+    } else if (latestScrollTop === 0) {
+      setScrollUp(true);
+    }
+  }, [lastScrollTop, latestScrollTop]);
+
   return (
     <React.Fragment>
-      <AppBar
-        position="fixed"
-        color={scrolling ? "inherit" : "transparent"}
-        elevation={scrolling ? 4 : 0}
-      >
-        <Toolbar>
-          <div className={classes.title}>
-            <img
-              src={logo}
-              className={classes.image}
-              alt="project manager logo"
-            />
-            <Button
-              className={classes.lowercase}
-              color="primary"
-              onClick={() => history.push(mainRoute.route)}
-            >
-              <Typography variant="h5">{mainRoute.name}</Typography>
-            </Button>
-          </div>
-          {loggedIn && loggedInIcon}
-          {!loggedIn && loggedOutItems}
-        </Toolbar>
-      </AppBar>
+      {(lastScrollTop === 0 || !scrollUp) && (
+          <AppBar
+            position="fixed"
+            color={!scrollUp ? "inherit" : "transparent"}
+            elevation={!scrollUp ? 4 : 0}
+          >
+            <Toolbar>
+              <div className={classes.title}>
+                <img
+                  src={logo}
+                  className={classes.image}
+                  alt="project manager logo"
+                />
+                <Button
+                  className={classes.lowercase}
+                  color="primary"
+                  onClick={() => history.push(mainRoute.route)}
+                >
+                  <Typography variant="h5">{mainRoute.name}</Typography>
+                </Button>
+              </div>
+              {loggedIn && loggedInIcon}
+              {!loggedIn && loggedOutItems}
+            </Toolbar>
+          </AppBar>
+      )}
       <Toolbar />
     </React.Fragment>
   );
