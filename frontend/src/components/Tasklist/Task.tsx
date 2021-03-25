@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useEffect, useRef, useState } from "react";
 import {
   makeStyles,
   Card,
@@ -103,6 +103,7 @@ const Task: FC<TaskProps> = ({ task, index, columnId, onDelete, onUpdate }) => {
   const [menuItems, setMenuItems] = useState<Array<JSX.Element>>([]);
   const [fullTaskView, setFullTaskView] = useState(false);
   const [modifyMode, setModifyMode] = useState(false);
+  const node = useRef<HTMLElement | null>(null);
   const menuOpen = Boolean(anchorEl);
   const classes = taskStyles();
   const normalClass = getClass(columnId, classes);
@@ -124,6 +125,28 @@ const Task: FC<TaskProps> = ({ task, index, columnId, onDelete, onUpdate }) => {
     setModifyMode(false);
     onUpdate(task);
   };
+
+  const handleClick = (e: MouseEvent) => {
+    if (
+      node.current !== null &&
+      e.target !== null &&
+      node.current.contains(e.target as Node)
+    ) {
+      return;
+    }
+    setFullTaskView(false);
+    setModifyMode(false);
+  };
+
+  //credit: https://medium.com/@pitipatdop/little-neat-trick-to-capture-click-outside-with-react-hook-ba77c37c7e82
+  useEffect(() => {
+    // add when mounted
+    document.addEventListener("mousedown", handleClick);
+    // return function to be called when unmounted
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+    };
+  }, []);
 
   // wonder if this helps performance
   useEffect(() => {
@@ -164,49 +187,57 @@ const Task: FC<TaskProps> = ({ task, index, columnId, onDelete, onUpdate }) => {
   }, [onDelete, onUpdate, task, classes.menuText, setAnchorEl]);
 
   return (
-    <div style={{width: "100%"}}>
-      {modifyMode && (<ModifyTask task={task} className={normalClass} onComplete={modifyComplete} />)}
-      {!modifyMode && (<Draggable draggableId={task._id} index={index}>
-        {(provided, snapshot) => (
-          <Card
-            className={snapshot.isDragging ? classes.dragging : normalClass}
-            {...provided.draggableProps}
-            {...provided.dragHandleProps}
-            innerRef={provided.innerRef}
-            onClick={taskClicked}
-          >
-            <Grid item>
-              <Grid
-                container
-                direction="row"
-                justify="space-between"
-                wrap="nowrap"
-                alignItems="flex-start"
-              >
-                <Typography className={classes.text}>{task.name}</Typography>
-                <IconButton onClick={menuOpenHandler}>
-                  <Edit />
-                </IconButton>
-              </Grid>
-              {fullTaskView && (
-                <Grid item>
-                  <Typography className={classes.text}>
-                    <i>{description}</i>
-                  </Typography>
+    <div ref={node} style={{ width: "100%" }}>
+      {modifyMode && (
+        <ModifyTask
+          task={task}
+          className={normalClass}
+          onComplete={modifyComplete}
+        />
+      )}
+      {!modifyMode && (
+        <Draggable draggableId={task._id} index={index}>
+          {(provided, snapshot) => (
+            <Card
+              className={snapshot.isDragging ? classes.dragging : normalClass}
+              {...provided.draggableProps}
+              {...provided.dragHandleProps}
+              innerRef={provided.innerRef}
+              onClick={taskClicked}
+            >
+              <Grid item>
+                <Grid
+                  container
+                  direction="row"
+                  justify="space-between"
+                  wrap="nowrap"
+                  alignItems="flex-start"
+                >
+                  <Typography className={classes.text}>{task.name}</Typography>
+                  <IconButton onClick={menuOpenHandler}>
+                    <Edit />
+                  </IconButton>
                 </Grid>
-              )}
-            </Grid>
+                {fullTaskView && (
+                  <Grid item>
+                    <Typography className={classes.text}>
+                      <i>{description}</i>
+                    </Typography>
+                  </Grid>
+                )}
+              </Grid>
 
-            <PopupMenu
-              menuID={"task-menu-" + task._id}
-              children={menuItems}
-              open={menuOpen}
-              anchor={anchorEl}
-              onClose={menuOffClick}
-            />
-          </Card>
-        )}
-      </Draggable>)}
+              <PopupMenu
+                menuID={"task-menu-" + task._id}
+                children={menuItems}
+                open={menuOpen}
+                anchor={anchorEl}
+                onClose={menuOffClick}
+              />
+            </Card>
+          )}
+        </Draggable>
+      )}
     </div>
   );
 };
