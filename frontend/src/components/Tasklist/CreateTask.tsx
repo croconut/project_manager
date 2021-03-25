@@ -1,12 +1,11 @@
 import {
   DialogProps,
-  Dialog,
-  DialogTitle,
   TextField,
   Button,
   makeStyles,
   Card,
   CardContent,
+  Grow,
 } from "@material-ui/core";
 import { Close, InputOutlined } from "@material-ui/icons";
 import React, { FC, useRef } from "react";
@@ -15,11 +14,11 @@ import { addTask } from "src/redux/actions";
 import { ITask, TaskAction } from "src/staticData/types";
 import { styles } from "../Login";
 import { v4 as genid } from "uuid";
-import { TaskStage } from "src/staticData/Constants";
 
 const createSpecificStyles = makeStyles((theme) => ({
   card: {
-    width: "400px",
+    width: "100%",
+    background: theme.palette.primary.dark,
   },
   cardActions: {
     display: "flex",
@@ -34,26 +33,27 @@ const createSpecificStyles = makeStyles((theme) => ({
 interface CreateTaskProps {
   addATask: (tasklistID: string, task: ITask) => TaskAction;
   onComplete: () => void;
+  onClose: () => void;
   tasklistID: string;
+  open: boolean;
 }
 
 // totally forgot but since this is an individual task, there's no need to assign the task
 // to a person just yet
 
-const CreateTask: FC<CreateTaskProps & DialogProps> = ({
+const CreateTask: FC<CreateTaskProps> = ({
   addATask,
   tasklistID,
   onComplete,
   onClose,
-  className,
-  ...otherDialogProps
+  open
 }) => {
   const classes = styles();
   const preciseClasses = createSpecificStyles();
   // dont need rerenders, should use useRef
   const nameRef = useRef({ value: "" });
-  const descriptionRef = useRef({ value: ""});
-  
+  const descriptionRef = useRef({ value: "" });
+
   const onSubmit = (submission: React.FormEvent) => {
     submission.preventDefault();
     const task: ITask = {
@@ -68,17 +68,11 @@ const CreateTask: FC<CreateTaskProps & DialogProps> = ({
   };
 
   const cancel = () => {
-    if (onClose !== undefined) onClose({}, "backdropClick");
+    if (onClose !== undefined) onClose();
   };
 
   return (
-    <Dialog
-      {...otherDialogProps}
-      onClose={onClose}
-      aria-labelledby="add-task-title"
-      className={classes.root}
-    >
-      <DialogTitle id="add-task-title">Add a new task!</DialogTitle>
+    <Grow in={open} unmountOnExit={true}>
       <Card className={preciseClasses.card} elevation={0}>
         <form
           onSubmit={onSubmit}
@@ -119,7 +113,7 @@ const CreateTask: FC<CreateTaskProps & DialogProps> = ({
             </Button>
             <Button
               variant="outlined"
-              color="primary"
+              color="default"
               value="Create Task"
               type="submit"
               endIcon={<InputOutlined />}
@@ -129,7 +123,7 @@ const CreateTask: FC<CreateTaskProps & DialogProps> = ({
           </CardContent>
         </form>
       </Card>
-    </Dialog>
+    </Grow>
   );
 };
 

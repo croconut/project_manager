@@ -24,6 +24,7 @@ import { addTasklistAttempt } from "src/redux/actions";
 import { styles as loginStyles } from "../Login";
 import { TStatus } from "src/staticData/Constants";
 import { Alert } from "@material-ui/lab";
+import WaitingOverlay from "../helpers/WaitingOverlay";
 
 interface StoreProps {
   storeState: TStatus;
@@ -114,6 +115,7 @@ const CreateTasklist: FC<StoreProps> = ({ storeState, createATasklist }) => {
 
   return (
     <div className={borrowedStyles.root}>
+      <WaitingOverlay wait={sentRequest} />
       {alert}
       <Card className={classes.card}>
         <CardHeader title="Create a tasklist!" />

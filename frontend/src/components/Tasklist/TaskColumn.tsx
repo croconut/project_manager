@@ -3,7 +3,6 @@ import {
   CardContent,
   CardHeader,
   Grid,
-  Grow,
   IconButton,
   makeStyles,
 } from "@material-ui/core";
@@ -13,13 +12,11 @@ import Task from "./Task";
 import { ITask, TaskAction, TTasks } from "src/staticData/types";
 import { Add } from "@material-ui/icons";
 import CreateTask from "./CreateTask";
-import { TransitionProps } from "@material-ui/core/transitions";
 import { removeTask } from "src/redux/actions";
 import { connect } from "react-redux";
 
 const styles = makeStyles((theme) => {
   return {
-    
     header: {
       backgroundColor: "#222",
     },
@@ -36,12 +33,12 @@ const styles = makeStyles((theme) => {
       backgroundColor: theme.palette.primary.dark,
     },
     headerOngoing: {
-      background: `linear-gradient( to right, ${theme.palette.primary.dark}, ${theme.palette.success.dark})`
+      background: `linear-gradient( to right, ${theme.palette.primary.dark}, ${theme.palette.success.dark})`,
     },
     taskCardContentOngoing: {
       paddingLeft: "0px",
       paddingRight: "0px",
-      background: `linear-gradient( to right, ${theme.palette.primary.light}, ${theme.palette.success.light})`
+      background: `linear-gradient( to right, ${theme.palette.primary.light}, ${theme.palette.success.light})`,
     },
     taskCardContentToDo: {
       paddingLeft: "0px",
@@ -125,15 +122,13 @@ const getContentClass = (columnId: number, classes: styletype) => {
   }
 };
 
-// should i credit docs? ...
-const Transition = React.forwardRef(function Transition(
-  props: TransitionProps & { children?: React.ReactElement<any, any> },
-  ref: React.Ref<unknown>
-) {
-  return <Grow ref={ref} {...props} />;
-});
-
-const TaskColumn: FC<TaskColumnProps> = ({ tasklistID, title, id, tasks, removeATask }) => {
+const TaskColumn: FC<TaskColumnProps> = ({
+  tasklistID,
+  title,
+  id,
+  tasks,
+  removeATask,
+}) => {
   const [openAdd, setOpenAdd] = useState(false);
   const classes = styles();
   const columnId = parseInt(id);
@@ -153,18 +148,14 @@ const TaskColumn: FC<TaskColumnProps> = ({ tasklistID, title, id, tasks, removeA
     //should be visually consistent with the create task dialog
     //pass it the task and tasklistID information
     //have it run the actual store modification
-    //we LIKELY want to have this be a function it pushes back up to tasklist 
+    //we LIKELY want to have this be a function it pushes back up to tasklist
   };
   const closeDialog = () => {
     setOpenAdd(false);
   };
 
   return (
-    <Grid
-      item
-      key={"column-" + id}
-      className={classes.small}
-    >
+    <Grid item key={"column-" + id} className={classes.small}>
       <Card elevation={3}>
         <CardHeader
           className={headerClass}
@@ -194,6 +185,13 @@ const TaskColumn: FC<TaskColumnProps> = ({ tasklistID, title, id, tasks, removeA
                 innerRef={provided.innerRef}
                 {...provided.droppableProps}
               >
+                <CreateTask
+                  open={openAdd}
+                  onClose={closeDialog}
+                  onComplete={closeDialog}
+                  tasklistID={tasklistID}
+                />
+
                 {tasks.map((task: ITask, index: number) => (
                   <Task
                     key={task._id}
@@ -210,13 +208,6 @@ const TaskColumn: FC<TaskColumnProps> = ({ tasklistID, title, id, tasks, removeA
           )}
         </Droppable>
       </Card>
-      <CreateTask
-        open={openAdd}
-        TransitionComponent={Transition}
-        onClose={closeDialog}
-        onComplete={closeDialog}
-        tasklistID={tasklistID}
-      />
     </Grid>
   );
 };

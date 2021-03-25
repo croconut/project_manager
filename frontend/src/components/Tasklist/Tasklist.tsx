@@ -11,12 +11,16 @@ import {
 } from "@material-ui/core";
 
 import { DragDropContext, DropResult } from "react-beautiful-dnd";
-import React, { FC, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, useHistory } from "react-router-dom";
 import { useMediaQuery } from "react-responsive";
 import { RootState } from "src/redux/reducers";
-import { getTasklistById, separateTasksByType } from "src/redux/selectors";
+import {
+  getStoreStatus,
+  getTasklistById,
+  separateTasksByType,
+} from "src/redux/selectors";
 import { Stage, TaskStage } from "src/staticData/Constants";
 import {
   ITask,
@@ -30,6 +34,7 @@ import TaskColumn from "./TaskColumn";
 import { restageTask, deleteTasklistAttempt } from "src/redux/actions";
 import GridPlus from "../helpers/GridPlus";
 import { DeleteForever } from "@material-ui/icons";
+import WaitingOverlay from "../helpers/WaitingOverlay";
 
 interface ReduxProps {
   tasklist: ITasklist | null;
@@ -41,7 +46,9 @@ interface ReduxProps {
     priority: number,
     oldPriority: number
   ) => TaskStageAction;
-  deleteTasklist: (id: string) => Promise<TasklistDeleteAction | UpdateFailedAction>;
+  deleteTasklist: (
+    id: string
+  ) => Promise<TasklistDeleteAction | UpdateFailedAction>;
 }
 
 interface RouteParams {
@@ -98,7 +105,7 @@ const TaskViews = (tasklistID: string, separatedTasks: ITask[][]) => {
 const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
   tasklist,
   restageTasks,
-  deleteTasklist
+  deleteTasklist,
 }) => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [waitForDelete, setWaitForDelete] = useState(false);
@@ -106,6 +113,11 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
   const isDesktop = useMediaQuery({ minWidth: 992 });
   const isMedium = useMediaQuery({ minWidth: 700 });
   const history = useHistory();
+  
+  useEffect(() => {
+    if ( /* waitForDelete && */ tasklist === null)
+      history.push("/");
+  }, [ /* waitForDelete, */ tasklist, history]);
 
   if (tasklist === null)
     return (
@@ -122,8 +134,9 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
   };
 
   const attemptTasklistDelete = () => {
+    setWaitForDelete(true);
+    setOpenDeleteDialog(false);
     deleteTasklist(tasklist._id);
-    history.goBack();
   };
 
   const closeDeleteDialog = () => {
@@ -163,6 +176,7 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
 
   return (
     <div>
+      <WaitingOverlay wait={waitForDelete} />
       <Card className={classes.card}>
         <CardHeader
           title={tasklist.name}
@@ -171,6 +185,7 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
         />
         <CardContent>
           <Typography>{tasklist.description}</Typography>
+          <p />
           <DragDropContext onDragEnd={onDragEnd}>
             <GridPlus
               container
@@ -238,6 +253,7 @@ const mapStateToProps = (state: RootState, otherProps: any) => {
   if (otherProps.location?.state?.id)
     return {
       tasklist: getTasklistById(state, { id: otherProps.location.state.id }),
+      storeState: getStoreStatus(state),
     };
   return { tasklist: null };
 };
