@@ -1,6 +1,8 @@
 const router = require("express").Router();
 const User = require("../models/user.model");
 
+const userPrivate = User.loginFields();
+
 const passwordFailed = (res) => {
   return res.status(403).json({ failed: "Login failed" });
 };
@@ -32,7 +34,7 @@ router.post("/", (req, res) => {
   //on fail return error status + msg
   //status determines if username not found or
   //if
-  User.findOne(filter, "_id password").exec((err, doc) => {
+  User.findOne(filter, userPrivate).exec((err, doc) => {
     // dont send this doc
     // DONT SEND THIS DOC
     if (err) return passwordFailed(res);
@@ -42,7 +44,9 @@ router.post("/", (req, res) => {
         return passwordFailed(res);
       }
       req.session.user = { _id: doc._id };
-      res.status(200).json({ success: "Login success" }).send();
+      delete doc.password;
+      delete doc._id;
+      return res.status(200).json({ success: true, user: doc});
     });
   });
 });

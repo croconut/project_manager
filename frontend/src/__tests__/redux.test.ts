@@ -1,8 +1,8 @@
-import configureStore, { RootStore } from "../redux/configureStore";
+import configureStore, { RootStore } from "src/redux/configureStore";
 import faker from "faker";
 import { v4 as idgen } from "uuid";
-import * as actions from "../redux/actions";
-import * as selectors from "../redux/selectors";
+import * as actions from "src/redux/actions";
+import * as selectors from "src/redux/selectors";
 import { ITasklist, TTasklists, TTasks } from "src/staticData/types";
 import { TaskStage } from "src/staticData/Constants";
 
@@ -25,6 +25,7 @@ describe("store actions and selection tests", () => {
         assignedUserIcon: "fa folder",
         assignedUsername: faker.name.title(),
         stage: TaskStage[Math.floor(Math.random() * 12) % TaskStage.length],
+        priority: j,
       };
     }
     return {
@@ -83,6 +84,18 @@ describe("store actions and selection tests", () => {
     return selectors.getTasklistById(store.getState(), { id });
   };
 
+  const getTLByIndex = (store: RootStore, index: number) => {
+    return selectors.getTasklistByIndex(store.getState(), { index });
+  }
+
+  const getTasksSplitFromID = (store: RootStore, id: string) => {
+    return selectors.getTasksSplitByStageID(store.getState(), { id });
+  }
+
+  const getTasksSplitFromIndex = (store: RootStore, index: number) => {
+    return selectors.getTasksSplitByStageIndex(store.getState(), { index });
+  }
+
   let currentTasklists: TTasklists;
 
   afterEach(() => {
@@ -132,6 +145,7 @@ describe("store actions and selection tests", () => {
         description: "a;posdigj ",
         name: "aspgdoia",
         stage: TaskStage[1],
+        priority: 5,
       },
     ];
     expect(getTLByID(store, tasklistToModify._id)?.tasks).toEqual(
@@ -162,6 +176,7 @@ describe("store actions and selection tests", () => {
         description: "a;posdigj ",
         name: "aspgdoia",
         stage: TaskStage[1],
+        priority: 3,
       },
     ];
     modTList(store, moddableTask);
@@ -224,6 +239,44 @@ describe("store actions and selection tests", () => {
     expect(idsAfterRemove[oldId]).toBeDefined();
     expect(listBeforeRemove.length).toEqual(listAfterRemove.length);
   });
+
+  it("selectors that separate tasks by stage work", () => {
+    const tasklist = getRandomList(store);
+    // if somehow we didn't get something, should never happen in this test @.@
+    if (tasklist === null) {
+      console.error("tasklist not returned from getRandomList");
+      return;
+    }
+    const splitTasks = getTasksSplitFromID(store, tasklist._id);
+    const checkSplit = (tasks: Array<TTasks> | null, listHolder: ITasklist) => {
+      if (tasks === null) {
+        console.error("tasklist somehow has no tasks");
+        return;
+      }
+      // want last array to be empty
+      expect(tasks[TaskStage.length].length).toEqual(0);
+      // want each array to only contain tasks with appropriate stages
+      let count = 0;
+      for (let i = 0; i < tasks.length - 1; i++) { 
+        const sublist = tasks[i];
+        count += sublist.length;
+        for (let j = 0; j < sublist.length; j++) {
+          expect(sublist[j].stage).toEqual(TaskStage[i]);
+        }
+      }
+      // want to have ALL the tasks in the tasklist
+      expect(count).toEqual(listHolder.tasks.length);
+    }
+    checkSplit(splitTasks, tasklist);
+    const splitTasks2 = getTasksSplitFromIndex(store, 90);
+    const tasklist2 = getTLByIndex(store, 90);
+    if (tasklist2 === null) {
+      console.error("tasklist not returned from index 90");
+      return;
+    }
+    checkSplit(splitTasks2, tasklist2);
+  });
+
   it.todo("state returned from a selector cannot be modified");
   it.todo("selectors return correct tasklists");
   it.todo("task CRUD with tasklist id and task only");

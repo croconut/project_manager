@@ -13,6 +13,11 @@ module.exports = {
   logoutRouter: { route: "/api/logout", methods: ["POST"] },
   registerRouter: { route: "/api/register", methods: ["POST"] },
   tasklistRouter: { route: "/api/tasklist", methods: ["POST"] },
+  tasklistAdd: { route: "/api/tasklist/add", methods: ["POST"] },
+  tasklistReadOne: { route: "/api/tasklist/read/", methods: ["GET"] },
+  tasklistReadAll: { route: "/api/tasklist/", methods: ["GET"] },
+  tasklistUpdate: { route: "/api/tasklist/update/", methods: ["POST"] },
+  tasklistDelete: { route: "/api/tasklist/delete/", methods: ["DELETE"] },
   // no methods for the base yet
   usersRouter: { route: "/api/users", methods: [] },
   usersUpdate: { route: "/api/users/update", methods: ["POST"] },

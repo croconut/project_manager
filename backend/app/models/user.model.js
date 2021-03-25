@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       index: true,
       minlength: 3,
+      maxlength: 64,
     },
     email: {
       type: String,
@@ -23,6 +24,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       index: true,
       minlength: 3,
+      maxlength: 256,
     },
     // front end hashes it too, so creation constraints
     // will not be here
@@ -30,6 +32,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 14,
+      maxlength: 128,
     },
     passwordReset: {
       type: String,
@@ -44,10 +47,12 @@ const userSchema = new mongoose.Schema(
     icon: {
       type: String,
       default: "",
+      maxlength: 100,
     },
     color: {
       type: String,
       default: "#fff",
+      maxlength: 7,
     },
     tasklists: [tasklist.schema],
   },
@@ -66,6 +71,8 @@ const EMAIL_REGEX = new RegExp(`^.+[@]+(?=.*[.]).+$`);
 
 userSchema.statics.privateFields = () =>
   "-password -_id -passwordReset -passwordResetTime";
+userSchema.statics.loginFields = () => 
+  "-passwordReset -passwordResetTime";
 userSchema.statics.publicFields = () =>
   userSchema.statics.privateFields() + " -email -tasklists";
 
@@ -114,9 +121,6 @@ function HashPassword(nextfn) {
 // its tempting to try, but cannot use 'this' on updateOne
 // basically do all password changes through save
 userSchema.pre("save", HashPassword);
-
-// TODO check whether this index should be $.name or just .name :o
-userSchema.index({ _id: 1, "tasklists.$.name": 1 });
 
 // all userschema changes must be before this line
 const User = mongoose.model("User", userSchema);

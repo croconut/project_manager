@@ -44,13 +44,19 @@ router.get("/search/:username", (req, res) => {
 router.post("/update", (req, res) => {
   // updates the logged in user
   const userUpdates = req.body.user;
-  if (!userUpdates || typeof userUpdates !== "object")
+  if (
+    !userUpdates ||
+    typeof userUpdates !== "object" ||
+    Object.keys(userUpdates).length < 1
+  )
     return res.status(400).json({ missing: "missing user object in body" });
   // removing password, cannot change that
   if (
     userUpdates["password"] ||
     userUpdates["passwordReset"] ||
-    userUpdates["passwordResetTime"]
+    userUpdates["passwordResetTime"] ||
+    userUpdates.username === "" ||
+    userUpdates.email === ""
   )
     return res.status(403).json({
       forbidden: "changing the password or related info is forbidden",

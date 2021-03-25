@@ -1,3 +1,3 @@
-const TaskStage = ["To-Do", "Ongoing", "Complete", "Cancelled"];
+const TaskStage = ["To-Do", "In Progress", "Complete", "Cancelled"];
 
 module.exports = { TaskStage };

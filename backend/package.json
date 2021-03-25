@@ -21,7 +21,8 @@
     "lint": "grunt watch",
     "start": "cross-env NODE_ENV=development nodemon server",
     "production-start": "cross-env NODE_ENV=production node server.js",
-    "test": "cross-env NODE_ENV=test jest --runInBand --coverage"
+    "test": "cross-env NODE_ENV=test jest --runInBand --coverage --watch",
+    "testAll": "cross-env NODE_ENV=test jest --runInBand --coverage"
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",

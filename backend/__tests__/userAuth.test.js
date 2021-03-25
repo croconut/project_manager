@@ -5,6 +5,7 @@ const api = require("../app/staticData/Routes");
 
 // does not test user model validation
 describe("registration, login, logout", () => {
+
   const loginRoute = api.loginRouter.route;
   // this route always causes a redirect
   const logoutRoute = api.logoutRouter.route;
@@ -40,15 +41,21 @@ describe("registration, login, logout", () => {
     passwordBad2: "LEECHie",
   };
 
+  let tester;
+
+  beforeAll(() => {
+    tester = request(server);
+  })
+
   it("can't login to account that doesn't exist", async (done) => {
-    await request(server).post(loginRoute).send(user1).expect(403);
+    await tester.post(loginRoute).send(user1).expect(403);
     done();
   });
 
   it("can't register accounts with missing information", async (done) => {
     // checking every dropped combination possible for userdata
     const promises = new Array(7);
-    promises[0] = request(server)
+    promises[0] = tester
       .post(registerRoute)
       .send({
         username: user1.username,
@@ -56,7 +63,7 @@ describe("registration, login, logout", () => {
         // password: user1.password,
       })
       .expect(400);
-    promises[1] = request(server)
+    promises[1] = tester
       .post(registerRoute)
       .send({
         username: user1.username,
@@ -64,7 +71,7 @@ describe("registration, login, logout", () => {
         password: user1.password,
       })
       .expect(400);
-    promises[2] = request(server)
+    promises[2] = tester
       .post(registerRoute)
       .send({
         // username: user1.username,
@@ -72,7 +79,7 @@ describe("registration, login, logout", () => {
         password: user1.password,
       })
       .expect(400);
-    promises[3] = request(server)
+    promises[3] = tester
       .post(registerRoute)
       .send({
         // username: user1.username,
@@ -80,7 +87,7 @@ describe("registration, login, logout", () => {
         password: user1.password,
       })
       .expect(400);
-    promises[4] = request(server)
+    promises[4] = tester
       .post(registerRoute)
       .send({
         username: user1.username,
@@ -88,7 +95,7 @@ describe("registration, login, logout", () => {
         // password: user1.password,
       })
       .expect(400);
-    promises[5] = request(server)
+    promises[5] = tester
       .post(registerRoute)
       .send({
         // username: user1.username,
@@ -96,7 +103,7 @@ describe("registration, login, logout", () => {
         // password: user1.password,
       })
       .expect(400);
-    promises[6] = request(server)
+    promises[6] = tester
       .post(registerRoute)
       .send({
         // username: user1.username,
@@ -111,15 +118,15 @@ describe("registration, login, logout", () => {
   it("denies username that fail validation", async (done) => {
     const unusedEmail = "aogina@something";
     const promises = new Array(5);
-    promises[0] = request(server)
+    promises[0] = tester
       .post(registerRoute)
       .send({ username: "agoo.33", email: unusedEmail, password: unusedEmail })
       .expect(400);
-    promises[1] = request(server)
+    promises[1] = tester
       .post(registerRoute)
       .send({ username: "$agoo33", email: unusedEmail, password: unusedEmail })
       .expect(400);
-    promises[2] = request(server)
+    promises[2] = tester
       .post(registerRoute)
       .send({
         username: "DROP TABLES",
@@ -127,7 +134,7 @@ describe("registration, login, logout", () => {
         password: unusedEmail,
       })
       .expect(400);
-    promises[3] = request(server)
+    promises[3] = tester
       .post(registerRoute)
       .send({
         username: "soemthign;",
@@ -135,7 +142,7 @@ describe("registration, login, logout", () => {
         password: unusedEmail,
       })
       .expect(400);
-    promises[4] = request(server)
+    promises[4] = tester
       .post(registerRoute)
       .send({
         username: "heywhatup;DROP tables",
@@ -149,7 +156,7 @@ describe("registration, login, logout", () => {
 
   it("can register a well formed request without db matches and gives login cookie", async (done) => {
     // these requests cannot be run in parallel
-    const res = await request(server).post(registerRoute).send(user1);
+    const res = await tester.post(registerRoute).send(user1);
     expect(res.statusCode).toEqual(201);
     // console.log(res.headers);
     //should also be setting a cookie
@@ -157,7 +164,7 @@ describe("registration, login, logout", () => {
     expect(cookie).toBeDefined();
     // has cookie array with the unset previous cookie, then the set current cookie :>
     expect(cookie.length).toEqual(2);
-    const response2 = await request(server)
+    const response2 = await tester
       .get("/api/users/myinfo")
       .set("Cookie", cookie[1]);
     // can view our information but not the password
@@ -169,83 +176,82 @@ describe("registration, login, logout", () => {
 
   it("cannot register a well formed request with username and/or email db match", async (done) => {
     const promises = new Array(3);
-    promises[0] = request(server).post(registerRoute).send(user1).expect(409);
-    promises[1] = request(server)
+    promises[0] = tester.post(registerRoute).send(user1).expect(409);
+    promises[1] = tester
       .post(registerRoute)
       .send(user1AltEmail)
       .expect(409);
-    promises[2] = request(server)
+    promises[2] = tester
       .post(registerRoute)
       .send(user1AltUsername)
       .expect(409);
     await Promise.all(promises);
     done();
   });
-
   // lots of tests for these to ensure when we're missing stuff in our body, the server
   // doesn't throw errors
   it("cannot login with bad / missing credentials", async (done) => {
     const promises = new Array(9);
-    promises[0] = request(server)
+    promises[0] = tester
       .post(loginRoute)
       .send({
         username: user1AltUsername.username,
         password: user1.password,
       })
       .expect(403);
-    promises[1] = request(server)
+    promises[1] = tester
       .post(loginRoute)
       .send({
         email: user1AltEmail.email,
         password: user1.password,
       })
       .expect(403);
-    promises[2] = request(server)
+    promises[2] = tester
       .post(loginRoute)
       .send({
         email: user1.email,
         password: badPassword,
       })
       .expect(403);
-    promises[3] = request(server)
+    promises[3] = tester
       .post(loginRoute)
       .send({
         username: user1.username,
         password: badPassword,
       })
       .expect(403);
-    promises[4] = request(server)
+    promises[4] = tester
       .post(loginRoute)
       .send({
         username: user1.username,
         email: user1.email,
       })
       .expect(401);
-    promises[5] = request(server)
+    promises[5] = tester
       .post(loginRoute)
       .send({
         username: user1.username,
       })
       .expect(401);
-    promises[6] = request(server)
+    promises[6] = tester
       .post(loginRoute)
       .send({
         email: user1.email,
       })
       .expect(401);
-    promises[7] = request(server)
+    promises[7] = tester
       .post(loginRoute)
       .send({
         password: user1.password,
       })
       .expect(401);
-    promises[8] = request(server).post(loginRoute).send({}).expect(401);
+    promises[8] = tester.post(loginRoute).send({}).expect(401);
     await Promise.all(promises);
     done();
   });
 
   it("doesn't give valid cookie on invalid login", async (done) => {
-    const response = await request(server).post(loginRoute).send({
+    const response = await tester.post(loginRoute).send({
       username: user1.username,
       password: badPassword,
     });
@@ -253,7 +259,7 @@ describe("registration, login, logout", () => {
     const cookie = response.headers["set-cookie"];
     expect(cookie).toBeDefined();
     expect(cookie.length).toEqual(1);
-    await request(server)
+    await tester
       .get(loginCheckRoute)
       .set("Cookie", cookie[0])
       .expect(302);
@@ -261,22 +267,22 @@ describe("registration, login, logout", () => {
   });
 
   it("redirects logout if not logged in", async (done) => {
-    await request(server).post(logoutRoute).expect(302);
+    await tester.post(logoutRoute).expect(302);
     done();
   });
 
   it("properly logs out a logged in user", async (done) => {
-    const response = await request(server)
+    const response = await tester
       .post(loginRoute)
       .send(user1)
       .expect(200);
     const cookie = response.headers["set-cookie"];
-    await request(server)
+    await tester
       .post(logoutRoute)
       .set("Cookie", cookie[1])
       .expect(302);
     // using the previously valid login cookie should cause the redirect
-    await request(server)
+    await tester
       .get(loginCheckRoute)
       .set("Cookie", cookie[1])
       .expect(302);
@@ -288,7 +294,7 @@ describe("registration, login, logout", () => {
     // pushing for this use case
     const promises = new Array();
     promises.push(
-      request(server)
+      tester
         .post(registerRoute)
         .send({
           username: user2.username,
@@ -298,7 +304,7 @@ describe("registration, login, logout", () => {
         .expect(400)
     );
     promises.push(
-      request(server)
+      tester
         .post(registerRoute)
         .send({
           username: user2.usernameBad,
@@ -308,7 +314,7 @@ describe("registration, login, logout", () => {
         .expect(400)
     );
     promises.push(
-      request(server)
+      tester
         .post(registerRoute)
         .send({
           username: user2.username,
@@ -318,7 +324,7 @@ describe("registration, login, logout", () => {
         .expect(400)
     );
     promises.push(
-      request(server)
+      tester
         .post(registerRoute)
         .send({
           username: user2.username,
@@ -328,7 +334,7 @@ describe("registration, login, logout", () => {
         .expect(400)
     );
     promises.push(
-      request(server)
+      tester
         .post(registerRoute)
         .send({
           username: user2.usernamebad2,
@@ -338,7 +344,7 @@ describe("registration, login, logout", () => {
         .expect(400)
     );
     promises.push(
-      request(server)
+      tester
         .post(registerRoute)
         .send({
           username: user2.username,
@@ -354,7 +360,7 @@ describe("registration, login, logout", () => {
   it("can register user2", async done => {
     const promises = new Array();
     promises.push(
-      request(server)
+      tester
         .post(registerRoute)
         .send(user2)
         .expect(201)

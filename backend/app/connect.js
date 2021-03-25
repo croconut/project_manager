@@ -73,6 +73,11 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
   // gotta be logged in to bother logging out
   app.use(Routes.logoutRouter.route, loginRedirect, logoutRouter);
 
+  // must have all api routes registered before this route
+  app.get("/api/*", (_req, res) => {
+    return res.status(404).json({ reason: "unsupported api call" });
+  });
+
   app.use(express.static(path.join(__dirname, "../build")));
 
   // would like to use these BUT refreshes dont work as well
