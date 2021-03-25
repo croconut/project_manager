@@ -100,9 +100,12 @@ const getClass = (columnId: number, classes: styletype) => {
 const Task: FC<TaskProps> = ({ task, index, columnId, onDelete, onUpdate }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuItems, setMenuItems] = useState<Array<JSX.Element>>([]);
+  const [fullTaskView, setFullTaskView] = useState(false);
   const menuOpen = Boolean(anchorEl);
   const classes = taskStyles();
   const normalClass = getClass(columnId, classes);
+  const description =
+    task.description !== "" ? task.description : "no description";
 
   const menuCloseHandler = () => {
     setAnchorEl(null);
@@ -110,6 +113,14 @@ const Task: FC<TaskProps> = ({ task, index, columnId, onDelete, onUpdate }) => {
 
   const menuOpenHandler = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
+  };
+
+  const taskClicked = (event: React.MouseEvent<HTMLElement>) => {
+    setFullTaskView(!fullTaskView);
+  };
+
+  const taskCollapse = () => {
+    setFullTaskView(false);
   };
 
   // wonder if this helps performance
@@ -125,6 +136,7 @@ const Task: FC<TaskProps> = ({ task, index, columnId, onDelete, onUpdate }) => {
       menuCloseHandler();
       onUpdate(task);
     };
+
     const createMenuItems = () => {
       const menuItemInfos: Array<MenuTuple> = [
         ["Modify", runModify, <Edit />],
@@ -134,7 +146,6 @@ const Task: FC<TaskProps> = ({ task, index, columnId, onDelete, onUpdate }) => {
       for (let i = 0; i < arr.length; i++) {
         arr[i] = (
           <MenuItem color="inherit" onClick={menuItemInfos[i][1]} key={genid()}>
-            
             {menuItemInfos[i][2]}
             <Typography className={classes.menuText}>
               {menuItemInfos[i][0]}
@@ -155,6 +166,8 @@ const Task: FC<TaskProps> = ({ task, index, columnId, onDelete, onUpdate }) => {
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           innerRef={provided.innerRef}
+          onClick={taskClicked}
+          onBlur={taskCollapse}
         >
           <Grid item>
             <Grid
@@ -171,7 +184,15 @@ const Task: FC<TaskProps> = ({ task, index, columnId, onDelete, onUpdate }) => {
                 {/* <DeleteOutlineRounded /> */}
               </IconButton>
             </Grid>
+            {fullTaskView && (
+              <Grid item>
+                <Typography className={classes.text}>
+                  <i>{description}</i>
+                </Typography>
+              </Grid>
+            )}
           </Grid>
+
           <PopupMenu
             menuID={"task-menu-" + task._id}
             children={menuItems}

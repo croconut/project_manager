@@ -113,11 +113,10 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
   const isDesktop = useMediaQuery({ minWidth: 992 });
   const isMedium = useMediaQuery({ minWidth: 700 });
   const history = useHistory();
-  
+
   useEffect(() => {
-    if ( /* waitForDelete && */ tasklist === null)
-      history.push("/");
-  }, [ /* waitForDelete, */ tasklist, history]);
+    if (/* waitForDelete && */ tasklist === null) history.push("/");
+  }, [/* waitForDelete, */ tasklist, history]);
 
   if (tasklist === null)
     return (
@@ -181,7 +180,16 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
         <CardHeader
           title={tasklist.name}
           titleTypographyProps={{ variant: "h3" }}
-          subheader={"Total tasks: " + tasklist.tasks.length}
+          subheader={
+            <div>
+              Total tasks: {tasklist.tasks.length} <br />
+              {(((tasklist.stage3.length + tasklist.stage4.length) /
+                  tasklist.tasks.length) *
+                  100
+              ).toFixed(0)}
+              % Complete
+            </div>
+          }
         />
         <CardContent>
           <Typography>{tasklist.description}</Typography>
