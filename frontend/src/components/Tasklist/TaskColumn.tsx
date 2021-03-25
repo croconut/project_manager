@@ -12,7 +12,7 @@ import Task from "./Task";
 import { ITask, TaskAction, TTasks } from "src/staticData/types";
 import { Add } from "@material-ui/icons";
 import CreateTask from "./CreateTask";
-import { removeTask } from "src/redux/actions";
+import { removeTask, modifyTask } from "src/redux/actions";
 import { connect } from "react-redux";
 
 const styles = makeStyles((theme) => {
@@ -88,6 +88,7 @@ interface TaskColumnProps {
   id: string;
   tasks: TTasks;
   removeATask: (tasklistID: string, task: ITask) => TaskAction;
+  modifyATask: (tasklistID: string, task: ITask) => TaskAction;
 }
 
 type styletype = ReturnType<typeof styles>;
@@ -128,6 +129,7 @@ const TaskColumn: FC<TaskColumnProps> = ({
   id,
   tasks,
   removeATask,
+  modifyATask
 }) => {
   const [openAdd, setOpenAdd] = useState(false);
   const classes = styles();
@@ -143,13 +145,16 @@ const TaskColumn: FC<TaskColumnProps> = ({
   const taskDeleter = (task: ITask) => {
     removeATask(tasklistID, task);
   };
+  
   const taskModifier = (task: ITask) => {
     //TODO create a modify task dialog
     //should be visually consistent with the create task dialog
     //pass it the task and tasklistID information
     //have it run the actual store modification
     //we LIKELY want to have this be a function it pushes back up to tasklist
+    modifyATask(tasklistID, task);
   };
+
   const closeDialog = () => {
     setOpenAdd(false);
   };
@@ -214,6 +219,7 @@ const TaskColumn: FC<TaskColumnProps> = ({
 
 const mapActionsToProps = {
   removeATask: removeTask,
+  modifyATask: modifyTask,
 };
 
 export default connect(null, mapActionsToProps)(TaskColumn);

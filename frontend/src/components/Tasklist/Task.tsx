@@ -10,8 +10,9 @@ import {
 import { ITask } from "src/staticData/types";
 import { Draggable } from "react-beautiful-dnd";
 import { v4 as genid } from "uuid";
-import { DeleteOutlineRounded, Edit, Menu } from "@material-ui/icons";
+import { DeleteOutlineRounded, Edit } from "@material-ui/icons";
 import PopupMenu from "../helpers/PopupMenu";
+import ModifyTask from "./ModifyTask";
 
 interface TaskProps {
   task: ITask;
@@ -101,40 +102,44 @@ const Task: FC<TaskProps> = ({ task, index, columnId, onDelete, onUpdate }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuItems, setMenuItems] = useState<Array<JSX.Element>>([]);
   const [fullTaskView, setFullTaskView] = useState(false);
+  const [modifyMode, setModifyMode] = useState(false);
   const menuOpen = Boolean(anchorEl);
   const classes = taskStyles();
   const normalClass = getClass(columnId, classes);
   const description =
     task.description !== "" ? task.description : "no description";
 
-  const menuCloseHandler = () => {
-    setAnchorEl(null);
-  };
+  const menuOffClick = () => setAnchorEl(null);
 
   const menuOpenHandler = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
+    event.stopPropagation();
   };
 
   const taskClicked = (event: React.MouseEvent<HTMLElement>) => {
-    setFullTaskView(!fullTaskView);
+    if (anchorEl === null) setFullTaskView(!fullTaskView);
   };
 
-  const taskCollapse = () => {
-    setFullTaskView(false);
+  const modifyComplete = (task: ITask) => {
+    setModifyMode(false);
+    onUpdate(task);
   };
 
   // wonder if this helps performance
   useEffect(() => {
     const runDelete = (event: React.MouseEvent<HTMLElement>) => {
       event.preventDefault();
-      menuCloseHandler();
+      event.stopPropagation();
+      setAnchorEl(null);
       onDelete(task);
     };
 
     const runModify = (event: React.MouseEvent<HTMLElement>) => {
       event.preventDefault();
-      menuCloseHandler();
-      onUpdate(task);
+      event.stopPropagation();
+      setAnchorEl(null);
+      // onUpdate(task);
+      setModifyMode(true);
     };
 
     const createMenuItems = () => {
@@ -156,53 +161,53 @@ const Task: FC<TaskProps> = ({ task, index, columnId, onDelete, onUpdate }) => {
       setMenuItems(arr);
     };
     createMenuItems();
-  }, [onDelete, onUpdate, task, classes.menuText]);
+  }, [onDelete, onUpdate, task, classes.menuText, setAnchorEl]);
 
   return (
-    <Draggable draggableId={task._id} index={index}>
-      {(provided, snapshot) => (
-        <Card
-          className={snapshot.isDragging ? classes.dragging : normalClass}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-          innerRef={provided.innerRef}
-          onClick={taskClicked}
-          onBlur={taskCollapse}
-        >
-          <Grid item>
-            <Grid
-              container
-              direction="row"
-              justify="space-between"
-              wrap="nowrap"
-              alignItems="flex-start"
-            >
-              <Typography className={classes.text}>{task.name}</Typography>
-              <IconButton onClick={menuOpenHandler}>
-                <Menu />
-
-                {/* <DeleteOutlineRounded /> */}
-              </IconButton>
-            </Grid>
-            {fullTaskView && (
-              <Grid item>
-                <Typography className={classes.text}>
-                  <i>{description}</i>
-                </Typography>
+    <div style={{width: "100%"}}>
+      {modifyMode && (<ModifyTask task={task} className={normalClass} onComplete={modifyComplete} />)}
+      {!modifyMode && (<Draggable draggableId={task._id} index={index}>
+        {(provided, snapshot) => (
+          <Card
+            className={snapshot.isDragging ? classes.dragging : normalClass}
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
+            innerRef={provided.innerRef}
+            onClick={taskClicked}
+          >
+            <Grid item>
+              <Grid
+                container
+                direction="row"
+                justify="space-between"
+                wrap="nowrap"
+                alignItems="flex-start"
+              >
+                <Typography className={classes.text}>{task.name}</Typography>
+                <IconButton onClick={menuOpenHandler}>
+                  <Edit />
+                </IconButton>
               </Grid>
-            )}
-          </Grid>
+              {fullTaskView && (
+                <Grid item>
+                  <Typography className={classes.text}>
+                    <i>{description}</i>
+                  </Typography>
+                </Grid>
+              )}
+            </Grid>
 
-          <PopupMenu
-            menuID={"task-menu-" + task._id}
-            children={menuItems}
-            open={menuOpen}
-            anchor={anchorEl}
-            onClose={menuCloseHandler}
-          />
-        </Card>
-      )}
-    </Draggable>
+            <PopupMenu
+              menuID={"task-menu-" + task._id}
+              children={menuItems}
+              open={menuOpen}
+              anchor={anchorEl}
+              onClose={menuOffClick}
+            />
+          </Card>
+        )}
+      </Draggable>)}
+    </div>
   );
 };
 
