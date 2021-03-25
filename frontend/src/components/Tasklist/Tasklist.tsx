@@ -109,6 +109,7 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
 }) => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [waitForDelete, setWaitForDelete] = useState(false);
+  const [completionPercent, setCompletionPercent] = useState("");
   const classes = styles();
   const isDesktop = useMediaQuery({ minWidth: 992 });
   const isMedium = useMediaQuery({ minWidth: 700 });
@@ -118,6 +119,22 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
     if (/* waitForDelete && */ tasklist === null) history.push("/");
   }, [/* waitForDelete, */ tasklist, history]);
 
+  useEffect(() => {
+    if (tasklist !== null) {
+      if (tasklist.tasks.length > 0) {
+        setCompletionPercent("No tasks");
+      } else {
+        setCompletionPercent(
+          (
+            ((tasklist.stage3.length + tasklist.stage4.length) /
+              tasklist.tasks.length) *
+            100
+          ).toFixed(0) + "% Complete"
+        );
+      }
+    }
+  }, [tasklist]);
+
   if (tasklist === null)
     return (
       <div>
@@ -125,6 +142,7 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
         Tasklist not found!
       </div>
     );
+
   const separatedTasks = separateTasksByType(tasklist);
   const taskCards = TaskViews(tasklist._id, separatedTasks);
 
@@ -183,11 +201,16 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
           subheader={
             <div>
               Total tasks: {tasklist.tasks.length} <br />
-              {(((tasklist.stage3.length + tasklist.stage4.length) /
-                  tasklist.tasks.length) *
-                  100
-              ).toFixed(0)}
-              % Complete
+              {tasklist.tasks.length > 0 && (
+                <div>
+                  {(
+                    ((tasklist.stage3.length + tasklist.stage4.length) /
+                      tasklist.tasks.length) *
+                    100
+                  ).toFixed(0)}
+                  % Complete
+                </div>
+              )}
             </div>
           }
         />

@@ -83,6 +83,7 @@ const configureStore = () => {
             break;
         }
       });
+      if (endObject.tasks !== undefined && endObject.tasks.length < 1) endObject.empty = true;
       // this library doesn't really like typescript here
       store.dispatch(updateTasklistAttempt(endObject, store) as any);
     }, 1500)

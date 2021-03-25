@@ -165,6 +165,8 @@ export interface IParsedUpdate extends IObjectID {
   stages?: ITasklistStages;
   // for when the stages changed but the tasks didnt
   taskslength?: number;
+  // for when the tasks changed and the count is empty
+  empty?: boolean;
 }
 
 // looks similar to ITasklistUpdate, but they are very definitely not

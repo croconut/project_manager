@@ -8,6 +8,7 @@ import {
   CardHeader,
   IconButton,
   Toolbar,
+  Grow,
 } from "@material-ui/core";
 
 import { AddCircle, Edit, OpenInNew } from "@material-ui/icons";
@@ -20,6 +21,7 @@ import { nonNavbarRoutes } from "src/staticData/Routes";
 import { ITasklist, TTasklists } from "src/staticData/types";
 import { v4 as genid } from "uuid";
 import Expand from "./animations/Expand";
+import CreateTasklist from "./Tasklist/CreateTasklist";
 
 interface StoreProps {
   tasklists: TTasklists;
@@ -62,32 +64,45 @@ type styletype = ReturnType<typeof style>;
 interface CreateProps {
   classes: styletype;
   callback: Function;
+  open: boolean;
+  onExit: () => void;
 }
 
-const CreateTasklistCard: FC<CreateProps> = ({ classes, callback }) => {
+const CreateTasklistCard: FC<CreateProps> = ({
+  classes,
+  callback,
+  open,
+  onExit,
+}) => {
   const [hover, setHover] = useState(false);
+  const exitWrapper = () => {
+    setHover(false);
+    onExit();
+  };
   return (
-    <Expand in={hover} timeout={150} start={0.9} end={1.05}>
-      <Grid item key={genid()} className={classes.card}>
-        <Card
-          className={classes.create}
-          onMouseOver={() => setHover(true)}
-          onMouseLeave={() => setHover(false)}
-          elevation={hover ? 12 : 2}
-        >
-          <Button fullWidth onClick={() => callback()}>
-            <CardContent>
-              <Typography variant="h5" className={classes.create}>
-                Create a new tasklist
-              </Typography>
-              <br />
-              <br />
-              <AddCircle className={classes.addButton} />
-            </CardContent>
-          </Button>
-        </Card>
-      </Grid>
-    </Expand>
+    <Grow in={open} onExited={exitWrapper} unmountOnExit={true}>
+      <Expand in={hover} timeout={150} start={0.9} end={1.05}>
+        <Grid item key={genid()} className={classes.card}>
+          <Card
+            className={classes.create}
+            onMouseOver={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+            elevation={hover ? 12 : 2}
+          >
+            <Button fullWidth onClick={() => callback()}>
+              <CardContent>
+                <Typography variant="h5" className={classes.create}>
+                  Create a new tasklist
+                </Typography>
+                <br />
+                <br />
+                <AddCircle className={classes.addButton} />
+              </CardContent>
+            </Button>
+          </Card>
+        </Grid>
+      </Expand>
+    </Grow>
   );
 };
 
@@ -184,21 +199,33 @@ const displayTasklists = (
 const Homepage: FC<StoreProps> = ({ tasklists, loggedIn }) => {
   const classes = style();
   const history = useHistory();
-  const [leaving, setLeaving] = useState(false);
+  const [create, setCreate] = useState(true);
+  const [createForm, setCreateForm] = useState(false);
   const createTasklist = () => {
-    if (leaving) return;
-    setLeaving(true);
-    setTimeout(() => history.push(nonNavbarRoutes[1].route), 200);
+    setCreate(false);
+  };
+
+  const onCreateClose = () => {
+    setCreateForm(true);
   };
 
   const openTasklist = (id: string, edit: boolean) => {
-    if (leaving) return;
-    setLeaving(true);
-    setTimeout(() => history.push(nonNavbarRoutes[0].route, { id, edit }), 200);
+    history.push(nonNavbarRoutes[0].route, { id, edit });
+  };
+
+  const onCancelCreate = () => {
+    setCreateForm(false);
+  };
+
+  const onCreateTasklistExit = () => {
+    setCreate(true);
+  };
+
+  const onCreateTasklistComplete = () => {
+    setCreateForm(false);
   };
 
   const displayable = displayTasklists(tasklists, classes, openTasklist);
-  const createNew = CreateTasklistCard({ classes, callback: createTasklist });
   return (
     <div className={classes.outer}>
       {loggedIn && (
@@ -206,7 +233,18 @@ const Homepage: FC<StoreProps> = ({ tasklists, loggedIn }) => {
           <Typography variant="h3">Recent Tasklists</Typography>
           <hr />
           <Grid className={classes.root} container spacing={2}>
-            {createNew}
+            <CreateTasklistCard
+              classes={classes}
+              callback={createTasklist}
+              onExit={onCreateClose}
+              open={create}
+            />
+            <CreateTasklist
+              onCancel={onCancelCreate}
+              onExit={onCreateTasklistExit}
+              onComplete={onCreateTasklistComplete}
+              open={createForm}
+            />
             {displayable}
           </Grid>
         </React.Fragment>

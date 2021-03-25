@@ -4,6 +4,7 @@ import {
   CardContent,
   CardHeader,
   Collapse,
+  Grow,
   makeStyles,
   TextField,
 } from "@material-ui/core";
@@ -31,13 +32,15 @@ interface StoreProps {
   createATasklist: (
     tasklist: ITasklistCreate
   ) => Promise<TasklistCreatedAction | UpdateFailedAction>;
+  onCancel: () => void;
+  onExit: () => void;
+  onComplete: () => void;
+  open: boolean;
 }
 
 const styles = makeStyles((theme) => ({
   card: {
     width: "90%",
-    minHeight: "400px",
-    height: "80vh",
     marginLeft: "5%",
     marginRight: "5%",
   },
@@ -51,7 +54,14 @@ const styles = makeStyles((theme) => ({
   },
 }));
 
-const CreateTasklist: FC<StoreProps> = ({ storeState, createATasklist }) => {
+const CreateTasklist: FC<StoreProps> = ({
+  storeState,
+  createATasklist,
+  onCancel,
+  onComplete,
+  open,
+  onExit,
+}) => {
   const nameRef = useRef({ value: "" });
   const [sentRequest, setSentRequest] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
@@ -85,16 +95,16 @@ const CreateTasklist: FC<StoreProps> = ({ storeState, createATasklist }) => {
   }, [alertActive, alertMessage]);
 
   useEffect(() => {
-    console.log(storeState);
     if (sentRequest && storeState === "SYNCED") {
-      history.goBack();
+      setSentRequest(false);
+      onComplete();
     }
     if (sentRequest && storeState === "UPDATE_NEEDED") {
       setSentRequest(false);
       setAlertMessage("tasklist create failed, server may be busy or down");
       setAlertActive(true);
     }
-  }, [sentRequest, storeState, history]);
+  }, [sentRequest, storeState, history, onComplete]);
 
   const onSubmit = (submission: React.FormEvent) => {
     submission.preventDefault();
@@ -110,63 +120,65 @@ const CreateTasklist: FC<StoreProps> = ({ storeState, createATasklist }) => {
   };
 
   const cancel = () => {
-    history.goBack();
+    onCancel();
   };
 
   return (
-    <div className={borrowedStyles.root}>
-      <WaitingOverlay wait={sentRequest} />
-      {alert}
-      <Card className={classes.card}>
-        <CardHeader title="Create a tasklist!" />
-        <form
-          onSubmit={onSubmit}
-          autoComplete="off"
-          className={borrowedStyles.cardContent}
-        >
-          <CardContent className={borrowedStyles.cardContent}>
-            <TextField
-              className={borrowedStyles.inputs}
-              required
-              autoFocus
-              id="name"
-              label="Name"
-              variant="outlined"
-              inputRef={nameRef}
-            />
-            <p />
-            <TextField
-              className={borrowedStyles.inputs}
-              id="description"
-              label="Description"
-              variant="outlined"
-              inputRef={descriptionRef}
-            />
-          </CardContent>
-          <CardContent className={classes.cardActions}>
-            <Button
-              className={classes.leftButton}
-              variant="outlined"
-              color="secondary"
-              value="Cancel"
-              endIcon={<Close />}
-              onClick={cancel}
-            >
-              cancel
-            </Button>
-            <Button
-              variant="outlined"
-              color="primary"
-              value="Create Task"
-              type="submit"
-              endIcon={<InputOutlined />}
-            >
-              Create Tasklist
-            </Button>
-          </CardContent>
-        </form>
-      </Card>
-    </div>
+    <Grow in={open} unmountOnExit={true} onExited={onExit}>
+      <div className={borrowedStyles.root}>
+        <WaitingOverlay wait={sentRequest} />
+        {alert}
+        <Card className={classes.card}>
+          <CardHeader title="Create a tasklist!" />
+          <form
+            onSubmit={onSubmit}
+            autoComplete="off"
+            className={borrowedStyles.cardContent}
+          >
+            <CardContent className={borrowedStyles.cardContent}>
+              <TextField
+                className={borrowedStyles.inputs}
+                required
+                autoFocus
+                id="name"
+                label="Name"
+                variant="outlined"
+                inputRef={nameRef}
+              />
+              <p />
+              <TextField
+                className={borrowedStyles.inputs}
+                id="description"
+                label="Description"
+                variant="outlined"
+                inputRef={descriptionRef}
+              />
+            </CardContent>
+            <CardContent className={classes.cardActions}>
+              <Button
+                className={classes.leftButton}
+                variant="outlined"
+                color="secondary"
+                value="Cancel"
+                endIcon={<Close />}
+                onClick={cancel}
+              >
+                cancel
+              </Button>
+              <Button
+                variant="outlined"
+                color="primary"
+                value="Create Task"
+                type="submit"
+                endIcon={<InputOutlined />}
+              >
+                Create Tasklist
+              </Button>
+            </CardContent>
+          </form>
+        </Card>
+      </div>
+    </Grow>
   );
 };
 
