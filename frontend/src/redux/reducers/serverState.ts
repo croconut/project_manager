@@ -33,7 +33,7 @@ export const serverState = (
     case types.LOGIN_COMPLETE:
       return { ...state, loggedIn: true, status: "SYNCED" };
     case types.LOGOUT_COMPLETE:
-      return { ...state, loggedIn: false, status: "INITIAL" };
+      return { ...state, loggedIn: false, status: "SYNCED" };
     case types.FETCH_FAILURE:
       return { ...state, status: "FETCH_NEEDED", lastFetchFailure: action.payload.reason };
     case types.UPDATE_FAILURE:

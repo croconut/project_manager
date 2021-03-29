@@ -49,9 +49,13 @@ export const getStoreStatus = (state: RootState) => {
   return state.serverState.status;
 };
 
+export const getUserInfo = (state: RootState) => {
+  return state.userInfo;
+}
+
 export const getUpdateObject = (state: RootState) => {
   return state.storeState;
-}
+};
 
 export const getLastFetchFailure = (state: RootState) => {
   return state.serverState.lastFetchFailure;
