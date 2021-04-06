@@ -78,15 +78,7 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
     return res.status(404).json({ reason: "unsupported api call" });
   });
 
-  app.use(
-    express.static(path.join(__dirname, "../../frontend/build"), {
-      setHeaders: function setHeaders(res) {
-        res.header("Access-Control-Allow-Origin", "*");
-        res.header("Access-Control-Allow-Methods", "GET");
-        res.header("Access-Control-Allow-Headers", "Content-Type");
-      },
-    })
-  );
+  app.use(express.static(path.join(__dirname, "../../frontend/build")));
 
   // would like to use these BUT refreshes dont work as well
 

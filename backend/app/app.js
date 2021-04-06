@@ -1,4 +1,4 @@
-// normal setup and 
+// normal setup and
 const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
@@ -14,7 +14,11 @@ if (!process.env.SESSION_KEY || process.env.SESSION_KEY === "") {
 }
 
 app.use(cors());
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+  })
+);
 app.use(express.json());
 
 module.exports = app;
