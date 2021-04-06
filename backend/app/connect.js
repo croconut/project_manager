@@ -78,7 +78,15 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
     return res.status(404).json({ reason: "unsupported api call" });
   });
 
-  app.use(express.static(path.join(__dirname, "../../frontend/build")));
+  app.use(
+    express.static(path.join(__dirname, "../../frontend/build"), {
+      setHeaders: function setHeaders(res) {
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Methods", "GET");
+        res.header("Access-Control-Allow-Headers", "Content-Type");
+      },
+    })
+  );
 
   // would like to use these BUT refreshes dont work as well
 
@@ -98,9 +106,9 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
 
   // react routes always available
   // will eventually include static pages like about us and contact me
-  app.get("/*", (_req, res) => {
-    res.sendFile(path.resolve(__dirname, "../../frontend/build", "index.html"));
-  });
+  app.get("/*", (_req, res) =>
+    res.sendFile(path.resolve(__dirname, "../../frontend/build/index.html"))
+  );
 
   await mongoose.connect(uri, mongooseConnectionOptions);
 
