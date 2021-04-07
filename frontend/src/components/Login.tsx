@@ -8,32 +8,44 @@ import {
   InputAdornment,
   IconButton,
   Collapse,
+  Typography,
 } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import { Input, Visibility, VisibilityOff } from "@material-ui/icons";
 import { hashPassword, TRequestFail, TStatus } from "../staticData/Constants";
 import { useHistory } from "react-router-dom";
 import { connect } from "react-redux";
-import { getLastFetchFailure, getLoggedIn, getStoreStatus } from "src/redux/selectors";
+import {
+  getLastFetchFailure,
+  getLoggedIn,
+  getStoreStatus,
+} from "src/redux/selectors";
 import { RootState } from "src/redux/reducers";
 import { loginAttempt } from "src/redux/actions";
-import { FetchFailedAction, LoginCompleteAction, TUserCredentials } from "src/staticData/types";
-
+import {
+  FetchFailedAction,
+  LoginCompleteAction,
+  TUserCredentials,
+} from "src/staticData/types";
 
 export interface StoreProps {
   loggedIn: boolean;
   status: TStatus;
   failReason: TRequestFail;
-  tryLogin: (creds: TUserCredentials) => Promise<LoginCompleteAction | FetchFailedAction>;
+  tryLogin: (
+    creds: TUserCredentials
+  ) => Promise<LoginCompleteAction | FetchFailedAction>;
 }
 
-export const styles = makeStyles({
+export const styles = makeStyles((theme) => ({
   card: {
     maxWidth: "800px",
-    minWidth: "400px",
+    minWidth: "300px",
     margin: "30px",
-    minHeight: "400px",
+    marginTop: "10vh",
+    minHeight: "320px",
     display: "flex",
+    [theme.breakpoints.down("xs")]: { marginTop: "10px" },
   },
   root: {
     display: "flex",
@@ -59,7 +71,7 @@ export const styles = makeStyles({
     position: "absolute",
     top: "62px",
   },
-});
+}));
 
 const Login: FC<StoreProps> = ({ loggedIn, tryLogin, status, failReason }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -128,7 +140,7 @@ const Login: FC<StoreProps> = ({ loggedIn, tryLogin, status, failReason }) => {
       userAuth = { password: hashPassword(password), username };
     }
     tryLogin(userAuth);
-  }
+  };
 
   return (
     <div className={classes.root}>
@@ -140,8 +152,10 @@ const Login: FC<StoreProps> = ({ loggedIn, tryLogin, status, failReason }) => {
           className={classes.cardContent}
         >
           <CardContent className={classes.cardContent}>
-            <h1 className={classes.inputs}>Login</h1>
-
+            <Typography variant="h3" className={classes.inputs}>
+              Login
+            </Typography>
+            <p />
             <TextField
               className={classes.inputs}
               required
@@ -186,10 +200,11 @@ const Login: FC<StoreProps> = ({ loggedIn, tryLogin, status, failReason }) => {
               variant="outlined"
               color="primary"
               value="Login"
+              fullWidth
               endIcon={<Input />}
               type="submit"
             >
-              Login
+              <Typography variant="h5">Login</Typography>
             </Button>
           </CardContent>
         </form>

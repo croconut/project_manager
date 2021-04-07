@@ -35,16 +35,8 @@ const createLoggedInIcon = (
   username: string
 ) => {
   return (
-    // <IconButton
-    //   edge="start"
-    //   color="primary"
-    //   onClick={menuHandler}
-    //   aria-label="menu"
-    // >
-    //   <MenuIcon />
-    // </IconButton>
     <div>
-      <Typography>
+      <Typography variant="body1">
         Welcome, {" " + username + " "}
         <Button onClick={onClick} color="primary">
           Logout
@@ -54,7 +46,7 @@ const createLoggedInIcon = (
   );
 };
 
-const styles = makeStyles({
+const styles = makeStyles((theme) => ({
   title: { flexGrow: 100, display: "flex", justifyContent: "left" },
   root: {
     position: "sticky",
@@ -62,9 +54,14 @@ const styles = makeStyles({
       backgroundColor: "#fffff",
     },
   },
-  image: { width: "32px", height: "32px" },
+  image: {
+    marginTop: "8px",
+    width: "16px",
+    height: "16px",
+    [theme.breakpoints.up("sm")]: { width: "32px", height: "32px" },
+  },
   lowercase: { textTransform: "none" },
-});
+}));
 
 const Navbar: FC<Props & StoreProps> = ({
   mainRoute,
@@ -86,13 +83,13 @@ const Navbar: FC<Props & StoreProps> = ({
         <Button
           color="primary"
           variant="outlined"
-          style={{ marginLeft: "15px" }}
+          style={{ marginLeft: "0.45rem" }}
           onClick={(_e) => {
             history.push(routes[i].route);
           }}
           key={genid()}
         >
-          <Typography variant="button">{routes[i].name}</Typography>
+          <Typography variant="body1">{routes[i].name}</Typography>
         </Button>
       );
     }
@@ -131,30 +128,32 @@ const Navbar: FC<Props & StoreProps> = ({
   return (
     <React.Fragment>
       {(lastScrollTop === 0 || !scrollUp) && (
-          <AppBar
-            position="fixed"
-            color={!scrollUp ? "inherit" : "transparent"}
-            elevation={!scrollUp ? 4 : 0}
-          >
-            <Toolbar>
-              <div className={classes.title}>
-                <img
-                  src={logo}
-                  className={classes.image}
-                  alt="project manager logo"
-                />
-                <Button
-                  className={classes.lowercase}
-                  color="primary"
-                  onClick={() => history.push(mainRoute.route)}
-                >
-                  <Typography variant="h5">{mainRoute.name}</Typography>
-                </Button>
-              </div>
-              {loggedIn && loggedInIcon}
-              {!loggedIn && loggedOutItems}
-            </Toolbar>
-          </AppBar>
+        <AppBar
+          position="fixed"
+          color={!scrollUp ? "inherit" : "transparent"}
+          elevation={!scrollUp ? 4 : 0}
+        >
+          <Toolbar>
+            <div className={classes.title}>
+              <img
+                src={logo}
+                className={classes.image}
+                alt="project manager logo"
+              />
+              <Button
+                className={classes.lowercase}
+                color="primary"
+                onClick={() => history.push(mainRoute.route)}
+              >
+                <Typography variant="h5">
+                  {mainRoute.name}
+                </Typography>
+              </Button>
+            </div>
+            {loggedIn && loggedInIcon}
+            {!loggedIn && loggedOutItems}
+          </Toolbar>
+        </AppBar>
       )}
       <Toolbar />
     </React.Fragment>

@@ -1,9 +1,7 @@
 import React, { FC, useEffect } from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import { connect } from "react-redux";
-import {
-  loginAttemptFromCookie,
-} from "src/redux/actions";
+import { loginAttemptFromCookie } from "src/redux/actions";
 import Navbar from "./Navbar";
 import Homepage from "./Homepage";
 import Register from "./Register";
@@ -15,14 +13,10 @@ import {
   loggedInRoutes,
   nonNavbarRoutes,
 } from "../staticData/Routes";
-import {
-  FetchFailedAction,
-  LoginCompleteAction,
-} from "src/staticData/types";
+import { FetchFailedAction, LoginCompleteAction } from "src/staticData/types";
 import Logout from "./Logout";
 import Tasklist from "./Tasklist/Tasklist";
 import CreateTasklist from "./Tasklist/CreateTasklist";
-
 type Props = {
   cookieLogin: () => Promise<FetchFailedAction | LoginCompleteAction>;
 };
