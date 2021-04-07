@@ -122,7 +122,7 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
   useEffect(() => {
     if (tasklist !== null) {
       if (tasklist.tasks.length < 1) {
-        setCompletionPercent("No tasks");
+        setCompletionPercent("");
       } else {
         setCompletionPercent(
           (
