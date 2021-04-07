@@ -45,6 +45,7 @@ const style = makeStyles((theme) => ({
   },
   card: {
     width: "325px",
+    [theme.breakpoints.down("xs")]: { width: "250px"}
   },
   create: {
     backgroundColor: "#eee",
