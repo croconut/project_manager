@@ -83,6 +83,7 @@ const Navbar: FC<Props & StoreProps> = ({
         <Button
           color="primary"
           variant="outlined"
+          disableElevation
           style={{ marginLeft: "0.45rem" }}
           onClick={(_e) => {
             history.push(routes[i].route);

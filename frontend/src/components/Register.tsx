@@ -208,7 +208,7 @@ const Register: FC<StoreProps> = ({ loggedIn, status, failReason, signUp }) => {
         >
           <CardContent className={classes.cardContent}>
             <Typography variant="h3" className={classes.inputs}>
-              Sign Up
+              sign up
             </Typography>
             <p />
             <TextField
@@ -324,13 +324,13 @@ const Register: FC<StoreProps> = ({ loggedIn, status, failReason, signUp }) => {
           <CardContent className={classes.cardActions}>
             <Button
               color="primary"
-              variant="outlined"
+              variant="contained"
               value="Sign Up"
               type="submit"
               fullWidth
               endIcon={<InputIcon />}
             >
-              <Typography variant="h5" >Sign Up</Typography>
+              <Typography variant="h5" ><b>Sign Up</b></Typography>
             </Button>
           </CardContent>
         </form>
