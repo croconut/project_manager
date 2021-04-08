@@ -14,6 +14,10 @@ export const loggedOutRoutes: Array<FrontendRoute> = [
   { name: "Sign Up", route: "/join" },
   { name: "Login", route: "/login" },
 ];
+export const landingRoute: FrontendRoute = {
+  name: "Welcome",
+  route: "/welcome",
+};
 export const loggedInRoutes: Array<FrontendRoute> = [
   { name: "My Tasklists", route: "/tasklists" },
   { name: "My Organizations", route: "/organizations" },

@@ -12,11 +12,14 @@ import {
   loggedOutRoutes,
   loggedInRoutes,
   nonNavbarRoutes,
+  landingRoute,
 } from "../staticData/Routes";
 import { FetchFailedAction, LoginCompleteAction } from "src/staticData/types";
 import Logout from "./Logout";
 import Tasklist from "./Tasklist/Tasklist";
 import CreateTasklist from "./Tasklist/CreateTasklist";
+import LandingPage from "./LandingPage";
+
 type Props = {
   cookieLogin: () => Promise<FetchFailedAction | LoginCompleteAction>;
 };
@@ -38,6 +41,7 @@ const App: FC<Props> = ({ cookieLogin }): React.ReactElement => {
           <Route exact path={mainRoute.route} component={Homepage} />
           <Route path={loggedOutRoutes[0].route} component={Register} />
           <Route path={loggedOutRoutes[1].route} component={Login} />
+          <Route path={landingRoute.route} component={LandingPage} />
           <Route path={loggedInRoutes[3].route} component={Logout} />
           <Route path={nonNavbarRoutes[0].route} component={Tasklist} />
           <Route path={nonNavbarRoutes[1].route} component={CreateTasklist} />

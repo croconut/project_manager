@@ -8,7 +8,7 @@ import { connect } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { RootState } from "src/redux/reducers";
 import { getLoggedIn, getStoreStatus, getTasklists } from "src/redux/selectors";
-import { nonNavbarRoutes } from "src/staticData/Routes";
+import { landingRoute, loggedOutRoutes, nonNavbarRoutes } from "src/staticData/Routes";
 import { TTasklists } from "src/staticData/types";
 import WaitingOverlay from "./helpers/WaitingOverlay";
 import CreateTasklist from "./Tasklist/CreateTasklist";
@@ -109,9 +109,9 @@ const Homepage: FC<StoreProps> = ({ tasklists, loggedIn, storeState }) => {
   useEffect(() => {
     if (!loggedIn) {
       if (storeState === "FETCH_NEEDED") {
-        history.push("/join");
+        history.push(landingRoute.route);
       } else if (storeState === "SYNCED") {
-        history.push("/login");
+        history.push(loggedOutRoutes[1].route);
       }
     }
   }, [history, storeState, loggedIn]);
