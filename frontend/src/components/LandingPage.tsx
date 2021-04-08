@@ -1,35 +1,59 @@
 import React, { FC } from "react";
-import { Typography, Button, makeStyles } from "@material-ui/core";
+import { Card, Typography, Button, makeStyles } from "@material-ui/core";
 import { DoubleArrow, Build, DoneAll, LinearScale } from "@material-ui/icons";
 import { useMediaQuery } from "react-responsive";
+import { useHistory } from "react-router";
+import { loggedOutRoutes } from "src/staticData/Routes";
 interface LandingPageProps {
   nothing?: boolean;
 }
 
 const styles = makeStyles((theme) => ({
-  title: {
-    paddingTop: "0.5rem",
-    marginLeft: "15vw",
+  heading: {
+    paddingTop: "2.5rem",
+    marginLeft: "2vw",
+    marginRight: "2vw",
   },
-  roadmap: {
-    backgroundColor: theme.palette.background.paper,
+  spacer: {
+    height: "2rem",
+  },
+  title: {
+    marginTop: "5rem",
+    paddingTop: "1rem",
+    width: "96%",
+    marginLeft: "2%",
+    marginRight: "2%",
+    marginBottom: "5%",
+    textAlign: "center",
+  },
+  root: {
+    // backgroundColor: theme.palette.background.paper,
+  },
+  callToActionContainer: {
+    display: "flex",
+    marginTop: "3rem",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  joinButton: {
+    marginLeft: "2rem",
   },
   circles: {
     paddingBottom: "30px",
-    paddingLeft: "3%",
+    marginTop: "40px",
     display: "flex",
+    justifyContent: "center",
   },
   circleHolder: {
     display: "flex",
     flexDirection: "column",
   },
   circle: {
-    minWidth: "25vw",
-    maxWidth: "25vw",
-    minHeight: "25vw",
-    maxHeight: "25vw",
-    backgroundColor: theme.palette.primary.dark,
-    borderRadius: "50%",
+    minWidth: "22vw",
+    maxWidth: "22vw",
+    borderColor: "white",
+    borderStyle: "dashed",
+    borderRadius: "3%",
     flex: "1",
     display: "flex",
     alignItems: "center",
@@ -37,14 +61,15 @@ const styles = makeStyles((theme) => ({
   arrow1: {
     minWidth: "7vw",
     maxWidth: "10vw",
-    minHeight: "25vw",
-    maxHeight: "25vw",
+    minHeight: "12vw",
     marginLeft: "1vw",
     marginRight: "1vw",
+    alignSelf: "center",
     color: theme.palette.success.light,
   },
   status: {
     width: "100%",
+    marginTop: "2%",
     textAlign: "center",
     display: "flex",
     flexDirection: "row",
@@ -64,10 +89,10 @@ const styles = makeStyles((theme) => ({
   arrow2: {
     minWidth: "7vw",
     maxWidth: "10vw",
-    minHeight: "25vw",
-    maxHeight: "25vw",
+    minHeight: "12vw",
     marginLeft: "1vw",
     marginRight: "1vw",
+    alignSelf: "center",
     color: theme.palette.secondary.light,
   },
   text: {
@@ -81,60 +106,97 @@ const styles = makeStyles((theme) => ({
 const LandingPage: FC<LandingPageProps> = () => {
   const classes = styles();
   const notMobile = useMediaQuery({ minWidth: 600 });
+  const history = useHistory();
+  const joinClick = () => {
+    history.push(loggedOutRoutes[0].route);
+  };
   return (
-    <div className={classes.roadmap}>
-      <div className={classes.title}>
-        <Typography variant="h3">
-          <b>ROADMAP</b>
+    <div className={classes.root}>
+      <div className={classes.heading}>
+        <Typography align="center" variant="h3">
+          Project Management Has <i>Never</i> Been Easier
         </Typography>
-      </div>
-      <p />
-      <div className={classes.circles}>
-        <div className={classes.circleHolder}>
-          <div className={classes.circle}>
-            <Typography
-              variant={notMobile ? "h5" : "body1"}
-              className={classes.text}
-            >
-              Personal task boards
+        <p />
+        <div className={classes.spacer} />
+        <Typography align="center" variant="h5">
+          latest feature: personal tasklists
+        </Typography>
+        <p />
+        <div className={classes.callToActionContainer}>
+          <Typography variant="h4">
+            Tasklist features include intuitive drag-and-drop controls and
+            automatic backups!
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={joinClick}
+            className={classes.joinButton}
+          >
+            <Typography variant="h4">
+              <b>join</b>
             </Typography>
-          </div>
-          <div className={classes.status}>
-            <Typography variant={notMobile ? "h5" : "body1"}>Status:&nbsp;</Typography>
-            <DoneAll className={classes.check} />
-          </div>
-        </div>
-        <DoubleArrow className={classes.arrow1} />
-        <div className={classes.circleHolder}>
-          <div className={classes.circle}>
-            <Typography
-              variant={notMobile ? "h5" : "body1"}
-              className={classes.text}
-            >
-              Task boards for teams
-            </Typography>
-          </div>
-          <div className={classes.status}>
-            <Typography variant={notMobile ? "h5" : "body1"}>Status:&nbsp;</Typography>
-            <Build className={classes.building} />
-          </div>
-        </div>
-        <LinearScale className={classes.arrow2} />
-        <div className={classes.circleHolder}>
-          <div className={classes.circle}>
-            <Typography
-              variant={notMobile ? "h5" : "body1"}
-              className={classes.text}
-            >
-              Personal and team schedules
-            </Typography>
-          </div>
-          <div className={classes.status}>
-            <Typography variant={notMobile ? "h5" : "body1"}>Status:&nbsp;</Typography>
-            <Build className={classes.building} />
-          </div>
+          </Button>
         </div>
       </div>
+      <Card className={classes.title}>
+          <Typography variant="h4">
+            <b>Milestones</b>
+          </Typography>
+        <p />
+        <div className={classes.circles}>
+          <div className={classes.circleHolder}>
+            <div className={classes.circle}>
+              <Typography
+                variant={notMobile ? "h5" : "body1"}
+                className={classes.text}
+              >
+                Personal tasklists
+              </Typography>
+            </div>
+            <div className={classes.status}>
+              <Typography variant={notMobile ? "h5" : "body1"}>
+                Status:&nbsp;
+              </Typography>
+              <DoneAll className={classes.check} />
+            </div>
+          </div>
+          <DoubleArrow className={classes.arrow1} />
+          <div className={classes.circleHolder}>
+            <div className={classes.circle}>
+              <Typography
+                variant={notMobile ? "h5" : "body1"}
+                className={classes.text}
+              >
+                Task boards for teams
+              </Typography>
+            </div>
+            <div className={classes.status}>
+              <Typography variant={notMobile ? "h5" : "body1"}>
+                Status:&nbsp;
+              </Typography>
+              <Build className={classes.building} />
+            </div>
+          </div>
+          <LinearScale className={classes.arrow2} />
+          <div className={classes.circleHolder}>
+            <div className={classes.circle}>
+              <Typography
+                variant={notMobile ? "h5" : "body1"}
+                className={classes.text}
+              >
+                Personal and team schedules
+              </Typography>
+            </div>
+            <div className={classes.status}>
+              <Typography variant={notMobile ? "h5" : "body1"}>
+                Status:&nbsp;
+              </Typography>
+              <Build className={classes.building} />
+            </div>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 };
