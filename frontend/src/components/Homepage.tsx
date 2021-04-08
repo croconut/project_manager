@@ -111,7 +111,7 @@ const Homepage: FC<StoreProps> = ({ tasklists, loggedIn, storeState }) => {
       if (storeState === "FETCH_NEEDED") {
         history.push(landingRoute.route);
       } else if (storeState === "SYNCED") {
-        history.push(loggedOutRoutes[1].route);
+        history.push(landingRoute.route);
       }
     }
   }, [history, storeState, loggedIn]);
