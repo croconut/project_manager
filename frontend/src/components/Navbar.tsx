@@ -36,7 +36,7 @@ const createLoggedInIcon = (
 ) => {
   return (
     <div>
-      <Typography variant="body1">
+      <Typography variant="body1" noWrap>
         Welcome, {" " + username + " "}
         <Button onClick={onClick} color="primary">
           Logout
