@@ -207,7 +207,9 @@ const Register: FC<StoreProps> = ({ loggedIn, status, failReason, signUp }) => {
           className={classes.cardContent}
         >
           <CardContent className={classes.cardContent}>
-            <h1 className={classes.inputs}>Sign Up</h1>
+            <Typography variant="h3" className={classes.inputs}>
+              Sign Up
+            </Typography>
             <p />
             <TextField
               className={classes.inputs}
@@ -306,7 +308,7 @@ const Register: FC<StoreProps> = ({ loggedIn, status, failReason, signUp }) => {
               onChange={(e) => updatePasswordDuplicate(e.target.value)}
             />
             <br />
-            <Typography variant="subtitle2">
+            <Typography variant="subtitle1">
               Passwords must have lower and uppercase letters and numbers OR be{" "}
               {MIN_NO_RESTRICTIONS}+ characters long
               <br />
@@ -314,7 +316,7 @@ const Register: FC<StoreProps> = ({ loggedIn, status, failReason, signUp }) => {
               <br />
             </Typography>
 
-            <Typography variant="subtitle2">
+            <Typography variant="subtitle1">
               Passwords must be {MIN_CHAR}-{MAX_CHAR} characters long
               <br />
             </Typography>
@@ -325,9 +327,10 @@ const Register: FC<StoreProps> = ({ loggedIn, status, failReason, signUp }) => {
               variant="outlined"
               value="Sign Up"
               type="submit"
+              fullWidth
               endIcon={<InputIcon />}
             >
-              Sign Up
+              <Typography variant="h5" >Sign Up</Typography>
             </Button>
           </CardContent>
         </form>

@@ -8,63 +8,52 @@ import {
 import { RootStore } from "src/redux/configureStore";
 import App from "./App";
 import CssBaseline from "@material-ui/core/CssBaseline";
+import { ThemeOptions, useMediaQuery } from "@material-ui/core";
 
 type Props = {
   store: RootStore;
 };
 
-const theme = responsiveFontSizes(
-  createMuiTheme({
-    /*
-  props: {
-    // Name of the component ⚛️
-    MuiButtonBase: {
-      // The default props to change
-      disableRipple: true, // No more ripple, on the whole application 💣!
+const unchangedThemeOptions: ThemeOptions = {
+  palette: {
+    type: "dark",
+    primary: {
+      main: "#00b0ff",
+    },
+    secondary: {
+      main: "#ff7043",
+    },
+    warning: {
+      main: "#00CAAA",
     },
   },
-  */
-    palette: {
-      // primary: {
-      //   main: "#444",
-      // },
-      // secondary: {
-      //   main: "#19857b",
-      // },
-      // error: {
-      //   main: "#ff1744",
-      // },
-      type: "dark",
-      primary: {
-        main: "#00b0ff"
-      },
-      secondary: {
-        main: "#ff7043"
-      },
-      warning: {
-        main: "#00CAAA"
-      }
-    },
+};
+
+const themeMobile = responsiveFontSizes(
+  createMuiTheme({
+    ...unchangedThemeOptions,
     typography: {
       fontFamily: "Roboto",
+      fontSize: 9.8,
     },
-    overrides: {
-      // Style sheet name ⚛️
-      MuiButton: {
-        // Name of the rule
-        text: {
-          // Some CSS
-          // background: "linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)",
-        },
-      },
+  })
+);
+
+const themeDesktop = responsiveFontSizes(
+  createMuiTheme({
+    ...unchangedThemeOptions,
+    typography: {
+      fontFamily: "Roboto",
+      fontSize: 12,
     },
   })
 );
 
 const Root: FC<Props> = ({ store }): ReactElement<null> => {
+  const themeSwap = useMediaQuery("(min-width:600px)");
   return (
     <Provider store={store}>
-      <ThemeProvider theme={theme}>
+      <ThemeProvider theme={themeSwap ? themeDesktop : themeMobile}>
         <CssBaseline>
           <App />
         </CssBaseline>

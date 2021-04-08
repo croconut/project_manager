@@ -58,9 +58,9 @@ interface RouteParams {
 
 const styles = makeStyles((theme) => ({
   card: {
-    width: "90%",
-    marginLeft: "5%",
-    marginRight: "5%",
+    width: "96%",
+    marginLeft: "2%",
+    marginRight: "2%",
   },
   gridChild: {
     width: "33%",
@@ -111,8 +111,8 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
   const [waitForDelete, setWaitForDelete] = useState(false);
   const [completionPercent, setCompletionPercent] = useState("");
   const classes = styles();
-  const isDesktop = useMediaQuery({ minWidth: 992 });
-  const isMedium = useMediaQuery({ minWidth: 700 });
+  const isDesktop = useMediaQuery({ minWidth: 960 });
+  const isMedium = useMediaQuery({ minWidth: 600 });
   const history = useHistory();
 
   useEffect(() => {
@@ -122,7 +122,7 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
   useEffect(() => {
     if (tasklist !== null) {
       if (tasklist.tasks.length < 1) {
-        setCompletionPercent("No tasks");
+        setCompletionPercent("");
       } else {
         setCompletionPercent(
           (
