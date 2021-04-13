@@ -8,7 +8,7 @@ import { connect } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { RootState } from "src/redux/reducers";
 import { getLoggedIn, getStoreStatus, getTasklists } from "src/redux/selectors";
-import { landingRoute, loggedOutRoutes, nonNavbarRoutes } from "src/staticData/Routes";
+import { landingRoute, nonNavbarRoutes } from "src/staticData/Routes";
 import { TTasklists } from "src/staticData/types";
 import WaitingOverlay from "./helpers/WaitingOverlay";
 import CreateTasklist from "./Tasklist/CreateTasklist";
