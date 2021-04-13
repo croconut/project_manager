@@ -5,6 +5,8 @@ import {
   Card,
   CardContent,
   Grow,
+  Typography,
+  CardHeader,
 } from "@material-ui/core";
 import { Close, InputOutlined } from "@material-ui/icons";
 import React, { FC, useRef } from "react";
@@ -27,6 +29,13 @@ const createSpecificStyles = makeStyles((theme) => ({
   leftButton: {
     marginRight: "20px",
   },
+  submitButton: {
+    backgroundColor: theme.palette.success.dark,
+    color: "white",
+    "&:hover": {
+      backgroundColor: theme.palette.success.main,
+    }
+  }
 }));
 
 interface CreateTaskProps {
@@ -73,6 +82,7 @@ const CreateTask: FC<CreateTaskProps> = ({
   return (
     <Grow in={open} unmountOnExit={true}>
       <Card className={preciseClasses.card} elevation={0}>
+        <CardHeader title="new task" />
         <form
           onSubmit={onSubmit}
           autoComplete="off"
@@ -108,16 +118,17 @@ const CreateTask: FC<CreateTaskProps> = ({
               endIcon={<Close />}
               onClick={cancel}
             >
-              cancel
+              <Typography><b>cancel</b></Typography>
             </Button>
             <Button
-              variant="outlined"
-              color="default"
+              variant="contained"
+              color="inherit"
+              className={preciseClasses.submitButton}
               value="Create Task"
               type="submit"
               endIcon={<InputOutlined />}
             >
-              Add Task
+              <Typography>Add Task</Typography>
             </Button>
           </CardContent>
         </form>

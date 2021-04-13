@@ -153,7 +153,7 @@ const Login: FC<StoreProps> = ({ loggedIn, tryLogin, status, failReason }) => {
         >
           <CardContent className={classes.cardContent}>
             <Typography variant="h3" className={classes.inputs}>
-              Login
+              login
             </Typography>
             <p />
             <TextField
@@ -197,14 +197,14 @@ const Login: FC<StoreProps> = ({ loggedIn, tryLogin, status, failReason }) => {
           </CardContent>
           <CardContent className={classes.cardActions}>
             <Button
-              variant="outlined"
+              variant="contained"
               color="primary"
               value="Login"
               fullWidth
               endIcon={<Input />}
               type="submit"
             >
-              <Typography variant="h5">Login</Typography>
+              <Typography variant="h5"><b>Login</b></Typography>
             </Button>
           </CardContent>
         </form>

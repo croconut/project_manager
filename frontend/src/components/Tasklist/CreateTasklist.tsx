@@ -7,6 +7,7 @@ import {
   Grow,
   makeStyles,
   TextField,
+  Typography,
 } from "@material-ui/core";
 import { Close, InputOutlined } from "@material-ui/icons";
 import React, { FC, useEffect, useRef, useState } from "react";
@@ -51,6 +52,13 @@ const styles = makeStyles((theme) => ({
   },
   leftButton: {
     marginRight: "20px",
+  },
+  submitButton: {
+    backgroundColor: theme.palette.success.dark,
+    color: "white",
+    "&:hover": {
+      backgroundColor: theme.palette.success.main,
+    },
   },
 }));
 
@@ -129,7 +137,7 @@ const CreateTasklist: FC<StoreProps> = ({
         <WaitingOverlay wait={sentRequest} />
         {alert}
         <Card className={classes.card}>
-          <CardHeader title="Create a tasklist!" />
+          <CardHeader title="new tasklist" />
           <form
             onSubmit={onSubmit}
             autoComplete="off"
@@ -163,16 +171,18 @@ const CreateTasklist: FC<StoreProps> = ({
                 endIcon={<Close />}
                 onClick={cancel}
               >
-                cancel
+                <Typography>
+                  <b>cancel</b>
+                </Typography>
               </Button>
               <Button
-                variant="outlined"
-                color="primary"
+                variant="contained"
+                className={classes.submitButton}
                 value="Create Task"
                 type="submit"
                 endIcon={<InputOutlined />}
               >
-                Create Tasklist
+                <Typography>Create Tasklist</Typography>
               </Button>
             </CardContent>
           </form>
