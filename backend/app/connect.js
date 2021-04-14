@@ -4,7 +4,7 @@ const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const path = require("path");
 
-// const { RateLimiterMongo } = require("rate-limiter-flexible");
+const { RateLimiterMemory } = require("rate-limiter-flexible");
 
 require("dotenv").config();
 
@@ -16,8 +16,42 @@ const logoutRouter = require("./routes/logout");
 const passwordResetRouter = require("./routes/userPasswordReset");
 const Routes = require("./staticData/Routes");
 const log = require("./utils/logcolors");
+let node_env = process.env.NODE_ENV;
 
 const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
+  // resource access per ip address
+  // only blocks for an hour
+  const rateLimitOptions = {
+    keyPrefix: "resource_access_by_ip",
+    points: node_env === "test" ? 2000 : 20,
+    duration: 1,
+    blockDuration: 60 * 60,
+  };
+
+  // 5 login attempts per hour
+  const loginRateLimitOptions = {
+    keyPrefix: "login_attempts_by_ip",
+    points: node_env === "test" ? 500 : 5,
+    duration: 60 * 60,
+    blockDuration: 60 * 60 * 24,
+  };
+
+  const standardRateLimiter = new RateLimiterMemory(rateLimitOptions);
+  const loginRateLimiter = new RateLimiterMemory(loginRateLimitOptions);
+  
+  const rateLimitMiddleware = (req, res, next) => {
+    standardRateLimiter
+      .consume(req.ip)
+      .then(() => next())
+      .catch(() =>
+        res.status(429).json({ reason: "ip resource limit reached" })
+      );
+  };
+
+  // ip rate limiting coming before the session middleware as the
+  // session middleware makes calls to the db
+  app.use(rateLimitMiddleware);
+
   app.use(
     session({
       key: process.env.SESSION_KEY,
@@ -31,27 +65,44 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
     })
   );
 
+
   // redirect to login when session not set
   // and not trying to access the home page "/"
   const nonHomeRedirect = (req, res, next) => {
     if (req.session.user && req.session.user._id) {
-      next();
-    } else {
-      // this gets caught by react btw
+      return next();
+    }
+    // this gets caught by frontend
+    else {
       res.redirect("/login");
     }
   };
 
   const loginRedirect = (req, res, next) => {
-    if (!req.session.user || !req.session.user._id) res.redirect("/");
-    else next();
+    if (!req.session.user || !req.session.user._id)
+      return res.redirect("/welcome");
+    next();
   };
 
   // you may not log in if you're already logged in
-  const alreadyLoggedIn = (req, res, next) => {
-    if (req.session && req.session.user) res.redirect("/");
-    else next();
+  // will actually let you try email if locked out of username
+  // as long as ip wasn't locked out
+  // since im not enforcing full info retrieval
+  const loginMiddleware = (req, res, next) => {
+    if (req.session && req.session.user) return res.redirect("/");
+    const usernameOrEmail = req.body.username || req.body.email;
+    if (typeof usernameOrEmail !== "string")
+      return res.status(401).json({
+        failed: "Login failed, missing username or email field",
+      });
+    // i guess ill allow attacks through rotating ip addresses so they
+    // can't just screw over a user on a different ip address
+    loginRateLimiter
+      .consume(req.ip + usernameOrEmail, 1)
+      .then(() => next())
+      .catch(() => res.status(429).json({ reason: "login limit reached" }));
   };
+
 
   app.use((req, res, next) => {
     // no user but have cookie id for some reason?
@@ -65,10 +116,12 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
     next();
   });
 
+  
+
   app.use(Routes.tasklistRouter.route, nonHomeRedirect, tasklistRouter);
   app.use(Routes.usersRouter.route, nonHomeRedirect, usersRouter);
   app.use(Routes.registerRouter.route, registerRouter);
-  app.use(Routes.loginRouter.route, alreadyLoggedIn, loginRouter);
+  app.use(Routes.loginRouter.route, loginMiddleware, loginRouter);
   app.use(Routes.usersPasswordReset.route, passwordResetRouter);
   // gotta be logged in to bother logging out
   app.use(Routes.logoutRouter.route, loginRedirect, logoutRouter);
@@ -80,24 +133,6 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
 
   app.use(express.static(path.join(__dirname, "../../frontend/build")));
 
-  // would like to use these BUT refreshes dont work as well
-
-  // react routes only for logged in users
-  // app.get(
-  //   ["/tasklist/create", "/tasklist/edit/:id", "/logout"],
-  //   nonHomeRedirect,
-  //   (_req, res) => {
-  //     res.sendFile(path.resolve(__dirname, "../build", "index.html"));
-  //   }
-  // );
-
-  // react routes only for people who aren't logged in
-  // app.get(["/login", "/join"], loginRedirect, (_req, res) => {
-  //   res.sendFile(path.resolve(__dirname, "../build", "index.html"));
-  // });
-
-  // react routes always available
-  // will eventually include static pages like about us and contact me
   app.get("/*", (_req, res) =>
     res.sendFile(path.resolve(__dirname, "../../frontend/build/index.html"))
   );
@@ -135,10 +170,11 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
 const Connect = async (app, isTest = false) => {
   let uri = "";
   // not covering production / development in tests
-  if (process.env.NODE_ENV === "test" || isTest) {
+  if (node_env === "test" || isTest) {
+    node_env = "test";
     console.log("testing mode...");
     uri = process.env.ATLAS_URI_TEST;
-  } else if (process.env.NODE_ENV === "production") {
+  } else if (node_env === "production") {
     console.log("production mode...");
     uri = process.env.ATLAS_URI;
   } else {
