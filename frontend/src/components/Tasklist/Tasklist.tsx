@@ -41,7 +41,7 @@ import {
   modifyTasklist,
 } from "src/redux/actions";
 import GridPlus from "../helpers/GridPlus";
-import { DeleteForever, DeleteOutlineRounded, Edit } from "@material-ui/icons";
+import { DeleteOutlineRounded, Edit } from "@material-ui/icons";
 import WaitingOverlay from "../helpers/WaitingOverlay";
 import { MenuTuple } from "./Task";
 import PopupMenu from "../helpers/PopupMenu";
