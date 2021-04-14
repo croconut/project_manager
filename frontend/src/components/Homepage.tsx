@@ -28,6 +28,10 @@ const style = makeStyles((theme) => ({
     paddingRight: "25px",
     marginTop: "40px",
   },
+  cardHeader: {
+    display: "block",
+    overflow: "hidden"
+  },
   outer: {
     margin: "15px",
   },

@@ -1,3 +1,4 @@
+import React, { FC, useEffect, useRef, useState } from "react";
 import {
   Button,
   Card,
@@ -6,12 +7,14 @@ import {
   Dialog,
   DialogActions,
   DialogTitle,
+  IconButton,
   makeStyles,
+  MenuItem,
+  TextField,
   Typography,
 } from "@material-ui/core";
-
+import { v4 as genid } from "uuid";
 import { DragDropContext, DropResult } from "react-beautiful-dnd";
-import React, { FC, useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, useHistory } from "react-router-dom";
 import { useMediaQuery } from "react-responsive";
@@ -25,16 +28,23 @@ import { Stage, TaskStage } from "src/staticData/Constants";
 import {
   ITask,
   ITasklist,
+  TasklistAction,
   TasklistDeleteAction,
   TaskStageAction,
   UpdateFailedAction,
 } from "src/staticData/types";
 
 import TaskColumn from "./TaskColumn";
-import { restageTask, deleteTasklistAttempt } from "src/redux/actions";
+import {
+  restageTask,
+  deleteTasklistAttempt,
+  modifyTasklist,
+} from "src/redux/actions";
 import GridPlus from "../helpers/GridPlus";
-import { DeleteForever } from "@material-ui/icons";
+import { DeleteForever, DeleteOutlineRounded, Edit } from "@material-ui/icons";
 import WaitingOverlay from "../helpers/WaitingOverlay";
+import { MenuTuple } from "./Task";
+import PopupMenu from "../helpers/PopupMenu";
 
 interface ReduxProps {
   tasklist: ITasklist | null;
@@ -46,6 +56,7 @@ interface ReduxProps {
     priority: number,
     oldPriority: number
   ) => TaskStageAction;
+  modTasklist: (tasklist: ITasklist) => TasklistAction;
   deleteTasklist: (
     id: string
   ) => Promise<TasklistDeleteAction | UpdateFailedAction>;
@@ -61,6 +72,12 @@ const styles = makeStyles((theme) => ({
     width: "96%",
     marginLeft: "2%",
     marginRight: "2%",
+  },
+  titleContainer: {
+    width: "100%",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "start",
   },
   gridChild: {
     width: "33%",
@@ -80,6 +97,18 @@ const styles = makeStyles((theme) => ({
   },
   deleteDialog: {
     minWidth: "300px",
+  },
+  menuText: {
+    flexGrow: 1,
+    marginLeft: "25px",
+  },
+  modButtonContainers: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+  modCancelButton: {
+    marginRight: "1.5rem",
   },
 }));
 
@@ -105,8 +134,15 @@ const TaskViews = (tasklistID: string, separatedTasks: ITask[][]) => {
 const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
   tasklist,
   restageTasks,
+  modTasklist,
   deleteTasklist,
 }) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [menuItems, setMenuItems] = useState<Array<JSX.Element>>([]);
+  const [modifyMode, setModifyMode] = useState(false);
+  const nameRef = useRef({ value: "" });
+  const descriptionRef = useRef({ value: "" });
+  const menuOpen = Boolean(anchorEl);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [waitForDelete, setWaitForDelete] = useState(false);
   const [completionPercent, setCompletionPercent] = useState("");
@@ -135,20 +171,70 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
     }
   }, [tasklist]);
 
-  if (tasklist === null)
-    return (
-      <div>
-        <p />
-        Tasklist not found!
-      </div>
-    );
-
-  const separatedTasks = separateTasksByType(tasklist);
-  const taskCards = TaskViews(tasklist._id, separatedTasks);
+  const runModify = (event: React.MouseEvent<HTMLElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setAnchorEl(null);
+    // onUpdate(task);
+    setModifyMode(true);
+  };
 
   const deleteOpenButton = () => {
     setOpenDeleteDialog(true);
   };
+
+  const menuOpenHandler = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+    event.stopPropagation();
+  };
+
+  const menuOffClick = () => setAnchorEl(null);
+
+  useEffect(() => {
+    const createMenuItems = () => {
+      const menuItemInfos: Array<MenuTuple> = [
+        ["Modify", runModify, <Edit />],
+        ["Delete", deleteOpenButton, <DeleteOutlineRounded />],
+      ];
+      const arr = new Array<JSX.Element>(menuItemInfos.length);
+      for (let i = 0; i < arr.length; i++) {
+        arr[i] = (
+          <MenuItem color="inherit" onClick={menuItemInfos[i][1]} key={genid()}>
+            {menuItemInfos[i][2]}
+            <Typography className={classes.menuText}>
+              {menuItemInfos[i][0]}
+            </Typography>
+          </MenuItem>
+        );
+      }
+      setMenuItems(arr);
+    };
+    createMenuItems();
+  }, [setMenuItems, classes.menuText]);
+
+  if (tasklist === null)
+    return (
+      <div>
+        <p />
+        Tasklist not found! Did this tasklist get deleted?
+      </div>
+    );
+
+  const cancelTasklistMod = () => {
+    setModifyMode(false);
+  };
+
+  const onSubmit = (submission: React.FormEvent) => {
+    submission.preventDefault();
+    const newTasklist = { ...tasklist };
+    newTasklist.name = nameRef.current.value;
+    newTasklist.description = descriptionRef.current.value;
+    setModifyMode(false);
+    modTasklist(newTasklist);
+  };
+
+  const separatedTasks = separateTasksByType(tasklist);
+  const taskCards = TaskViews(tasklist._id, separatedTasks);
 
   const attemptTasklistDelete = () => {
     setWaitForDelete(true);
@@ -195,19 +281,84 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
     <div>
       <WaitingOverlay wait={waitForDelete} />
       <Card className={classes.card}>
-        <CardHeader
-          title={tasklist.name}
-          titleTypographyProps={{ variant: "h3" }}
-          subheader={
-            <div>
-              Total tasks: {tasklist.tasks.length} <br />
-              {completionPercent}
-            </div>
-          }
+        {modifyMode && (
+          <div>
+            <CardHeader
+              title="Update Tasklist"
+              titleTypographyProps={{ variant: "h3", gutterBottom: true }}
+            />
+            <CardContent>
+              <form onSubmit={onSubmit} autoComplete="off">
+                <TextField
+                  required
+                  autoFocus
+                  fullWidth
+                  label="Tasklist Name"
+                  variant="outlined"
+                  defaultValue={tasklist.name}
+                  inputRef={nameRef}
+                />
+                <p />
+                <TextField
+                  fullWidth
+                  label="Description"
+                  variant="outlined"
+                  defaultValue={tasklist.description}
+                  inputRef={descriptionRef}
+                />
+                <p />
+                <div className={classes.modButtonContainers}>
+                  <Button
+                    color="secondary"
+                    className={classes.modCancelButton}
+                    variant="outlined"
+                    onClick={cancelTasklistMod}
+                  >
+                    Cancel
+                  </Button>
+                  <Button color="primary" variant="contained" type="submit">
+                    Update
+                  </Button>
+                </div>
+                <p />
+              </form>
+            </CardContent>
+          </div>
+        )}
+        {!modifyMode && (
+          <div>
+            <CardHeader
+              title={
+                <div className={classes.titleContainer}>
+                  <Typography gutterBottom variant="h3">
+                    {tasklist.name}
+                  </Typography>
+                  <IconButton onClick={menuOpenHandler}>
+                    <Edit />
+                  </IconButton>
+                </div>
+              }
+              subheader={
+                <div>
+                  Total tasks: {tasklist.tasks.length} <br />
+                  {completionPercent}
+                </div>
+              }
+            />
+            <CardContent>
+              <Typography>{tasklist.description}</Typography>
+              <p />
+            </CardContent>
+          </div>
+        )}
+        <PopupMenu
+          menuID={"task-menu-" + tasklist._id}
+          children={menuItems}
+          open={menuOpen}
+          anchor={anchorEl}
+          onClose={menuOffClick}
         />
         <CardContent>
-          <Typography>{tasklist.description}</Typography>
-          <p />
           <DragDropContext onDragEnd={onDragEnd}>
             <GridPlus
               container
@@ -231,15 +382,6 @@ const Tasklist: FC<RouteComponentProps<RouteParams> & ReduxProps> = ({
               {taskCards}
             </GridPlus>
           </DragDropContext>
-          <p />
-          <Button
-            startIcon={<DeleteForever />}
-            color="secondary"
-            variant="outlined"
-            onClick={deleteOpenButton}
-          >
-            Delete tasklist
-          </Button>
         </CardContent>
       </Card>
       <Dialog open={openDeleteDialog} onClose={closeDeleteDialog}>
@@ -282,6 +424,7 @@ const mapStateToProps = (state: RootState, otherProps: any) => {
 
 const mapActionsToProps = {
   restageTasks: restageTask,
+  modTasklist: modifyTasklist,
   deleteTasklist: deleteTasklistAttempt,
 };
 

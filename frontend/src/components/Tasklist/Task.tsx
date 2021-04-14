@@ -77,7 +77,7 @@ const taskStyles = makeStyles((theme) => ({
 }));
 
 type styletype = ReturnType<typeof taskStyles>;
-type MenuTuple = [
+export type MenuTuple = [
   string,
   (event: React.MouseEvent<HTMLElement>) => void,
   JSX.Element
