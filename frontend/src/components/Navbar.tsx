@@ -97,7 +97,7 @@ const Navbar: FC<Props & StoreProps> = ({
     return arrItems;
   };
 
-  const logoutButton = () => history.push("logout");
+  const logoutButton = () => history.push("/logout");
 
   const loggedOutItems = createButtons(loggedOutRoutes);
   const loggedInIcon = createLoggedInIcon(logoutButton, userInfo.username);

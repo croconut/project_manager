@@ -24,7 +24,8 @@ export const RequestFails = [
   "unknown",
   "none_yet",
   "no_cookie",
-  "old_version"
+  "old_version",
+  "max_login_attempts",
 ] as const;
 export type TRequestFail = typeof RequestFails[number];
 

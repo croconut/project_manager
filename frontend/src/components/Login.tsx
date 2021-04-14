@@ -76,6 +76,7 @@ export const styles = makeStyles((theme) => ({
 const Login: FC<StoreProps> = ({ loggedIn, tryLogin, status, failReason }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [alertActive, setAlertActive] = useState(false);
+  const [alertMsg, setAlertMsg] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const classes = styles();
@@ -85,7 +86,7 @@ const Login: FC<StoreProps> = ({ loggedIn, tryLogin, status, failReason }) => {
     return (
       <Collapse in={alertActive} className={classes.alert}>
         <Alert variant="filled" severity="error">
-          Login unsuccessful!
+          {alertMsg}
         </Alert>
       </Collapse>
     );
@@ -116,6 +117,13 @@ const Login: FC<StoreProps> = ({ loggedIn, tryLogin, status, failReason }) => {
     switch (failReason) {
       case "login":
         setAlertActive(true);
+        setAlertMsg("Login unsuccessful");
+        return;
+      case "max_login_attempts":
+        setAlertActive(true);
+        setAlertMsg(
+          "Maximum login attempts reached. Please wait 1 hour to try again."
+        );
         return;
       default:
         return;
@@ -204,7 +212,9 @@ const Login: FC<StoreProps> = ({ loggedIn, tryLogin, status, failReason }) => {
               endIcon={<Input />}
               type="submit"
             >
-              <Typography variant="h5"><b>Login</b></Typography>
+              <Typography variant="h5">
+                <b>Login</b>
+              </Typography>
             </Button>
           </CardContent>
         </form>
