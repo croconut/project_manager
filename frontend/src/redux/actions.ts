@@ -206,31 +206,35 @@ const extractTasklist = (info: any): Promise<types.ITasklistReturn> => {
   return Promise.resolve({ tasklist: tasklist });
 };
 
-const updateTasklistRequest = (
+const updateTasklistRequest = async (
   tasklist: types.IParsedUpdate
 ): Promise<types.ITasklistReturn> => {
-  return axios
-    .post(
-      updateTasklist.route + tasklist._id,
-      // server doesn't care about extra stuff like having the _id here :p
-      // it extracts the info it wants
-      tasklist,
-      { withCredentials: true }
-    )
-    .then((response) => extractTasklist(response.data))
-    .catch(({ response }: ErrorResponse) => {
-      console.warn(response.data);
-      return Promise.reject(UpdateFails[1]);
-    });
+  try {
+    const response = await axios
+      .post(
+        updateTasklist.route + tasklist._id,
+        // server doesn't care about extra stuff like having the _id here :p
+        // it extracts the info it wants
+        tasklist,
+        { withCredentials: true }
+      );
+    return await extractTasklist(response.data);
+  } catch ({ response: response_1 }) {
+    console.warn(response_1.data);
+    return await Promise.reject(UpdateFails[1]);
+  }
 };
 
-const addTasklistRequest = (
+const addTasklistRequest = async (
   tasklist: types.ITasklistCreate
 ): Promise<types.ITasklistReturn> => {
-  return axios
-    .post(addTasklistRouter.route, tasklist, { withCredentials: true })
-    .then((response) => extractTasklist(response.data))
-    .catch(({ response }: ErrorResponse) => Promise.reject(UpdateFails[1]));
+  try {
+    const response = await axios
+      .post(addTasklistRouter.route, tasklist, { withCredentials: true });
+    return await extractTasklist(response.data);
+  } catch ({ response: response_1 }) {
+    return await Promise.reject(UpdateFails[1]);
+  }
 };
 
 const deleteTasklistRequest = (id: string): Promise<void> => {
@@ -243,55 +247,65 @@ const deleteTasklistRequest = (id: string): Promise<void> => {
   );
 };
 
-const loginRequest = (
+const loginRequest = async (
   credentials: types.TUserCredentials
 ): Promise<types.ILoginReturn> => {
-  return axios
-    .post(loginRouter.route, credentials)
-    .then((response) => extractPrivateInfo(response.data.user))
-    .catch(({ response }: ErrorResponse) => Promise.reject(RequestFails[0]));
+  try {
+    const response = await axios
+      .post(loginRouter.route, credentials);
+    return extractPrivateInfo(response.data.user);
+  } catch ({ response: response_1 }) {
+    if (response_1.status === 429)
+      return Promise.reject(RequestFails[11]);
+    else
+      return Promise.reject(RequestFails[0]);
+  }
 };
 
 const logoutRequest = (): Promise<AxiosStatic> => {
   return axios.post(logoutRouter.route, { withCredentials: true });
 };
 
-const signupRequest = (
+const signupRequest = async (
   credentials: types.IUserRegister
 ): Promise<types.ILoginReturn> => {
-  return axios
-    .post(registerRouter.route, credentials)
-    .then((response) => extractPrivateInfo(response.data.user))
-    .catch(({ response }: ErrorResponse) => {
-      if (response === undefined) {
-        return Promise.reject(RequestFails[7]);
-      }
-      if (response.status !== 409) {
-        return Promise.reject(RequestFails[7]);
-      }
-      if (response.data.username) {
-        if (response.data.email) {
-          return Promise.reject(RequestFails[5]);
-        } else {
-          return Promise.reject(RequestFails[4]);
-        }
-      } else if (response.data.email) {
-        return Promise.reject(RequestFails[3]);
-      }
+  try {
+    const response = await axios
+      .post(registerRouter.route, credentials);
+    return extractPrivateInfo(response.data.user);
+  } catch ({ response: response_1 }) {
+    if (response_1 === undefined) {
       return Promise.reject(RequestFails[7]);
-    });
+    }
+    if (response_1.status !== 409) {
+      return Promise.reject(RequestFails[7]);
+    }
+    if (response_1.data.username) {
+      if (response_1.data.email) {
+        return Promise.reject(RequestFails[5]);
+      } else {
+        return Promise.reject(RequestFails[4]);
+      }
+    } else if (response_1.data.email) {
+      return Promise.reject(RequestFails[3]);
+    }
+    return await Promise.reject(RequestFails[7]);
+  }
 };
 
-const infoRequest = (cookieLogin = false): Promise<types.ILoginReturn> => {
-  return axios
-    .get(usersPrivateInfo.route, {
-      withCredentials: true,
-    })
-    .then((response) => extractPrivateInfo(response.data))
-    .catch(({ response }: ErrorResponse) => {
-      if (cookieLogin) return Promise.reject(RequestFails[9]);
-      else return Promise.reject(RequestFails[6]);
-    });
+const infoRequest = async (cookieLogin = false): Promise<types.ILoginReturn> => {
+  try {
+    const response = await axios
+      .get(usersPrivateInfo.route, {
+        withCredentials: true,
+      });
+    return extractPrivateInfo(response.data);
+  } catch ({ response: response_1 }) {
+    if (cookieLogin)
+      return Promise.reject(RequestFails[9]);
+    else
+      return Promise.reject(RequestFails[6]);
+  }
 };
 
 // thunks
@@ -305,9 +319,9 @@ export const loginAttempt = (
   {},
   types.AnyCustomAction
 > => {
-  return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
+  return async function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
     dispatch(fetching(types.FAKE_IDS[0]));
-    return loginRequest(credentials)
+    return await loginRequest(credentials)
       .then((login: types.ILoginReturn) => dispatch(loginSuccess(login)))
       .catch((reason: TRequestFail) => dispatch(loginFail(reason)));
   };
@@ -320,9 +334,9 @@ export const loginAttemptFromCookie = (): ThunkAction<
   {},
   types.AnyCustomAction
 > => {
-  return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
+  return async function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
     dispatch(fetching(types.FAKE_IDS[0]));
-    return infoRequest(true)
+    return await infoRequest(true)
       .then((login: types.ILoginReturn) => dispatch(loginSuccess(login)))
       .catch((reason: TRequestFail) => dispatch(loginFail(reason)));
   };
@@ -336,9 +350,9 @@ export const signUpAttempt = (
   {},
   types.AnyCustomAction
 > => {
-  return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
+  return async function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
     dispatch(fetching(types.FAKE_IDS[0]));
-    return signupRequest(credentials)
+    return await signupRequest(credentials)
       .then((login: types.ILoginReturn) => dispatch(loginSuccess(login)))
       .catch((reason: TRequestFail) => dispatch(loginFail(reason)));
   };
@@ -350,9 +364,9 @@ export const logoutAttempt = (): ThunkAction<
   {},
   types.AnyCustomAction
 > => {
-  return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
+  return async function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
     dispatch(fetching(types.FAKE_IDS[0]));
-    return logoutRequest()
+    return await logoutRequest()
       .then(() => dispatch(logoutSuccess()))
       .catch(() => dispatch(updateFail(UpdateFails[0])));
   };
@@ -366,9 +380,9 @@ export const addTasklistAttempt = (
   {},
   types.AnyCustomAction
 > => {
-  return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
+  return async function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
     dispatch(updating(types.FAKE_IDS[1]));
-    return addTasklistRequest(tasklist)
+    return await addTasklistRequest(tasklist)
       .then((tasklistObj: types.ITasklistReturn) =>
         dispatch(tasklistCreateSuccess(tasklistObj))
       )
@@ -385,10 +399,10 @@ export const updateTasklistAttempt = (
   {},
   types.AnyCustomAction
 > => {
-  return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
+  return async function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
     const id = tasklist._id;
     store.dispatch(updating(tasklist._id));
-    return updateTasklistRequest(tasklist)
+    return await updateTasklistRequest(tasklist)
       .then((tasklistObj: types.ITasklistReturn) =>
         store.dispatch(tasklistUpdateSuccess(tasklistObj, store.getState()))
       )
@@ -404,9 +418,9 @@ export const deleteTasklistAttempt = (
   {},
   types.AnyCustomAction
 > => {
-  return function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
+  return async function (dispatch: ThunkDispatch<{}, {}, types.AnyCustomAction>) {
     dispatch(updating(id));
-    return deleteTasklistRequest(id)
+    return await deleteTasklistRequest(id)
       .then(() => dispatch(tasklistDeleteSuccess(id)))
       .catch((reason: TUpdateFail) => dispatch(updateFail(reason, id)));
   };
