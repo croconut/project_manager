@@ -7,10 +7,10 @@ const fs = require("fs");
 
 const startServer = async () => {
   const port = process.env.PORT || 5000;
+  const port2 = process.env.HTTP_PORT || port;
   const appStore = await connect(app);
-  let server;
-  if (process.env.HTTPS === "true")
-    server = https
+  if (process.env.HTTPS === "true") {
+    const httpsServer = https
       .createServer(
         {
           key: fs.readFileSync(process.env.KEYFILE),
@@ -19,10 +19,23 @@ const startServer = async () => {
         appStore.app
       )
       .listen(port);
-  else {
-    server = appStore.app.listen(port);
+    const shutdownManagerHTTPS = createHttpTerminator({ server: httpsServer });
+    // app gracefully shuts down
+    const terminateHandleHTTPS = async () => {
+      const closeM = shutdownManagerHTTPS.terminate();
+      const closeS = appStore.store.client.close();
+      const close = mongoose.connection.close();
+      await close;
+      await closeM;
+      await closeS;
+    };
+    process.on("SIGTERM", terminateHandleHTTPS);
+    process.on("SIGINT", terminateHandleHTTPS);
   }
-  const shutdownManager = createHttpTerminator({ server });
+
+  const httpServer = appStore.app.listen(port2);
+
+  const shutdownManager = createHttpTerminator({ server: httpServer });
   // app gracefully shuts down
   const terminateHandle = async () => {
     const closeM = shutdownManager.terminate();

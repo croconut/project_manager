@@ -38,7 +38,7 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
 
   const standardRateLimiter = new RateLimiterMemory(rateLimitOptions);
   const loginRateLimiter = new RateLimiterMemory(loginRateLimitOptions);
-  
+
   const rateLimitMiddleware = (req, res, next) => {
     standardRateLimiter
       .consume(req.ip)
@@ -47,6 +47,18 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
         res.status(429).json({ reason: "ip resource limit reached" })
       );
   };
+
+  if (process.env.HTTPS === "true") {
+    app.use(function (req, res, next) {
+      if (req.secure) {
+        // request was via https, so do no special handling
+        next();
+      } else {
+        // request was via http, so redirect to https
+        res.redirect("https://" + req.headers.host + req.url);
+      }
+    });
+  }
 
   // ip rate limiting coming before the session middleware as the
   // session middleware makes calls to the db
@@ -66,7 +78,6 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
       unset: "destroy",
     })
   );
-
 
   // redirect to login when session not set
   // and not trying to access the home page "/"
@@ -105,7 +116,6 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
       .catch(() => res.status(429).json({ reason: "login limit reached" }));
   };
 
-
   app.use((req, res, next) => {
     // no user but have cookie id for some reason?
     if (
@@ -117,8 +127,6 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
     }
     next();
   });
-
-  
 
   app.use(Routes.tasklistRouter.route, nonHomeRedirect, tasklistRouter);
   app.use(Routes.usersRouter.route, nonHomeRedirect, usersRouter);
