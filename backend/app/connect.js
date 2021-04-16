@@ -58,6 +58,8 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
       secret: process.env.SESSION_SECRET,
       resave: false,
       saveUninitialized: false,
+      httpOnly: true,
+      secure: true,
       // one week in ms
       cookie: { maxAge: 604800000 },
       store: store,
