@@ -13,8 +13,8 @@ const startServer = async () => {
     server = https
       .createServer(
         {
-          key: fs.readFileSync("./key.pem"),
-          cert: fs.readFileSync("./cert.pem"),
+          key: fs.readFileSync(process.env.KEYFILE),
+          cert: fs.readFileSync(process.env.CERTFILE),
         },
         appStore.app
       )
