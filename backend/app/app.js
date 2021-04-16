@@ -14,11 +14,16 @@ if (!process.env.SESSION_KEY || process.env.SESSION_KEY === "") {
 }
 
 app.use(cors());
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-  })
-);
+if (process.env.HTTPS === "true") {
+  app.use(helmet());
+} else {
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+    })
+  );
+}
+
 app.use(express.json());
 
 module.exports = app;
