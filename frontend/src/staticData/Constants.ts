@@ -59,7 +59,7 @@ export const PASSWORD_REQ = new RegExp(
   `^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*()_-]{${MIN_CHAR},${MAX_CHAR}}$`
 );
 export const USER_REGEX = new RegExp("^[A-Za-z][a-zA-Z0-9_-]*$");
-export const EMAIL_REGEX = new RegExp(`^.+[@]+(?=.*[.]).+$`);
+export const EMAIL_REGEX = new RegExp(`^.+[@].*$`);
 
 const IconGeneration = (): Array<string> => {
   const max = 640;

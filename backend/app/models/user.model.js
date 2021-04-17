@@ -67,7 +67,7 @@ const PASSWORD_REGEX = new RegExp(
   `^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*()_-]{14,128}$`
 );
 
-const EMAIL_REGEX = new RegExp(`^.+[@]+(?=.*[.]).+$`);
+const EMAIL_REGEX = new RegExp(`^.+[@].*$`);
 
 userSchema.statics.privateFields = () =>
   "-password -_id -passwordReset -passwordResetTime";

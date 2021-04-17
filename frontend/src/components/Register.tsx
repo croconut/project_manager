@@ -168,7 +168,11 @@ const Register: FC<StoreProps> = ({ loggedIn, status, failReason, signUp }) => {
   const CheckSubmittable = () => {
     let earlyReturn = false;
     if (!emailOkay) {
-      setErrorMessage("Emails must have an '@' and a '.'");
+      setErrorMessage("Emails must have an '@'");
+      earlyReturn = true;
+    }
+    if (!passwordOkay) {
+      setErrorMessage("Password must meet the listed requirements");
       earlyReturn = true;
     }
     if (password !== passwordDuplicate) {
@@ -229,7 +233,7 @@ const Register: FC<StoreProps> = ({ loggedIn, status, failReason, signUp }) => {
               className={classes.inputs}
               required
               error={!emailOkay}
-              helperText={emailOkay ? "" : "must have '@' and '.'"}
+              helperText={emailOkay ? "" : "must have an '@'"}
               id="email"
               label="Email"
               variant="outlined"
