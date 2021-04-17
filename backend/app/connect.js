@@ -48,15 +48,22 @@ const ConnectDBs = async (app, uri, mongooseConnectionOptions, store) => {
       );
   };
 
+  // subdomain redirects & http redirects
   if (process.env.HTTPS === "true") {
-    app.use(function (req, res, next) {
-      if (req.secure) {
-        // request was via https, so do no special handling
-        next();
-      } else {
-        // request was via http, so redirect to https
-        res.redirect("https://" + req.headers.host + req.url);
-      }
+    app.use((req, res, next) => {
+      var host = req.headers.host;
+      if (host.search(/^www\./) !== -1) {
+        host = host.replace(/^www\./, "");
+        res.redirect(301, "https://" + host + req.url);
+      } else if (!req.secure) res.redirect(301, "https://" + host + req.url);
+      else next();
+    });
+  } else {
+    app.use((req, res, next) => {
+      if (req.headers.host.search(/^www\./) !== -1) {
+        const hostRedef = req.headers.host.replace(/^www\./, "");
+        res.redirect(301, "http://" + hostRedef + req.url);
+      } else next();
     });
   }
 
