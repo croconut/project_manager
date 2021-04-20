@@ -14,7 +14,8 @@
     "http-terminator": "^2.0.3",
     "mongoose": "^5.11.12",
     "nodemailer": "^6.4.17",
-    "rate-limiter-flexible": "^2.2.1"
+    "rate-limiter-flexible": "^2.2.1",
+    "socket.io": "^4.0.1"
   },
   "scripts": {
     "build": "",
@@ -51,5 +52,9 @@
     "coveragePathIgnorePatterns": [
       "/node_modules/"
     ]
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.3",
+    "utf-8-validate": "^5.0.4"
   }
 }
