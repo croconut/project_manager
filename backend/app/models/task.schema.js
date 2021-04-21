@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 var ObjectID = require("mongodb").ObjectID;
-const { TaskStage } = require("../staticData/ModelConstants");
 
 const taskSchema = new mongoose.Schema({
   name: {
@@ -69,4 +68,4 @@ taskSchema.statics.isMinimumTaskArray = (tasks) => {
 
 const Task = mongoose.model("Task", taskSchema);
 
-module.exports = { schema: taskSchema, stage: TaskStage, model: Task };
+module.exports = { schema: taskSchema, model: Task };
